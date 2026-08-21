@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { ScanSearch, ShieldCheck, Navigation, UserCheck } from 'lucide-react'
 import { AppShell, PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import {
   StatTile,
   IncidentPrioritySummary,
@@ -149,31 +150,43 @@ export function CommandStaffDashboardPage() {
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
-          <StatTile label="Confirmed Incidents" value={data.confirmedIncidents.length} icon={ShieldCheck} tone="danger" />
-          <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
-          <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
-        </div>
+        <Reveal>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
+            <StatTile label="Confirmed Incidents" value={data.confirmedIncidents.length} icon={ShieldCheck} tone="danger" />
+            <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
+            <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
+          </div>
+        </Reveal>
 
-        <IncidentPrioritySummary counts={data.priorityCounts} />
+        <Reveal delayMs={100}>
+          <IncidentPrioritySummary counts={data.priorityCounts} />
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <PendingDetectionsPanel detections={data.pendingDetections} />
-          <ConfirmedIncidentsPanel incidents={data.confirmedIncidents} />
-        </div>
+        <Reveal delayMs={200}>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <PendingDetectionsPanel detections={data.pendingDetections} />
+            <ConfirmedIncidentsPanel incidents={data.confirmedIncidents} />
+          </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <ActiveMissionsPanel missions={data.activeMissions} />
-          <ResponderStatusPanel responders={data.responderStatus} />
-        </div>
+        <Reveal delayMs={300}>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <ActiveMissionsPanel missions={data.activeMissions} />
+            <ResponderStatusPanel responders={data.responderStatus} />
+          </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <OperationalMapPreview pins={data.mapPins} />
-          <RecentNotificationsPanel notifications={data.notifications} />
-        </div>
+        <Reveal delayMs={400}>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <OperationalMapPreview pins={data.mapPins} />
+            <RecentNotificationsPanel notifications={data.notifications} />
+          </div>
+        </Reveal>
 
-        <RecentDetectionsPanel detections={data.recentDetections} />
+        <Reveal delayMs={500}>
+          <RecentDetectionsPanel detections={data.recentDetections} />
+        </Reveal>
       </div>
     </AppShell>
   )

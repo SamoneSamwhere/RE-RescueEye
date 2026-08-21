@@ -31,8 +31,8 @@ export function Reveal({ children, className, delayMs = 0, as: Tag = 'div' }: Re
     <Tag
       ref={ref}
       className={cn(
-        'motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out',
-        !inView && 'motion-safe:translate-y-6 motion-safe:opacity-0',
+        'motion-safe:transition-all motion-safe:duration-[1200ms] motion-safe:ease-out',
+        !inView && 'motion-safe:translate-y-12 motion-safe:opacity-0',
         inView && 'translate-y-0 opacity-100',
         className,
       )}
