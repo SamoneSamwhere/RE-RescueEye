@@ -53,9 +53,8 @@ export function WorkflowTimeline() {
     setActiveStep(0)
     const id = window.setInterval(() => {
       step += 1
-      if (step >= STEPS.length) {
-        window.clearInterval(id)
-        return
+      if (step > STEPS.length) {
+        step = 0
       }
       setActiveStep(step)
     }, STEP_INTERVAL_MS)
