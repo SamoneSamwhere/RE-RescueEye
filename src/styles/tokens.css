@@ -1,0 +1,381 @@
+
+@theme {
+  /* ---------------------------------------------------------------- */
+  /* Typography                                                        */
+  /* ---------------------------------------------------------------- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  /* Dense type scale — tuned smaller than Tailwind defaults for
+     high-information-density operational screens. */
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.25rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.125rem;
+
+  /* ---------------------------------------------------------------- */
+  /* Spacing — Tailwind's default numeric scale (p-1, gap-2, px-4, ...) */
+  /* is used directly rather than custom named keys. Named keys under  */
+  /* --spacing-name (sm, md, lg, xl, 2xl) are reserved by Tailwind for */
+  /* the w and max-w size scale; redefining them here would silently  */
+  /* break those utilities across the whole app.                       */
+  /* ---------------------------------------------------------------- */
+
+  /* ---------------------------------------------------------------- */
+  /* Radius — restrained and boxy; deliberately not pill-shaped        */
+  /* ---------------------------------------------------------------- */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* ---------------------------------------------------------------- */
+  /* Elevation                                                          */
+  /* ---------------------------------------------------------------- */
+  --shadow-panel: 0 1px 2px 0 rgb(15 23 42 / 0.06), 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-modal: 0 10px 15px -3px rgb(15 23 42 / 0.15), 0 4px 6px -4px rgb(15 23 42 / 0.1);
+
+  /* ---------------------------------------------------------------- */
+  /* Surfaces & backgrounds                                            */
+  /* ---------------------------------------------------------------- */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f1f5f9;
+  --color-surface-inverse: #0f172a;
+
+  /* ---------------------------------------------------------------- */
+  /* Borders                                                            */
+  /* ---------------------------------------------------------------- */
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  /* ---------------------------------------------------------------- */
+  /* Foreground / text                                                 */
+  /* ---------------------------------------------------------------- */
+  --color-foreground: #0f172a;
+  --color-foreground-secondary: #475569;
+  --color-foreground-muted: #94a3b8;
+  --color-foreground-inverse: #f8fafc;
+
+  /* ---------------------------------------------------------------- */
+  /* Accent / brand + focus                                            */
+  /* ---------------------------------------------------------------- */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-subtle: #eff6ff;
+  --color-accent-border: #bfdbfe;
+  --color-focus: #2563eb;
+
+  /* ---------------------------------------------------------------- */
+  /* Generic feedback tones — used by Badge, Button(danger), alerts    */
+  /* ---------------------------------------------------------------- */
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-success-fg: #15803d;
+
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-fg: #b45309;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-fg: #b91c1c;
+
+  --color-info: #2563eb;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
+  --color-info-fg: #1d4ed8;
+
+  --color-neutral: #64748b;
+  --color-neutral-bg: #f1f5f9;
+  --color-neutral-border: #e2e8f0;
+  --color-neutral-fg: #334155;
+
+  /* ---------------------------------------------------------------- */
+  /* Domain: Incident priority (LOW / MEDIUM / HIGH / CRITICAL)        */
+  /* ---------------------------------------------------------------- */
+  --color-priority-low: #0284c7;
+  --color-priority-low-bg: #f0f9ff;
+  --color-priority-low-border: #bae6fd;
+  --color-priority-low-fg: #0369a1;
+
+  --color-priority-medium: #d97706;
+  --color-priority-medium-bg: #fffbeb;
+  --color-priority-medium-border: #fde68a;
+  --color-priority-medium-fg: #b45309;
+
+  --color-priority-high: #ea580c;
+  --color-priority-high-bg: #fff7ed;
+  --color-priority-high-border: #fed7aa;
+  --color-priority-high-fg: #c2410c;
+
+  --color-priority-critical: #dc2626;
+  --color-priority-critical-bg: #fef2f2;
+  --color-priority-critical-border: #fecaca;
+  --color-priority-critical-fg: #b91c1c;
+
+  /* ---------------------------------------------------------------- */
+  /* Domain: Detection validation (PENDING / VERIFIED / REJECTED)      */
+  /* ---------------------------------------------------------------- */
+  --color-detection-pending: #64748b;
+  --color-detection-pending-bg: #f1f5f9;
+  --color-detection-pending-border: #e2e8f0;
+  --color-detection-pending-fg: #334155;
+
+  --color-detection-verified: #16a34a;
+  --color-detection-verified-bg: #f0fdf4;
+  --color-detection-verified-border: #bbf7d0;
+  --color-detection-verified-fg: #15803d;
+
+  --color-detection-rejected: #dc2626;
+  --color-detection-rejected-bg: #fef2f2;
+  --color-detection-rejected-border: #fecaca;
+  --color-detection-rejected-fg: #b91c1c;
+
+  /* ------------------------------------------------------------------ */
+  /* Domain: Mission status                                              */
+  /* (PENDING / ACCEPTED / DECLINED / EN_ROUTE / ON_SITE / COMPLETED)    */
+  /* ------------------------------------------------------------------ */
+  --color-mission-pending: #64748b;
+  --color-mission-pending-bg: #f1f5f9;
+  --color-mission-pending-border: #e2e8f0;
+  --color-mission-pending-fg: #334155;
+
+  --color-mission-accepted: #2563eb;
+  --color-mission-accepted-bg: #eff6ff;
+  --color-mission-accepted-border: #bfdbfe;
+  --color-mission-accepted-fg: #1d4ed8;
+
+  --color-mission-declined: #dc2626;
+  --color-mission-declined-bg: #fef2f2;
+  --color-mission-declined-border: #fecaca;
+  --color-mission-declined-fg: #b91c1c;
+
+  --color-mission-en-route: #d97706;
+  --color-mission-en-route-bg: #fffbeb;
+  --color-mission-en-route-border: #fde68a;
+  --color-mission-en-route-fg: #b45309;
+
+  --color-mission-on-site: #7c3aed;
+  --color-mission-on-site-bg: #f5f3ff;
+  --color-mission-on-site-border: #ddd6fe;
+  --color-mission-on-site-fg: #6d28d9;
+
+  --color-mission-completed: #16a34a;
+  --color-mission-completed-bg: #f0fdf4;
+  --color-mission-completed-border: #bbf7d0;
+  --color-mission-completed-fg: #15803d;
+
+  /* ---------------------------------------------------------------- */
+  /* Motion — restrained, continuous decorative animations only.       */
+  /* Scroll/entrance reveals are driven by JS (transition utilities),  */
+  /* not defined here. Every utility below is applied via the         */
+  /* motion-safe: variant so prefers-reduced-motion is respected.      */
+  /* ---------------------------------------------------------------- */
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 9.5s ease-in-out infinite 0.4s;
+  --animate-drone-flight: drone-flight 8s ease-in-out infinite;
+  --animate-capability-scan: capability-scan 4.5s ease-in-out infinite;
+  --animate-radar-spin: radar-spin 16s linear infinite;
+  --animate-pulse-glow: pulse-glow 2.6s ease-in-out infinite;
+
+  /* One-shot, app-wide entrance/feedback animations — used by shared
+     components (Modal, page transitions, dropdowns, form validation) across
+     both the public pages and the authenticated dashboard. */
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-pop-in: pop-in 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-page-in: page-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-step-in: step-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0);
+  }
+}
+
+@keyframes drone-flight {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(14px, -8px, 0) rotate(1deg);
+  }
+  50% {
+    transform: translate3d(0, -22px, 0) rotate(0deg);
+  }
+  75% {
+    transform: translate3d(-14px, -8px, 0) rotate(-1deg);
+  }
+}
+
+@keyframes capability-scan {
+  0%,
+  35% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  70%,
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Light / dark theme — scoped to the shared [data-theme] root boundary.     */
+/* The root router layout owns this attribute so public pages and all role   */
+/* dashboards receive the same persisted theme.                              */
+/*                                                                          */
+/* surface-inverse / foreground-inverse / accent are intentionally NOT     */
+/* redefined here — the header, hero, and CTA bands are a fixed dark       */
+/* "signature" look in both themes; only the content bands and footer,     */
+/* which use the plain surface/foreground tokens, actually re-theme.       */
+/* ---------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --color-background: #0b1220;
+  --color-surface: #111827;
+  --color-surface-secondary: #0c1424;
+  --color-border: #1f2937;
+  --color-border-strong: #334155;
+
+  --color-foreground: #f1f5f9;
+  --color-foreground-secondary: #cbd5e1;
+  --color-foreground-muted: #64748b;
+
+  --color-accent-subtle: #16213a;
+  --color-accent-border: #2b3f66;
+
+  --shadow-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.5);
+  --shadow-modal: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+/* Smooth theme transitions, scoped the same way. Colors only — never
+   transform/opacity, which would fight the entrance/hover animations that
+   already rely on their own transition timing throughout these pages.
+   Wrapped in :where() so this rule carries zero specificity — every
+   component's own transition-* utility (hover lifts, reveals, the
+   ThemeToggle icon crossfade, etc.) keeps winning over it regardless of
+   source order, and this only governs elements with no transition of
+   their own. */
+:where([data-theme]) {
+  transition: background-color 400ms ease;
+}
+
+:where([data-theme]) * {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 400ms;
+  transition-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-theme]) *,
+  :where([data-theme]) {
+    transition: none !important;
+  }
+}
