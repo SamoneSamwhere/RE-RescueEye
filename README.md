@@ -1,32 +1,68 @@
-# React + TypeScript + Vite
+# RescueEye
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+RescueEye is a web dashboard for drone-based search-and-rescue operations. It turns
+AI-flagged detections from drone footage into confirmed incidents, dispatches the
+nearest available field responder, and tracks the mission through to resolution.
 
-Currently, two official plugins are available:
+This repo currently contains the frontend — a React/TypeScript UI running on mock
+data and in-memory stores, built out to validate the workflow and role-based screens
+before wiring up a real backend.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Roles
 
-## React Compiler
+The app is organized around four roles, each with its own dashboard and routes:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **System Admin** — approves/rejects agency registrations, oversees agency status platform-wide.
+- **Agency Admin** — manages an agency's users (creates Command Staff / Field Responder accounts), reviews account status, views mission history.
+- **Command Staff** — reviews AI detections from drone footage, confirms incidents, assigns responders, tracks incidents and drones/media on an operational map.
+- **Field Responder** — receives mission assignments, views mission details, updates their profile/location.
 
-## Expanding the Oxlint configuration
+Each role has a dedicated data provider (e.g. `CommandStaffDataProvider`) and route
+group in [src/app/router.tsx](src/app/router.tsx), gated by [ProtectedRoute](src/features/auth/ProtectedRoute.tsx)
+and [roleRoutes.ts](src/features/auth/roleRoutes.ts).
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Tech stack
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- React 19 + TypeScript, built with Vite
+- React Router 7 for routing
+- TanStack Query for data fetching
+- Tailwind CSS 4 for styling
+- Oxlint for linting
+
+## Getting started
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Other scripts:
+
+```bash
+npm run build    # type-check (tsc -b) and build for production
+npm run preview  # preview the production build locally
+npm run lint      # run oxlint
+```
+
+## Project structure
+
+```
+src/
+  app/          # router, root layout, query client
+  pages/        # top-level route components, one per screen
+  components/   # UI grouped by feature area (dashboard, detections, incidents,
+                # missions, drones, map, media, landing, layout, ui, ...)
+  features/     # role-scoped data providers, auth, theming
+  state/        # in-memory stores (agencies, users, detections, incidents, ...)
+  data/         # mock seed data used by the stores
+  hooks/        # shared hooks
+  lib/          # formatting, geo, id, status, and other utilities
+  types/        # shared domain types (user, agency, drone, incident, mission, ...)
+  routes/       # centralized route path definitions
+```
+
+## Status
+
+Data is currently backed by mock stores under [src/state/](src/state/) and
+[src/data/](src/data/) rather than a live API, so the app is fully navigable and
+demoable without a backend.
