@@ -14,7 +14,7 @@ function AuthPageShellContent({ children }: AuthPageShellProps) {
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-surface-inverse">
       <HeroBackground />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
+      <header className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="group flex items-center gap-2 text-foreground-inverse">
           <span className="inline-flex size-8 items-center justify-center rounded-md bg-white/95 p-1 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
             <img src={logo} alt="" className="size-full object-contain" />
@@ -34,7 +34,7 @@ function AuthPageShellContent({ children }: AuthPageShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+      <main className="relative z-10 flex flex-1 items-start justify-center px-4 pb-6 pt-2 sm:px-6 sm:pt-4 lg:px-8 lg:pt-1">
         {children}
       </main>
     </div>

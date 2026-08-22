@@ -14,3 +14,13 @@ export { Modal } from './Modal'
 export { LoadingState } from './LoadingState'
 export { EmptyState } from './EmptyState'
 export { UnauthorizedState } from './UnauthorizedState'
+export {
+  MorphingDialog,
+  MorphingDialogTrigger,
+  MorphingDialogContainer,
+  MorphingDialogContent,
+  MorphingDialogClose,
+  MorphingDialogTitle,
+  MorphingDialogSubtitle,
+  MorphingDialogDescription,
+} from './MorphingDialog'

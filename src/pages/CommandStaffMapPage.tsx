@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import { Panel } from '../components/ui'
 import { OperationalMapCanvas, MarkerDetailPanel } from '../components/map'
 import type { MapMarker, IncidentMapMarker } from '../components/map'
 import { useAuth } from '../features/auth'
-import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData } from '../features/command-staff'
 import { mockUsers } from '../data/mockUsers'
 import { MAP_VISIBLE_MISSION_STATUSES } from '../lib/missionStatus'
 
 export function CommandStaffMapPage() {
-  const { session, logout } = useAuth()
-  const { detections, incidents, missions, notifications } = useCommandStaffData()
+  const { session } = useAuth()
+  const { detections, incidents, missions } = useCommandStaffData()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const agencyId = session?.agencyId
@@ -77,21 +78,14 @@ export function CommandStaffMapPage() {
 
   const selectedMarker = markers.find((m) => m.id === selectedId) ?? null
 
-  if (!session) return null
-
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={COMMAND_STAFF_NAV_ITEMS}
-      notifications={notifications.map((n) => ({ id: n.id, title: n.message, timestamp: n.sentAt, read: n.read, type: n.type }))}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title="Operational Map"
         description="Confirmed incidents, AI detections, and Field Responder positions for your agency."
       />
 
-      <div className="grid grid-cols-1 gap-4 px-4 py-4 xl:grid-cols-[1fr_320px]">
+      <Reveal className="grid grid-cols-1 gap-4 px-4 py-4 xl:grid-cols-[1fr_320px]">
         <Panel title={`Operational Map (${markers.length} markers)`}>
           <OperationalMapCanvas
             markers={markers}
@@ -100,7 +94,7 @@ export function CommandStaffMapPage() {
           />
         </Panel>
         <MarkerDetailPanel marker={selectedMarker} />
-      </div>
-    </AppShell>
+      </Reveal>
+    </>
   )
 }

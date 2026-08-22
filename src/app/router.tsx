@@ -1,6 +1,5 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom'
-import { LoginPage } from '../pages/LoginPage'
-import { SignUpPage } from '../pages/SignUpPage'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { AuthPage } from '../pages/AuthPage'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 import { SystemAdminDashboardPage } from '../pages/SystemAdminDashboardPage'
 import { SystemAdminAgencyValidationPage } from '../pages/SystemAdminAgencyValidationPage'
@@ -25,20 +24,29 @@ import { AgencyAdminDataProvider } from '../features/agency-admin'
 import { SystemAdminDataProvider } from '../features/system-admin'
 import { ROUTES } from '../routes/paths'
 import { RootLayout } from './RootLayout'
+import { PublicLayout } from './layouts/PublicLayout'
+import { SystemAdminLayout } from './layouts/SystemAdminLayout'
+import { AgencyAdminLayout } from './layouts/AgencyAdminLayout'
+import { CommandStaffLayout } from './layouts/CommandStaffLayout'
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <RootRedirect /> },
-      { path: ROUTES.login, element: <LoginPage /> },
-      { path: ROUTES.signup, element: <SignUpPage /> },
-      { path: ROUTES.unauthorized, element: <UnauthorizedPage /> },
+      {
+        element: <PublicLayout />,
+        children: [
+          { path: '/', element: <RootRedirect /> },
+          { path: ROUTES.login, element: <AuthPage /> },
+          { path: ROUTES.signup, element: <Navigate to={`${ROUTES.login}?mode=signup`} replace /> },
+          { path: ROUTES.unauthorized, element: <UnauthorizedPage /> },
+        ],
+      },
       {
         element: (
           <ProtectedRoute allowedRoles={['SYSTEM_ADMIN']}>
             <SystemAdminDataProvider>
-              <Outlet />
+              <SystemAdminLayout />
             </SystemAdminDataProvider>
           </ProtectedRoute>
         ),
@@ -52,7 +60,7 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['AGENCY_ADMIN']}>
             <AgencyAdminDataProvider>
-              <Outlet />
+              <AgencyAdminLayout />
             </AgencyAdminDataProvider>
           </ProtectedRoute>
         ),
@@ -67,7 +75,7 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['COMMAND_STAFF']}>
             <CommandStaffDataProvider>
-              <Outlet />
+              <CommandStaffLayout />
             </CommandStaffDataProvider>
           </ProtectedRoute>
         ),

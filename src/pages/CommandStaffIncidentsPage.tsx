@@ -1,16 +1,15 @@
 import { useMemo, useState } from 'react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import { Panel } from '../components/ui'
 import { IncidentFiltersBar, IncidentListTable } from '../components/incidents'
 import type { EnrichedIncident, PriorityFilter, StatusFilterValue, TypeFilter } from '../components/incidents'
-import { useAuth } from '../features/auth'
-import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
 
 export function CommandStaffIncidentsPage() {
-  const { session, logout } = useAuth()
   const { incidents, detections, mediaAssets } = useCommandStaffData()
 
   const [search, setSearch] = useState('')
@@ -70,34 +69,32 @@ export function CommandStaffIncidentsPage() {
     })
   }, [enrichedIncidents, search, priorityFilter, statusFilter, typeFilter])
 
-  if (!session) return null
-
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={COMMAND_STAFF_NAV_ITEMS}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title="Incident Management"
         description="Confirmed incidents created from verified AI detections."
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <IncidentFiltersBar
-          search={search}
-          onSearchChange={setSearch}
-          priorityFilter={priorityFilter}
-          onPriorityFilterChange={setPriorityFilter}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-        />
-        <Panel title={`Incidents (${filteredIncidents.length})`}>
-          <IncidentListTable incidents={filteredIncidents} />
-        </Panel>
+        <Reveal>
+          <IncidentFiltersBar
+            search={search}
+            onSearchChange={setSearch}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={setPriorityFilter}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+          />
+        </Reveal>
+        <Reveal delayMs={100}>
+          <Panel title={`Incidents (${filteredIncidents.length})`}>
+            <IncidentListTable incidents={filteredIncidents} />
+          </Panel>
+        </Reveal>
       </div>
-    </AppShell>
+    </>
   )
 }

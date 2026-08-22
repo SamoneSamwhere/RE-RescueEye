@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { Users, UserCheck, UserX, UserPlus, History, ArrowRight } from 'lucide-react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
 import { Card } from '../components/ui'
 import { Reveal } from '../components/landing/Reveal'
 import { StatTile } from '../components/dashboard'
 import { useAuth } from '../features/auth'
-import { AGENCY_ADMIN_NAV_ITEMS, useAgencyAdminData } from '../features/agency-admin'
+import { useAgencyAdminData } from '../features/agency-admin'
 import { ROUTES } from '../routes/paths'
 
 const ACTIONS = [
@@ -30,7 +30,7 @@ const ACTIONS = [
 ]
 
 export function AgencyAdminDashboardPage() {
-  const { session, logout } = useAuth()
+  const { session } = useAuth()
   const { agencyUsers, missionHistory } = useAgencyAdminData()
 
   if (!session) return null
@@ -39,11 +39,7 @@ export function AgencyAdminDashboardPage() {
   const inactiveCount = agencyUsers.length - activeCount
 
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={AGENCY_ADMIN_NAV_ITEMS}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title="Agency Dashboard"
         description={`Administration for ${session.agencyName ?? 'your agency'}`}
@@ -81,6 +77,6 @@ export function AgencyAdminDashboardPage() {
           </div>
         </Reveal>
       </div>
-    </AppShell>
+    </>
   )
 }

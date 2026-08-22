@@ -1,16 +1,12 @@
 import { useMemo } from 'react'
-import { ScanSearch, ShieldCheck, Navigation, UserCheck } from 'lucide-react'
-import { AppShell, PageHeader } from '../components/layout'
+import { ScanSearch, Navigation, UserCheck } from 'lucide-react'
+import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import {
   StatTile,
-  IncidentPrioritySummary,
   PendingDetectionsPanel,
-  RecentDetectionsPanel,
-  ConfirmedIncidentsPanel,
   ActiveMissionsPanel,
   ResponderStatusPanel,
-  RecentNotificationsPanel,
 } from '../components/dashboard'
 import type {
   DetectionListItem,
@@ -20,24 +16,19 @@ import type {
 } from '../components/dashboard'
 import { OperationalMapPreview } from '../components/map'
 import { useAuth } from '../features/auth'
-import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
 import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
-import type { IncidentPriority } from '../types/incident'
-
-const RECENT_DETECTIONS_LIMIT = 6
-const RECENT_NOTIFICATIONS_LIMIT = 5
 
 export function CommandStaffDashboardPage() {
-  const { session, logout } = useAuth()
+  const { session } = useAuth()
   const {
     detections: sharedDetections,
     incidents: sharedIncidents,
     missions: sharedMissions,
     mediaAssets,
-    notifications: sharedNotifications,
   } = useCommandStaffData()
 
   const agencyId = session?.agencyId
@@ -55,7 +46,6 @@ export function CommandStaffDashboardPage() {
       .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt))
 
     const pendingDetections = detections.filter((d) => d.validationStatus === 'PENDING')
-    const recentDetections = detections.slice(0, RECENT_DETECTIONS_LIMIT)
 
     const incidents: IncidentListItem[] = sharedIncidents
       .map((incident) => {
@@ -71,11 +61,6 @@ export function CommandStaffDashboardPage() {
       .sort((a, b) => b.verifiedAt.localeCompare(a.verifiedAt))
 
     const openIncidents = incidents.filter((incident) => incident.status !== 'CLOSED')
-
-    const priorityCounts: Record<IncidentPriority, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 }
-    for (const incident of openIncidents) {
-      priorityCounts[incident.priority] += 1
-    }
 
     const agencyResponders = mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId)
 
@@ -110,84 +95,54 @@ export function CommandStaffDashboardPage() {
       }
     })
 
-    const notifications = [...sharedNotifications]
-      .sort((a, b) => b.sentAt.localeCompare(a.sentAt))
-      .slice(0, RECENT_NOTIFICATIONS_LIMIT)
-
     const mapPins = openIncidents.map((incident) => ({ id: incident.id, priority: incident.priority }))
 
     return {
       pendingDetections,
-      recentDetections,
-      confirmedIncidents: openIncidents,
-      priorityCounts,
       activeMissions,
       responderStatus,
-      notifications,
       mapPins,
       availableResponders: responderStatus.filter((r) => r.isActive && !r.missionStatus).length,
     }
-  }, [agencyId, sharedDetections, sharedIncidents, sharedMissions, sharedNotifications, mediaAssets])
+  }, [agencyId, sharedDetections, sharedIncidents, sharedMissions, mediaAssets])
 
   if (!session) return null
 
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={COMMAND_STAFF_NAV_ITEMS}
-      notifications={data.notifications.map((n) => ({
-        id: n.id,
-        title: n.message,
-        timestamp: n.sentAt,
-        read: n.read,
-        type: n.type,
-      }))}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title="Command Staff Dashboard"
         description={`Operational overview for ${session.agencyName ?? 'your agency'}`}
       />
 
-      <div className="flex flex-col gap-4 px-4 py-4">
+      <div className="flex flex-col gap-6 px-4 py-4">
         <Reveal>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
-            <StatTile label="Confirmed Incidents" value={data.confirmedIncidents.length} icon={ShieldCheck} tone="danger" />
             <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
             <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
           </div>
         </Reveal>
 
         <Reveal delayMs={100}>
-          <IncidentPrioritySummary counts={data.priorityCounts} />
-        </Reveal>
-
-        <Reveal delayMs={200}>
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4">
             <PendingDetectionsPanel detections={data.pendingDetections} />
-            <ConfirmedIncidentsPanel incidents={data.confirmedIncidents} />
           </div>
         </Reveal>
 
-        <Reveal delayMs={300}>
+        <Reveal delayMs={200}>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <ActiveMissionsPanel missions={data.activeMissions} />
             <ResponderStatusPanel responders={data.responderStatus} />
           </div>
         </Reveal>
 
-        <Reveal delayMs={400}>
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Reveal delayMs={300}>
+          <div className="grid grid-cols-1 gap-4">
             <OperationalMapPreview pins={data.mapPins} />
-            <RecentNotificationsPanel notifications={data.notifications} />
           </div>
         </Reveal>
-
-        <Reveal delayMs={500}>
-          <RecentDetectionsPanel detections={data.recentDetections} />
-        </Reveal>
       </div>
-    </AppShell>
+    </>
   )
 }

@@ -48,7 +48,7 @@ export function DocumentUploadField({ id, label, hint, required, file, error, on
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex h-full flex-col gap-1.5">
       <label htmlFor={id} className="text-xs font-medium uppercase tracking-wide text-foreground-secondary">
         {label}
         {required ? (
@@ -69,7 +69,7 @@ export function DocumentUploadField({ id, label, hint, required, file, error, on
       />
 
       {file ? (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 motion-safe:animate-pop-in">
+        <div className="mt-auto flex items-center justify-between gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 motion-safe:animate-pop-in">
           <div className="flex min-w-0 items-center gap-2">
             <CheckCircle2 className="size-4 shrink-0 text-success" />
             <div className="min-w-0">
@@ -90,7 +90,7 @@ export function DocumentUploadField({ id, label, hint, required, file, error, on
         <label
           htmlFor={id}
           className={cn(
-            'flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2.5 text-sm transition-colors',
+            'mt-auto flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2.5 text-sm transition-colors',
             error
               ? 'border-danger-border bg-danger-bg text-danger-fg hover:bg-danger-bg/70 motion-safe:animate-shake'
               : 'border-border-strong text-foreground-secondary hover:border-accent-border hover:bg-accent-subtle hover:text-accent',

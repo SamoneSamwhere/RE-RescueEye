@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock } from 'lucide-react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import { Panel, Button, Modal, PriorityBadge, Badge, DetectionStatusBadge, EmptyState, DetailField } from '../components/ui'
 import { DetectionMediaPreview } from '../components/detections'
 import { IncidentTimeline } from '../components/incidents'
 import { OperationalMapPreview } from '../components/map'
 import { ResponderSelectionPanel } from '../components/responders'
 import { useAuth } from '../features/auth'
-import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData } from '../features/command-staff'
 import { useResponderCandidates } from '../hooks/useResponderCandidates'
 import { useIncidentTimeline } from '../hooks/useIncidentTimeline'
 import { mockDrones } from '../data/mockDrones'
@@ -22,7 +23,7 @@ import type { IncidentPriority } from '../types/incident'
 const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 
 export function CommandStaffIncidentDetailPage() {
-  const { session, logout } = useAuth()
+  const { session } = useAuth()
   const { incidentId } = useParams<{ incidentId: string }>()
   const { incidents, detections, missions, mediaAssets, updateIncidentPriority, dispatchIncident, closeIncident } =
     useCommandStaffData()
@@ -45,20 +46,14 @@ export function CommandStaffIncidentDetailPage() {
   const timelineEvents = useIncidentTimeline(incident, detection, missions, sourceLabel)
   const responderCandidates = useResponderCandidates(detection, session?.agencyId, incidents, missions)
 
-  if (!session) return null
-
   if (!incident || !detection) {
     return (
-      <AppShell
-        user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-        navItems={COMMAND_STAFF_NAV_ITEMS}
-        onLogout={logout}
-      >
+      <>
         <PageHeader title="Incident Not Found" />
         <div className="px-4 py-4">
           <EmptyState title="This incident could not be found" description="It may not exist in your agency." />
         </div>
-      </AppShell>
+      </>
     )
   }
 
@@ -88,11 +83,7 @@ export function CommandStaffIncidentDetailPage() {
   }
 
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={COMMAND_STAFF_NAV_ITEMS}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title={incident.id}
         description={`${DETECTION_CATEGORY_LABEL[detection.category]} incident — verified ${formatDateTime(incident.verifiedAt)}`}
@@ -108,7 +99,7 @@ export function CommandStaffIncidentDetailPage() {
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <Reveal className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <PriorityBadge priority={incident.priority} />
             <Badge tone="neutral">{INCIDENT_STATUS_LABEL[incident.status] ?? incident.status}</Badge>
@@ -126,9 +117,9 @@ export function CommandStaffIncidentDetailPage() {
               Close Incident
             </Button>
           ) : null}
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Reveal delayMs={100} className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <Panel title="Detection Evidence">
             <div className="flex flex-col gap-4">
               <DetectionMediaPreview
@@ -187,35 +178,39 @@ export function CommandStaffIncidentDetailPage() {
               Coordinates: {detection.location.lat.toFixed(4)}, {detection.location.lng.toFixed(4)}
             </p>
           </div>
-        </div>
+        </Reveal>
 
-        {dispatchSuccess ? (
-          <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-            <Send className="size-4 shrink-0" />
-            Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
-          </div>
-        ) : null}
+        <Reveal delayMs={200} className="flex flex-col gap-4">
+          {dispatchSuccess ? (
+            <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
+              <Send className="size-4 shrink-0" />
+              Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
+            </div>
+          ) : null}
 
-        {hasActiveMission ? (
-          <Panel title="Select Field Responder to Notify">
-            <EmptyState
-              icon={Send}
-              title="A mission is already in progress"
-              description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
+          {hasActiveMission ? (
+            <Panel title="Select Field Responder to Notify">
+              <EmptyState
+                icon={Send}
+                title="A mission is already in progress"
+                description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
+              />
+            </Panel>
+          ) : (
+            <ResponderSelectionPanel
+              candidates={responderCandidates}
+              selectedId={selectedResponderId}
+              onSelect={setSelectedResponderId}
+              onNotify={() => setConfirmOpen(true)}
             />
-          </Panel>
-        ) : (
-          <ResponderSelectionPanel
-            candidates={responderCandidates}
-            selectedId={selectedResponderId}
-            onSelect={setSelectedResponderId}
-            onNotify={() => setConfirmOpen(true)}
-          />
-        )}
+          )}
+        </Reveal>
 
-        <Panel title="Incident Timeline">
-          <IncidentTimeline events={timelineEvents} />
-        </Panel>
+        <Reveal delayMs={300}>
+          <Panel title="Incident Timeline">
+            <IncidentTimeline events={timelineEvents} />
+          </Panel>
+        </Reveal>
       </div>
 
       <Modal
@@ -245,6 +240,6 @@ export function CommandStaffIncidentDetailPage() {
           </div>
         ) : null}
       </Modal>
-    </AppShell>
+    </>
   )
 }

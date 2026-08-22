@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Building2, ShieldCheck, ShieldAlert, Power, ArrowRight } from 'lucide-react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
 import { Card, Badge } from '../components/ui'
 import { Reveal } from '../components/landing/Reveal'
 import { StatTile } from '../components/dashboard'
-import { useAuth } from '../features/auth'
-import { SYSTEM_ADMIN_NAV_ITEMS, useSystemAdminData } from '../features/system-admin'
+import { useSystemAdminData } from '../features/system-admin'
 import { ROUTES } from '../routes/paths'
 import { formatDateTime } from '../lib/formatDateTime'
 
@@ -25,24 +24,19 @@ const ACTIONS = [
 ]
 
 export function SystemAdminDashboardPage() {
-  const { session, logout } = useAuth()
   const { agencies } = useSystemAdminData()
-
-  if (!session) return null
 
   const pendingCount = agencies.filter((a) => a.registrationStatus === 'PENDING').length
   const approvedCount = agencies.filter((a) => a.registrationStatus === 'APPROVED').length
   const rejectedCount = agencies.filter((a) => a.registrationStatus === 'REJECTED').length
   const activeCount = agencies.filter((a) => a.accountStatus === 'ACTIVE').length
 
-  const sortedAgencies = [...agencies].sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+  const recentAgencies = [...agencies]
+    .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+    .slice(0, 5)
 
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={SYSTEM_ADMIN_NAV_ITEMS}
-      onLogout={logout}
-    >
+    <>
       <PageHeader title="System Admin Dashboard" description="Registered agencies across the platform." />
 
       <div className="flex flex-col gap-4 px-4 py-4">
@@ -79,10 +73,19 @@ export function SystemAdminDashboardPage() {
 
         <Reveal delayMs={200}>
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-              Registered Agencies ({agencies.length})
-            </p>
-            {sortedAgencies.map((agency) => (
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
+                Recently Registered
+              </p>
+              <Link
+                to={ROUTES.systemAdminAgencyStatus}
+                className="flex items-center gap-1 text-xs font-medium text-accent"
+              >
+                View all ({agencies.length})
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            {recentAgencies.map((agency) => (
               <Card key={agency.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{agency.name}</p>
@@ -111,6 +114,6 @@ export function SystemAdminDashboardPage() {
           </div>
         </Reveal>
       </div>
-    </AppShell>
+    </>
   )
 }

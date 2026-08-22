@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, ArrowRight } from 'lucide-react'
-import { AppShell, PageHeader } from '../components/layout'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import { DroneList, RegisterDroneModal } from '../components/drones'
 import { FeedSourceSelector, LiveFeedPlaceholder, UploadVideoPlaceholder, MediaHistoryTable } from '../components/media'
 import type { MediaHistoryItem } from '../components/media'
 import { useAuth } from '../features/auth'
-import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { now } from '../lib/now'
@@ -18,7 +19,7 @@ import type { MediaSourceType } from '../types/media'
 const CONNECT_DELAY_MS = 800
 
 export function CommandStaffDronesMediaPage() {
-  const { session, logout } = useAuth()
+  const { session } = useAuth()
   const { mediaAssets, captureMedia } = useCommandStaffData()
   const agencyId = session?.agencyId
 
@@ -99,25 +100,23 @@ export function CommandStaffDronesMediaPage() {
   if (!session) return null
 
   return (
-    <AppShell
-      user={{ name: session.name, role: session.role, agencyName: session.agencyName }}
-      navItems={COMMAND_STAFF_NAV_ITEMS}
-      onLogout={logout}
-    >
+    <>
       <PageHeader
         title="Drones & Media"
         description="Register drones, connect them, and bring in live feeds or recorded footage."
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <DroneList
-          drones={drones}
-          connectingDroneId={connectingDroneId}
-          selectedDroneId={selectedDroneId}
-          onConnect={handleConnect}
-          onSelectFeedSource={handleSelectFeedSource}
-          onRegisterClick={() => setRegisterModalOpen(true)}
-        />
+        <Reveal>
+          <DroneList
+            drones={drones}
+            connectingDroneId={connectingDroneId}
+            selectedDroneId={selectedDroneId}
+            onConnect={handleConnect}
+            onSelectFeedSource={handleSelectFeedSource}
+            onRegisterClick={() => setRegisterModalOpen(true)}
+          />
+        </Reveal>
 
         {selectedDrone ? (
           <FeedSourceSelector droneName={selectedDrone.name} selected={feedSource} onSelect={setFeedSource} />
@@ -152,7 +151,9 @@ export function CommandStaffDronesMediaPage() {
           </div>
         ) : null}
 
-        <MediaHistoryTable items={mediaHistoryItems} />
+        <Reveal delayMs={100}>
+          <MediaHistoryTable items={mediaHistoryItems} />
+        </Reveal>
       </div>
 
       <RegisterDroneModal
@@ -161,6 +162,6 @@ export function CommandStaffDronesMediaPage() {
         onRegister={handleRegister}
         existingSerialNumbers={drones.map((d) => d.serialNumber)}
       />
-    </AppShell>
+    </>
   )
 }

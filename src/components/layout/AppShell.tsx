@@ -23,19 +23,23 @@ export function AppShell({ navItems = [], user, notifications = [], onLogout, ch
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar navItems={navItems} open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar
           user={user}
           notifications={notifications}
           onMenuClick={() => setMobileNavOpen(true)}
           onLogout={onLogout}
         />
-        {/* overflow-x-hidden keeps a wide table/grid from ever forcing the whole
-            page to scroll sideways — each Table already scrolls internally. */}
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-background">
+        {/* h-screen + min-h-0 above keeps the whole shell pinned to the viewport, so this
+            is the only element that ever scrolls — no more nested body+main scrollbars, and
+            [scrollbar-gutter:stable] keeps its width constant whether or not the scrollbar is
+            actually showing, so switching between short and tall pages doesn't reflow content.
+            overflow-x-hidden keeps a wide table/grid from ever forcing sideways scroll — each
+            Table already scrolls internally. */}
+        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-background [scrollbar-gutter:stable]">
           <DashboardBackdrop />
           <div className="relative z-10 flex min-h-full flex-col">{children}</div>
         </main>

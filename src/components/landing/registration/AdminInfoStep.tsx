@@ -9,10 +9,13 @@ interface AdminInfoStepProps {
 export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground-secondary">
-        This is the account that will manage your agency in RescueEye — approving detections, assigning
-        missions, and adding your team once your registration is approved.
-      </p>
+      <div className="rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
+        <p className="text-xs font-medium text-accent">Agency administrator account</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">
+          This is the account that will manage your agency in RescueEye — approving detections, assigning
+          missions, and adding your team once your registration is approved.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Full Name" htmlFor="admin-name">
