@@ -23,26 +23,83 @@ and [roleRoutes.ts](src/features/auth/roleRoutes.ts).
 
 ## Tech stack
 
+**Frontend:**
 - React 19 + TypeScript, built with Vite
 - React Router 7 for routing
 - TanStack Query for data fetching
 - Tailwind CSS 4 for styling
 - Oxlint for linting
 
+**Backend (in progress):**
+- Node.js with Express/Fastify
+- PostgreSQL (hosted on Supabase)
+- Prisma ORM for database access
+
 ## Getting started
 
+### Prerequisites
+- Node.js 18+
+- A Supabase account (free tier works)
+
+### Setup
+
+**1. Clone and install:**
 ```bash
+git clone <your-repo-url>
+cd "RE RescueEye"
 npm install
+```
+
+**2. Set up database:**
+Create a `.env` file in the root directory:
+```
+DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
+```
+
+Get your connection string from [Supabase](https://supabase.com):
+- Sign in to your project
+- Go to Settings → Database → Connection string
+- Copy the PostgreSQL connection string
+- Replace `[PASSWORD]` and `[HOST]` with your values
+
+**3. Generate Prisma client:**
+```bash
+npx prisma generate
+```
+
+**4. Run dev server:**
+```bash
 npm run dev
 ```
 
-Other scripts:
+### Available scripts
 
 ```bash
+npm run dev      # start dev server
 npm run build    # type-check (tsc -b) and build for production
 npm run preview  # preview the production build locally
-npm run lint      # run oxlint
+npm run lint     # run oxlint
 ```
+
+### Database
+
+Prisma schema is in `prisma/schema.prisma`. To modify the schema:
+
+```bash
+# Update schema.prisma, then:
+npx prisma db push     # sync changes to database
+npx prisma generate    # regenerate TypeScript client
+```
+
+### For teammates
+
+1. Clone this repo
+2. Run `npm install`
+3. Create your own `.env` file with the Supabase `DATABASE_URL`
+   - **Option A:** Use the shared Supabase project (same database as the team)
+   - **Option B:** Create your own Supabase project (isolated testing)
+4. Run `npx prisma generate`
+5. Run `npm run dev`
 
 ## Project structure
 
@@ -63,6 +120,6 @@ src/
 
 ## Status
 
-Data is currently backed by mock stores under [src/state/](src/state/) and
-[src/data/](src/data/) rather than a live API, so the app is fully navigable and
-demoable without a backend.
+**Frontend:** React UI complete and fully navigable with all role-based dashboards.
+
+**Backend:** In progress. Database schema set up on Supabase with Prisma ORM. API endpoints are being built out to replace mock data stores.
