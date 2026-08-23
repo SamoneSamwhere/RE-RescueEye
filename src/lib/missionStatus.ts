@@ -10,7 +10,7 @@ export const ACTIVE_MISSION_STATUSES = new Set<MissionStatus>(['PENDING', 'ACCEP
 
 /**
  * Same as ACTIVE_MISSION_STATUSES plus COMPLETED — used only by the
- * operational map, which shows a responder's most recent mission status
+ * Damage Map, which shows a responder's most recent mission status
  * (including a just-finished one) rather than only in-flight missions.
  */
 export const MAP_VISIBLE_MISSION_STATUSES = new Set<MissionStatus>([

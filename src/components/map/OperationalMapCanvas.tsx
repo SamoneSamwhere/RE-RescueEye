@@ -5,7 +5,7 @@ import type { MapMarker } from './types'
 import type { IncidentPriority } from '../../types/incident'
 import type { MissionStatus } from '../../types/mission'
 
-interface OperationalMapCanvasProps {
+interface DamageMapCanvasProps {
   markers: MapMarker[]
   selectedId: string | null
   onSelect: (marker: MapMarker) => void
@@ -40,7 +40,7 @@ function offsetPercent(pos: { top: string; left: string }, dTop: number, dLeft: 
   return { top: `${top}%`, left: `${left}%` }
 }
 
-export function OperationalMapCanvas({ markers, selectedId, onSelect }: OperationalMapCanvasProps) {
+export function DamageMapCanvas({ markers, selectedId, onSelect }: DamageMapCanvasProps) {
   const bounds = computeBounds(markers.length > 0 ? markers.map((m) => m.location) : [{ lat: 0, lng: 0 }])
 
   return (

@@ -8,7 +8,7 @@ interface MapPreviewPin {
   priority: IncidentPriority
 }
 
-interface OperationalMapPreviewProps {
+interface DamageMapPreviewProps {
   pins: MapPreviewPin[]
   title?: string
   emptyLabel?: string
@@ -54,11 +54,11 @@ function positionFor(id: string): { top: string; left: string } {
  * Preview only — incident locations are not yet tracked in the domain model,
  * so pins are laid out deterministically rather than on real coordinates.
  */
-export function OperationalMapPreview({
+export function DamageMapPreview({
   pins,
-  title = 'Operational Map Preview',
+  title = 'Damage Map Preview',
   emptyLabel = 'No open incidents to display',
-}: OperationalMapPreviewProps) {
+}: DamageMapPreviewProps) {
   return (
     <Panel title={title}>
       {pins.length === 0 ? (

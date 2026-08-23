@@ -14,7 +14,7 @@ The app is organized around four roles, each with its own dashboard and routes:
 
 - **System Admin** — approves/rejects agency registrations, oversees agency status platform-wide.
 - **Agency Admin** — manages an agency's users (creates Command Staff / Field Responder accounts), reviews account status, views mission history.
-- **Command Staff** — reviews AI detections from drone footage, confirms incidents, assigns responders, tracks incidents and drones/media on an operational map.
+- **Command Staff** — reviews AI detections from drone footage, confirms incidents, assigns responders, tracks incidents and drones/media on a Damage Map.
 - **Field Responder** — receives mission assignments, views mission details, updates their profile/location.
 
 Each role has a dedicated data provider (e.g. `CommandStaffDataProvider`) and route

@@ -6,7 +6,7 @@ import { Reveal } from '../components/landing/Reveal'
 import { Panel, Button, Modal, PriorityBadge, Badge, DetectionStatusBadge, EmptyState, DetailField } from '../components/ui'
 import { DetectionMediaPreview } from '../components/detections'
 import { IncidentTimeline } from '../components/incidents'
-import { OperationalMapPreview } from '../components/map'
+import { DamageMapPreview } from '../components/map'
 import { ResponderSelectionPanel } from '../components/responders'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
@@ -169,7 +169,7 @@ export function CommandStaffIncidentDetailPage() {
               </div>
             </Panel>
 
-            <OperationalMapPreview
+            <DamageMapPreview
               title="Incident Location"
               emptyLabel="No location on record"
               pins={[{ id: incident.id, priority: incident.priority }]}

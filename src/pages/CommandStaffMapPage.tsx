@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import { Panel } from '../components/ui'
-import { OperationalMapCanvas, MarkerDetailPanel } from '../components/map'
+import { DamageMapCanvas, MarkerDetailPanel } from '../components/map'
 import type { MapMarker, IncidentMapMarker } from '../components/map'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
@@ -81,13 +81,13 @@ export function CommandStaffMapPage() {
   return (
     <>
       <PageHeader
-        title="Operational Map"
+        title="Damage Map"
         description="Confirmed incidents, AI detections, and Field Responder positions for your agency."
       />
 
       <Reveal className="grid grid-cols-1 gap-4 px-4 py-4 xl:grid-cols-[1fr_320px]">
-        <Panel title={`Operational Map (${markers.length} markers)`}>
-          <OperationalMapCanvas
+        <Panel title={`Damage Map (${markers.length} markers)`}>
+          <DamageMapCanvas
             markers={markers}
             selectedId={selectedId}
             onSelect={(marker) => setSelectedId(marker.id)}

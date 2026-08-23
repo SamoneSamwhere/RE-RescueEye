@@ -14,7 +14,7 @@ import type {
   MissionListItem,
   ResponderStatusItem,
 } from '../components/dashboard'
-import { OperationalMapPreview } from '../components/map'
+import { DamageMapPreview } from '../components/map'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'
@@ -139,7 +139,7 @@ export function CommandStaffDashboardPage() {
 
         <Reveal delayMs={300}>
           <div className="grid grid-cols-1 gap-4">
-            <OperationalMapPreview pins={data.mapPins} />
+            <DamageMapPreview pins={data.mapPins} />
           </div>
         </Reveal>
       </div>
