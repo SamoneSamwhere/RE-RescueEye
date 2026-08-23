@@ -77,7 +77,6 @@ export function AgencyAdminDashboardPage() {
               icon={Bot}
               tone={dronesOnlineCount === agencyDrones.length ? 'success' : 'warning'}
             />
-            <StatTile label="Incidents Handled" value={agencyIncidents.length} icon={History} tone="info" />
           </div>
         </Reveal>
 
