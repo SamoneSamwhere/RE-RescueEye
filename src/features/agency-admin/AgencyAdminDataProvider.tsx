@@ -16,13 +16,21 @@ export type CreatableUserRole = Extract<UserRole, 'COMMAND_STAFF' | 'FIELD_RESPO
 export interface CreateUserInput {
   name: string
   email: string
+  phone?: string
   password: string
   role: CreatableUserRole
 }
 
-export type CreateUserResult = { ok: true } | { ok: false; error: string }
+export type CreateUserResult = { ok: true; userId: string } | { ok: false; error: string }
 
-export interface MissionHistoryItem {
+/**
+ * One agency response record — a Field Responder's dispatch to a verified
+ * incident. Built from the shared Mission store, but named/shaped around
+ * "incident response" since Agency Admins think in incidents, not the
+ * internal dispatch-record ("mission") terminology Command Staff/Field
+ * Responder screens use.
+ */
+export interface IncidentHistoryItem {
   id: string
   responderName: string
   incidentPriority?: IncidentPriority
@@ -33,7 +41,7 @@ export interface MissionHistoryItem {
 
 interface AgencyAdminDataContextValue {
   agencyUsers: MockUser[]
-  missionHistory: MissionHistoryItem[]
+  incidentHistory: IncidentHistoryItem[]
   createUser: (input: CreateUserInput) => CreateUserResult
   setUserStatus: (userId: string, status: UserAccountStatus) => void
 }
@@ -63,7 +71,7 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
     [users, agencyId],
   )
 
-  const missionHistory = useMemo<MissionHistoryItem[]>(() => {
+  const incidentHistory = useMemo<IncidentHistoryItem[]>(() => {
     const responderIds = new Set(agencyUsers.filter((u) => u.role === 'FIELD_RESPONDER').map((u) => u.id))
     return missions
       .filter((mission) => responderIds.has(mission.responderUserId))
@@ -95,6 +103,7 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
       id: generateId('usr'),
       name: input.name.trim(),
       email: input.email.trim(),
+      phone: input.phone?.trim() || undefined,
       password: input.password,
       role: input.role,
       agencyId,
@@ -103,7 +112,7 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
       createdByUserId: session.id,
     }
     addUser(newUser)
-    return { ok: true }
+    return { ok: true, userId: newUser.id }
   }
 
   function setUserStatus(userId: string, status: UserAccountStatus) {
@@ -111,7 +120,7 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AgencyAdminDataContext.Provider value={{ agencyUsers, missionHistory, createUser, setUserStatus }}>
+    <AgencyAdminDataContext.Provider value={{ agencyUsers, incidentHistory, createUser, setUserStatus }}>
       {children}
     </AgencyAdminDataContext.Provider>
   )

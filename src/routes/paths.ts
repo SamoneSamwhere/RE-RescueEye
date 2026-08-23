@@ -9,7 +9,7 @@ export const ROUTES = {
   agencyAdmin: '/agency-admin',
   agencyAdminUserCreation: '/agency-admin/users/new',
   agencyAdminAccountStatus: '/agency-admin/users',
-  agencyAdminMissionHistory: '/agency-admin/mission-history',
+  agencyAdminIncidentHistory: '/agency-admin/incident-history',
   commandStaff: '/command-staff',
   commandStaffMedia: '/command-staff/drones-media',
   commandStaffLiveMonitoring: '/command-staff/live-monitoring',

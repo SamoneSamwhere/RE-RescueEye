@@ -19,7 +19,7 @@ import { FieldResponderMissionDetailPage } from '../pages/FieldResponderMissionD
 import { AgencyAdminDashboardPage } from '../pages/AgencyAdminDashboardPage'
 import { AgencyAdminUserCreationPage } from '../pages/AgencyAdminUserCreationPage'
 import { AgencyAdminAccountStatusPage } from '../pages/AgencyAdminAccountStatusPage'
-import { AgencyAdminMissionHistoryPage } from '../pages/AgencyAdminMissionHistoryPage'
+import { AgencyAdminIncidentHistoryPage } from '../pages/AgencyAdminIncidentHistoryPage'
 import { ProtectedRoute, RootRedirect } from '../features/auth'
 import { CommandStaffDataProvider } from '../features/command-staff'
 import { FieldResponderDataProvider } from '../features/field-responder'
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.agencyAdmin, element: <AgencyAdminDashboardPage /> },
           { path: ROUTES.agencyAdminUserCreation, element: <AgencyAdminUserCreationPage /> },
           { path: ROUTES.agencyAdminAccountStatus, element: <AgencyAdminAccountStatusPage /> },
-          { path: ROUTES.agencyAdminMissionHistory, element: <AgencyAdminMissionHistoryPage /> },
+          { path: ROUTES.agencyAdminIncidentHistory, element: <AgencyAdminIncidentHistoryPage /> },
         ],
       },
       {
