@@ -1,23 +1,25 @@
-import { Loader2, Radio, Video } from 'lucide-react'
-import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Button, StatusIndicator, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { Radio } from 'lucide-react'
+import { Panel, Button, EmptyState } from '../ui'
+import { DroneCard } from './DroneCard'
 import type { Drone } from '../../types/drone'
 
 interface DroneListProps {
   drones: Drone[]
   connectingDroneId: string | null
-  selectedDroneId: string | null
+  liveDroneIds: string[]
   onConnect: (droneId: string) => void
   onSelectFeedSource: (droneId: string) => void
+  onViewLive: () => void
   onRegisterClick: () => void
 }
 
 export function DroneList({
   drones,
   connectingDroneId,
-  selectedDroneId,
+  liveDroneIds,
   onConnect,
   onSelectFeedSource,
+  onViewLive,
   onRegisterClick,
 }: DroneListProps) {
   return (
@@ -41,59 +43,19 @@ export function DroneList({
           }
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Drone</TableHead>
-              <TableHead>Serial</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Connected</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {drones.map((drone) => {
-              const isConnecting = connectingDroneId === drone.id
-              const isConnected = drone.connectionStatus === 'CONNECTED'
-              const isSelected = selectedDroneId === drone.id
-
-              return (
-                <TableRow key={drone.id} className={isSelected ? 'bg-accent-subtle/40' : undefined}>
-                  <TableCell className="font-medium text-foreground">{drone.name}</TableCell>
-                  <TableCell className="font-mono text-foreground-secondary">{drone.serialNumber}</TableCell>
-                  <TableCell>
-                    {isConnecting ? (
-                      <span className="inline-flex items-center gap-1.5 text-sm text-foreground-secondary">
-                        <Loader2 className="size-3.5 animate-spin" />
-                        Connecting…
-                      </span>
-                    ) : (
-                      <StatusIndicator
-                        tone={isConnected ? 'success' : 'neutral'}
-                        label={isConnected ? 'Connected' : 'Disconnected'}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-foreground-secondary">
-                    {drone.lastConnectedAt ? formatDateTime(drone.lastConnectedAt) : '—'}
-                  </TableCell>
-                  <TableCell>
-                    {isConnected ? (
-                      <Button size="sm" variant={isSelected ? 'secondary' : 'outline'} onClick={() => onSelectFeedSource(drone.id)}>
-                        <Video className="size-3.5" />
-                        Select Feed Source
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="outline" disabled={isConnecting} onClick={() => onConnect(drone.id)}>
-                        {isConnecting ? 'Connecting…' : 'Connect'}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {drones.map((drone) => (
+            <DroneCard
+              key={drone.id}
+              drone={drone}
+              isConnecting={connectingDroneId === drone.id}
+              isLive={liveDroneIds.includes(drone.id)}
+              onConnect={onConnect}
+              onSelectFeedSource={onSelectFeedSource}
+              onViewLive={onViewLive}
+            />
+          ))}
+        </div>
       )}
     </Panel>
   )

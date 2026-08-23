@@ -11,11 +11,13 @@ export const ROUTES = {
   agencyAdminMissionHistory: '/agency-admin/mission-history',
   commandStaff: '/command-staff',
   commandStaffMedia: '/command-staff/drones-media',
+  commandStaffLiveMonitoring: '/command-staff/live-monitoring',
   commandStaffDetections: '/command-staff/detections',
   commandStaffIncidents: '/command-staff/incidents',
   commandStaffIncidentDetail: '/command-staff/incidents/:incidentId',
   commandStaffMap: '/command-staff/map',
   fieldResponder: '/field-responder',
+  fieldResponderMap: '/field-responder/map',
   fieldResponderProfile: '/field-responder/profile',
   fieldResponderMissionDetail: '/field-responder/mission/:missionId',
 } as const

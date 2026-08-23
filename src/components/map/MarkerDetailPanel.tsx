@@ -23,9 +23,11 @@ function DetailRow({ label, children }: DetailRowProps) {
 
 interface MarkerDetailPanelProps {
   marker: MapMarker | null
+  /** Command Staff can jump to the full incident record; Field Responders have no route for it, so hide the link there. */
+  showIncidentLink?: boolean
 }
 
-export function MarkerDetailPanel({ marker }: MarkerDetailPanelProps) {
+export function MarkerDetailPanel({ marker, showIncidentLink = true }: MarkerDetailPanelProps) {
   if (!marker) {
     return (
       <Panel title="Marker Details">
@@ -51,13 +53,15 @@ export function MarkerDetailPanel({ marker }: MarkerDetailPanelProps) {
             {marker.location.lat.toFixed(4)}, {marker.location.lng.toFixed(4)}
           </DetailRow>
           <DetailRow label="Verified">{formatDateTime(marker.verifiedAt)}</DetailRow>
-          <Link
-            to={commandStaffIncidentDetailPath(marker.incidentId)}
-            className="mt-1 flex items-center justify-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-2 text-sm font-medium text-foreground-inverse hover:bg-accent-hover"
-          >
-            View Incident Details
-            <ArrowRight className="size-3.5" />
-          </Link>
+          {showIncidentLink ? (
+            <Link
+              to={commandStaffIncidentDetailPath(marker.incidentId)}
+              className="mt-1 flex items-center justify-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-2 text-sm font-medium text-foreground-inverse hover:bg-accent-hover"
+            >
+              View Incident Details
+              <ArrowRight className="size-3.5" />
+            </Link>
+          ) : null}
         </div>
       </Panel>
     )

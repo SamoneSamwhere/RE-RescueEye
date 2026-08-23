@@ -36,6 +36,8 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
 
   if (!open) return null
 
+  const portalTarget = document.querySelector<HTMLElement>('[data-theme]') ?? document.body
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-surface-inverse/40 p-4 motion-safe:animate-fade-in"
@@ -71,6 +73,6 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
         ) : null}
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }

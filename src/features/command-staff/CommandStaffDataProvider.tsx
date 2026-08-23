@@ -11,12 +11,14 @@ import type { Mission } from '../../types/mission'
 import type { MediaAsset, MediaSourceType } from '../../types/media'
 import type { GeoPoint } from '../../types/geo'
 import type { Notification } from '../../types/notification'
+import type { Drone } from '../../types/drone'
 import { useAuth } from '../auth'
 import { useMissionStore } from '../../state/MissionStore'
 import { useIncidentStore } from '../../state/IncidentStore'
 import { useDetectionStore } from '../../state/DetectionStore'
 import { useMediaAssetStore } from '../../state/MediaAssetStore'
 import { useNotificationStore } from '../../state/NotificationStore'
+import { useDroneStore } from '../../state/DroneStore'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
 const DEFAULT_AREA_CENTER: GeoPoint = { lat: 37.775, lng: -122.42 }
@@ -27,12 +29,18 @@ interface CommandStaffDataContextValue {
   missions: Mission[]
   mediaAssets: MediaAsset[]
   notifications: Notification[]
+  drones: Drone[]
+  liveDroneIds: string[]
   verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => void
   rejectDetection: (detectionId: string, notes: string) => void
   updateIncidentPriority: (incidentId: string, priority: IncidentPriority) => void
   dispatchIncident: (incidentId: string, responderUserId: string) => Mission | null
   closeIncident: (incidentId: string) => void
   captureMedia: (sourceType: MediaSourceType, droneId: string | undefined, fileName?: string) => Detection
+  registerDrone: (input: { name: string; serialNumber: string }) => void
+  connectDrone: (droneId: string) => void
+  startLiveFeed: (droneId: string) => void
+  stopLiveFeed: (droneId: string) => void
 }
 
 const CommandStaffDataContext = createContext<CommandStaffDataContextValue | undefined>(undefined)
@@ -56,6 +64,14 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   const { detections: allDetections, addDetection, updateDetection } = useDetectionStore()
   const { mediaAssets: allMediaAssets, addMediaAsset } = useMediaAssetStore()
   const { notifications: allNotifications, addNotification } = useNotificationStore()
+  const {
+    drones: allDrones,
+    liveDroneIds: allLiveDroneIds,
+    addDrone,
+    updateDrone,
+    startLiveFeed,
+    stopLiveFeed,
+  } = useDroneStore()
 
   const mediaAssets = useMemo(
     () => allMediaAssets.filter((m) => m.agencyId === agencyId),
@@ -85,6 +101,11 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
         return recipient?.agencyId === agencyId
       }),
     [allNotifications, agencyId],
+  )
+  const drones = useMemo(() => allDrones.filter((d) => d.agencyId === agencyId), [allDrones, agencyId])
+  const liveDroneIds = useMemo(
+    () => allLiveDroneIds.filter((droneId) => drones.some((d) => d.id === droneId)),
+    [allLiveDroneIds, drones],
   )
 
   /**
@@ -253,6 +274,22 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     updateIncident(incidentId, { status: 'CLOSED', closedByUserId: session.id, closedAt: now().toISOString() })
   }
 
+  function registerDrone(input: { name: string; serialNumber: string }) {
+    if (!agencyId) return
+    addDrone({
+      id: generateId('drone'),
+      agencyId,
+      name: input.name,
+      serialNumber: input.serialNumber,
+      connectionStatus: 'DISCONNECTED',
+      registeredAt: now().toISOString(),
+    })
+  }
+
+  function connectDrone(droneId: string) {
+    updateDrone(droneId, { connectionStatus: 'CONNECTED', lastConnectedAt: now().toISOString() })
+  }
+
   return (
     <CommandStaffDataContext.Provider
       value={{
@@ -261,12 +298,18 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
         missions,
         mediaAssets,
         notifications,
+        drones,
+        liveDroneIds,
         verifyDetection,
         rejectDetection,
         updateIncidentPriority,
         dispatchIncident,
         closeIncident,
         captureMedia,
+        registerDrone,
+        connectDrone,
+        startLiveFeed,
+        stopLiveFeed,
       }}
     >
       {children}

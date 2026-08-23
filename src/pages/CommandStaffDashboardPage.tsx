@@ -117,6 +117,12 @@ export function CommandStaffDashboardPage() {
 
       <div className="flex flex-col gap-6 px-4 py-4">
         <Reveal>
+          <div className="grid grid-cols-1 gap-4">
+            <DamageMapPreview pins={data.mapPins} />
+          </div>
+        </Reveal>
+
+        <Reveal delayMs={100}>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
             <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
@@ -124,22 +130,16 @@ export function CommandStaffDashboardPage() {
           </div>
         </Reveal>
 
-        <Reveal delayMs={100}>
+        <Reveal delayMs={200}>
           <div className="grid grid-cols-1 gap-4">
             <PendingDetectionsPanel detections={data.pendingDetections} />
           </div>
         </Reveal>
 
-        <Reveal delayMs={200}>
+        <Reveal delayMs={300}>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <ActiveMissionsPanel missions={data.activeMissions} />
             <ResponderStatusPanel responders={data.responderStatus} />
-          </div>
-        </Reveal>
-
-        <Reveal delayMs={300}>
-          <div className="grid grid-cols-1 gap-4">
-            <DamageMapPreview pins={data.mapPins} />
           </div>
         </Reveal>
       </div>

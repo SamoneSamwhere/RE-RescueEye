@@ -1,61 +1,37 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Sparkles, ArrowRight } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import { DroneList, RegisterDroneModal } from '../components/drones'
-import { FeedSourceSelector, LiveFeedPlaceholder, UploadVideoPlaceholder, MediaHistoryTable } from '../components/media'
+import { FeedModal, MediaHistoryTable } from '../components/media'
 import type { MediaHistoryItem } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
-import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
-import { now } from '../lib/now'
-import { generateId } from '../lib/id'
 import { ROUTES } from '../routes/paths'
-import type { Drone } from '../types/drone'
 import type { MediaSourceType } from '../types/media'
 
 const CONNECT_DELAY_MS = 800
 
 export function CommandStaffDronesMediaPage() {
+  const navigate = useNavigate()
   const { session } = useAuth()
-  const { mediaAssets, captureMedia } = useCommandStaffData()
-  const agencyId = session?.agencyId
+  const { drones, liveDroneIds, mediaAssets, registerDrone, connectDrone, startLiveFeed, captureMedia } =
+    useCommandStaffData()
 
-  const [drones, setDrones] = useState<Drone[]>(() => mockDrones.filter((d) => d.agencyId === agencyId))
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)
-  const [isLive, setIsLive] = useState(false)
   const [detectionCreated, setDetectionCreated] = useState(false)
 
   const selectedDrone = drones.find((d) => d.id === selectedDroneId) ?? null
 
-  function handleRegister(input: { name: string; serialNumber: string }) {
-    if (!agencyId) return
-    const newDrone: Drone = {
-      id: generateId('drone'),
-      agencyId,
-      name: input.name,
-      serialNumber: input.serialNumber,
-      connectionStatus: 'DISCONNECTED',
-      registeredAt: now().toISOString(),
-    }
-    setDrones((prev) => [...prev, newDrone])
-  }
-
   function handleConnect(droneId: string) {
     setConnectingDroneId(droneId)
     window.setTimeout(() => {
-      setDrones((prev) =>
-        prev.map((drone) =>
-          drone.id === droneId
-            ? { ...drone, connectionStatus: 'CONNECTED', lastConnectedAt: now().toISOString() }
-            : drone,
-        ),
-      )
+      connectDrone(droneId)
       setConnectingDroneId(null)
     }, CONNECT_DELAY_MS)
   }
@@ -63,15 +39,20 @@ export function CommandStaffDronesMediaPage() {
   function handleSelectFeedSource(droneId: string) {
     setSelectedDroneId(droneId)
     setFeedSource(null)
-    setIsLive(false)
     setDetectionCreated(false)
   }
 
-  /** Live Feed frame -> mock AI Detection, ready for Detection Review. */
-  function handleSaveLiveToHistory() {
+  function handleCloseFeedModal() {
+    setSelectedDroneId(null)
+    setFeedSource(null)
+  }
+
+  /** Hands the feed off to the dedicated Live Monitoring screen instead of streaming it inline. */
+  function handleStartLiveFeed() {
     if (!selectedDrone) return
-    captureMedia('LIVE_FEED', selectedDrone.id)
-    setDetectionCreated(true)
+    startLiveFeed(selectedDrone.id)
+    handleCloseFeedModal()
+    navigate(ROUTES.commandStaffLiveMonitoring)
   }
 
   /** Uploaded video -> mock AI Detection, ready for Detection Review. */
@@ -79,6 +60,7 @@ export function CommandStaffDronesMediaPage() {
     if (!selectedDrone) return
     captureMedia('UPLOADED_VIDEO', selectedDrone.id, fileName)
     setDetectionCreated(true)
+    handleCloseFeedModal()
   }
 
   const mediaHistoryItems: MediaHistoryItem[] = useMemo(() => {
@@ -111,29 +93,13 @@ export function CommandStaffDronesMediaPage() {
           <DroneList
             drones={drones}
             connectingDroneId={connectingDroneId}
-            selectedDroneId={selectedDroneId}
+            liveDroneIds={liveDroneIds}
             onConnect={handleConnect}
             onSelectFeedSource={handleSelectFeedSource}
+            onViewLive={() => navigate(ROUTES.commandStaffLiveMonitoring)}
             onRegisterClick={() => setRegisterModalOpen(true)}
           />
         </Reveal>
-
-        {selectedDrone ? (
-          <FeedSourceSelector droneName={selectedDrone.name} selected={feedSource} onSelect={setFeedSource} />
-        ) : null}
-
-        {selectedDrone && feedSource === 'LIVE_FEED' ? (
-          <LiveFeedPlaceholder
-            droneName={selectedDrone.name}
-            isLive={isLive}
-            onToggleLive={() => setIsLive((v) => !v)}
-            onSaveToHistory={handleSaveLiveToHistory}
-          />
-        ) : null}
-
-        {selectedDrone && feedSource === 'UPLOADED_VIDEO' ? (
-          <UploadVideoPlaceholder droneName={selectedDrone.name} onUpload={handleUploadVideo} />
-        ) : null}
 
         {detectionCreated ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-accent-border bg-accent-subtle px-3 py-2 text-sm text-foreground">
@@ -159,9 +125,22 @@ export function CommandStaffDronesMediaPage() {
       <RegisterDroneModal
         open={registerModalOpen}
         onClose={() => setRegisterModalOpen(false)}
-        onRegister={handleRegister}
+        onRegister={registerDrone}
         existingSerialNumbers={drones.map((d) => d.serialNumber)}
       />
+
+      {selectedDrone ? (
+        <FeedModal
+          open={!!selectedDrone}
+          onClose={handleCloseFeedModal}
+          droneName={selectedDrone.name}
+          isConnected={selectedDrone.connectionStatus === 'CONNECTED'}
+          feedSource={feedSource}
+          onSelectFeedSource={setFeedSource}
+          onStartLiveFeed={handleStartLiveFeed}
+          onUploadVideo={handleUploadVideo}
+        />
+      ) : null}
     </>
   )
 }

@@ -10,6 +10,7 @@ import { IncidentStoreProvider } from '../state/IncidentStore'
 import { DetectionStoreProvider } from '../state/DetectionStore'
 import { MediaAssetStoreProvider } from '../state/MediaAssetStore'
 import { NotificationStoreProvider } from '../state/NotificationStore'
+import { DroneStoreProvider } from '../state/DroneStore'
 
 function App() {
   return (
@@ -17,17 +18,19 @@ function App() {
       <UserStoreProvider>
         <AgencyStoreProvider>
           <AuthProvider>
-            <MediaAssetStoreProvider>
-              <DetectionStoreProvider>
-                <IncidentStoreProvider>
-                  <MissionStoreProvider>
-                    <NotificationStoreProvider>
-                      <RouterProvider router={router} />
-                    </NotificationStoreProvider>
-                  </MissionStoreProvider>
-                </IncidentStoreProvider>
-              </DetectionStoreProvider>
-            </MediaAssetStoreProvider>
+            <DroneStoreProvider>
+              <MediaAssetStoreProvider>
+                <DetectionStoreProvider>
+                  <IncidentStoreProvider>
+                    <MissionStoreProvider>
+                      <NotificationStoreProvider>
+                        <RouterProvider router={router} />
+                      </NotificationStoreProvider>
+                    </MissionStoreProvider>
+                  </IncidentStoreProvider>
+                </DetectionStoreProvider>
+              </MediaAssetStoreProvider>
+            </DroneStoreProvider>
           </AuthProvider>
         </AgencyStoreProvider>
       </UserStoreProvider>

@@ -7,11 +7,18 @@ interface LiveFeedPlaceholderProps {
   isLive: boolean
   onToggleLive: () => void
   onSaveToHistory: () => void
+  title?: string
 }
 
-export function LiveFeedPlaceholder({ droneName, isLive, onToggleLive, onSaveToHistory }: LiveFeedPlaceholderProps) {
+export function LiveFeedPlaceholder({
+  droneName,
+  isLive,
+  onToggleLive,
+  onSaveToHistory,
+  title = 'Live Feed',
+}: LiveFeedPlaceholderProps) {
   return (
-    <Panel title="Live Feed">
+    <Panel title={title}>
       <div className="flex flex-col gap-3">
         <div className="relative flex h-56 flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-border bg-surface-inverse">
           {isLive ? (

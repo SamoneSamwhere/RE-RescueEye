@@ -6,11 +6,13 @@ import { SystemAdminAgencyValidationPage } from '../pages/SystemAdminAgencyValid
 import { SystemAdminAgencyStatusPage } from '../pages/SystemAdminAgencyStatusPage'
 import { CommandStaffDashboardPage } from '../pages/CommandStaffDashboardPage'
 import { CommandStaffDronesMediaPage } from '../pages/CommandStaffDronesMediaPage'
+import { CommandStaffLiveMonitoringPage } from '../pages/CommandStaffLiveMonitoringPage'
 import { CommandStaffDetectionReviewPage } from '../pages/CommandStaffDetectionReviewPage'
 import { CommandStaffIncidentsPage } from '../pages/CommandStaffIncidentsPage'
 import { CommandStaffIncidentDetailPage } from '../pages/CommandStaffIncidentDetailPage'
 import { CommandStaffMapPage } from '../pages/CommandStaffMapPage'
 import { FieldResponderHomePage } from '../pages/FieldResponderHomePage'
+import { FieldResponderMapPage } from '../pages/FieldResponderMapPage'
 import { FieldResponderProfilePage } from '../pages/FieldResponderProfilePage'
 import { FieldResponderMissionDetailPage } from '../pages/FieldResponderMissionDetailPage'
 import { AgencyAdminDashboardPage } from '../pages/AgencyAdminDashboardPage'
@@ -82,6 +84,7 @@ export const router = createBrowserRouter([
         children: [
           { path: ROUTES.commandStaff, element: <CommandStaffDashboardPage /> },
           { path: ROUTES.commandStaffMedia, element: <CommandStaffDronesMediaPage /> },
+          { path: ROUTES.commandStaffLiveMonitoring, element: <CommandStaffLiveMonitoringPage /> },
           { path: ROUTES.commandStaffDetections, element: <CommandStaffDetectionReviewPage /> },
           { path: ROUTES.commandStaffIncidents, element: <CommandStaffIncidentsPage /> },
           { path: ROUTES.commandStaffIncidentDetail, element: <CommandStaffIncidentDetailPage /> },
@@ -98,6 +101,7 @@ export const router = createBrowserRouter([
         ),
         children: [
           { path: ROUTES.fieldResponder, element: <FieldResponderHomePage /> },
+          { path: ROUTES.fieldResponderMap, element: <FieldResponderMapPage /> },
           { path: ROUTES.fieldResponderProfile, element: <FieldResponderProfilePage /> },
           { path: ROUTES.fieldResponderMissionDetail, element: <FieldResponderMissionDetailPage /> },
         ],
