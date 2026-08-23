@@ -101,7 +101,7 @@ export function HeroSection() {
             className="inline-block transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
           >
             <Button size="lg" className="gap-2 px-6">
-              Get Started
+              Register Agency
               <ArrowRight className="size-4" />
             </Button>
           </Link>

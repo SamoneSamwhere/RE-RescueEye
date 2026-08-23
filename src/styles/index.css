@@ -1,6 +1,27 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+@layer utilities {
+  @keyframes pan-horizontal {
+    0% {
+      right: 35%;
+      transform: translateY(-50%);
+    }
+    50% {
+      right: 17.5%;
+      transform: translateY(-50%);
+    }
+    100% {
+      right: 0;
+      transform: translateY(-50%);
+    }
+  }
+
+  .animate-pan-horizontal {
+    animation: pan-horizontal 8s ease-in-out infinite alternate;
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-sans);
