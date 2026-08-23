@@ -1,0 +1,330 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Platform-level admin
+model PlatformAdmin {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique @db.VarChar(120)
+  passwordHash String  @db.VarChar(255)
+  name      String    @db.VarChar(100)
+  createdAt DateTime  @default(now())
+  lastLogin DateTime?
+
+  validatedAgencies Agency[]
+
+  @@map("platform_admin")
+}
+
+// Organizations subscribing to the platform
+model Agency {
+  id                 Int       @id @default(autoincrement())
+  name               String    @db.VarChar(100)
+  registrationStatus RegistrationStatus @default(PENDING)
+  subscriptionStatus SubscriptionStatus @default(ACTIVE)
+  createdBy          Int
+  createdAt          DateTime  @default(now())
+  validatedBy        Int?
+  validatedAt        DateTime?
+
+  creator            User      @relation("AgencyCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  validator          PlatformAdmin? @relation(fields: [validatedBy], references: [id], onDelete: SetNull)
+  users              User[]
+  drones             Drone[]
+  incidents          Incident[]
+
+  @@map("agency")
+}
+
+// User accounts (Agency Admin, Command Staff, Field Responder)
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(120)
+  passwordHash String    @db.VarChar(255)
+  name         String    @db.VarChar(100)
+  phone        String?   @db.VarChar(20)
+  role         UserRole
+  agencyId     Int
+  active       Boolean   @default(true)
+  dutyStatus   DutyStatus @default(AVAILABLE)
+  createdAt    DateTime  @default(now())
+  lastLogin    DateTime?
+
+  agency              Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  createdAgencies     Agency[]  @relation("AgencyCreator")
+  dronesAdded         Drone[]
+  detectionsReviewed  Detection[]
+  incidentsReported   Incident[]
+  responses           Response[]
+  mediaUploaded       Media[]
+  alertsReceived      Alert[]
+
+  @@index([agencyId])
+  @@map("user")
+}
+
+// Drone units capturing video feeds
+model Drone {
+  id          Int       @id @default(autoincrement())
+  callsign    String    @db.VarChar(50)
+  status      DroneStatus
+  addedBy     Int
+  lastLat     Float?
+  lastLng     Float?
+  lastFeedAt  DateTime?
+  agencyId    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  operator    User      @relation(fields: [addedBy], references: [id], onDelete: Restrict)
+  agency      Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  detections  Detection[]
+
+  @@index([addedBy])
+  @@index([agencyId])
+  @@map("drone")
+}
+
+// AI model detections from drone feeds
+model Detection {
+  id              Int       @id @default(autoincrement())
+  droneId         Int
+  detectionClass  DetectionClass
+  confidence      Decimal   @db.Decimal(5, 4)
+  bboxJson        String    // [x, y, w, h]
+  modelName       String    @db.VarChar(50)
+  modelVersion    String    @db.VarChar(20)
+  lat             Float
+  lng             Float
+  timestamp       DateTime
+  reviewStatus    ReviewStatus @default(PENDING)
+  reviewedBy      Int?
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  drone           Drone     @relation(fields: [droneId], references: [id], onDelete: Cascade)
+  reviewer        User?     @relation(fields: [reviewedBy], references: [id], onDelete: SetNull)
+  incidents       Incident[]
+  media           Media[]
+
+  @@index([droneId])
+  @@index([reviewedBy])
+  @@map("detection")
+}
+
+// Confirmed incidents from detections or direct reports
+model Incident {
+  id              Int       @id @default(autoincrement())
+  detectionId     Int?
+  agencyId        Int
+  incidentType    IncidentType
+  severity        Severity
+  status          IncidentStatus @default(OPEN)
+  lat             Float
+  lng             Float
+  description     String?   @db.VarChar(500)
+  reportedBy      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  detection       Detection? @relation(fields: [detectionId], references: [id], onDelete: SetNull)
+  agency          Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  reporter        User      @relation(fields: [reportedBy], references: [id], onDelete: Restrict)
+  responses       Response[]
+  alerts          Alert[]
+  media           Media[]
+
+  @@index([detectionId])
+  @@index([agencyId])
+  @@index([reportedBy])
+  @@map("incident")
+}
+
+
+// Individual responder response to incident
+model Response {
+  id              Int       @id @default(autoincrement())
+  incidentId      Int
+  userId          Int
+  responseStatus  ResponseStatus @default(ASSIGNED)
+  notes           String?   @db.VarChar(500)
+  assignedAt      DateTime  @default(now())
+  acceptedAt      DateTime?
+  arrivedAt       DateTime?
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  incident        Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  responder       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([incidentId])
+  @@index([userId])
+  @@map("response")
+}
+
+// Alerts sent to responders
+model Alert {
+  id              Int       @id @default(autoincrement())
+  incidentId      Int
+  recipientId     Int
+  alertType       AlertType
+  message         String    @db.VarChar(300)
+  status          AlertStatus @default(SENT)
+  sentAt          DateTime  @default(now())
+  acknowledgedAt  DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  incident        Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  recipient       User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@index([recipientId])
+  @@map("alert")
+}
+
+// Media: video files and attachments
+model Media {
+  id              Int       @id @default(autoincrement())
+  detectionId     Int?
+  incidentId      Int?
+  url             String    @db.VarChar(500)
+  uploadedBy      Int
+  uploadedAt      DateTime  @default(now())
+
+  detection       Detection? @relation(fields: [detectionId], references: [id], onDelete: SetNull)
+  incident        Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  uploader        User      @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@index([detectionId])
+  @@index([incidentId])
+  @@index([uploadedBy])
+  @@map("media")
+}
+
+// Audit trail for all entity changes
+model AuditHistory {
+  id              Int       @id @default(autoincrement())
+  entityType      EntityType
+  entityId        Int
+  fieldChanged    String    @db.VarChar(50)
+  oldValue        String?   @db.VarChar(500)
+  newValue        String?   @db.VarChar(500)
+  changedBy       Int
+  changedByType   ActorType
+  changedAt       DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([changedBy])
+  @@map("audit_history")
+}
+
+// Enums
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+enum UserRole {
+  AGENCY_ADMIN
+  COMMAND_STAFF
+  FIELD_RESPONDER
+}
+
+enum DutyStatus {
+  AVAILABLE
+  ON_DUTY
+  OFF_DUTY
+}
+
+enum DroneStatus {
+  ACTIVE
+  IDLE
+  OFFLINE
+}
+
+enum DetectionClass {
+  CASUALTY
+  DAMAGE_MINOR
+  DAMAGE_MAJOR
+  DAMAGE_SEVERE
+}
+
+enum ReviewStatus {
+  PENDING
+  VALID
+  FALSE_POSITIVE
+}
+
+enum IncidentType {
+  VICTIM_DETECTED
+  FLOOD
+  FIRE
+  STRUCTURAL
+  UNKNOWN
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum IncidentStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum ResponseStatus {
+  ASSIGNED
+  ACCEPTED
+  DECLINED
+  EN_ROUTE
+  ON_SITE
+  COMPLETED
+}
+
+enum AlertType {
+  SMS
+  PUSH
+  DASHBOARD
+}
+
+enum AlertStatus {
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum EntityType {
+  INCIDENT
+  RESPONSE
+  ALERT
+  DETECTION
+  AGENCY
+}
+
+enum ActorType {
+  USER
+  ADMIN
+}
