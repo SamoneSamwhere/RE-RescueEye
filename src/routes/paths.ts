@@ -4,6 +4,7 @@ export const ROUTES = {
   unauthorized: '/unauthorized',
   systemAdmin: '/system-admin',
   systemAdminAgencyValidation: '/system-admin/agencies/validation',
+  systemAdminAgencyValidationDetail: '/system-admin/agencies/validation/:agencyId',
   systemAdminAgencyStatus: '/system-admin/agencies/status',
   agencyAdmin: '/agency-admin',
   agencyAdminUserCreation: '/agency-admin/users/new',
@@ -24,6 +25,10 @@ export const ROUTES = {
 
 export function commandStaffIncidentDetailPath(incidentId: string): string {
   return `/command-staff/incidents/${incidentId}`
+}
+
+export function systemAdminAgencyValidationDetailPath(agencyId: string): string {
+  return `/system-admin/agencies/validation/${agencyId}`
 }
 
 export function fieldResponderMissionDetailPath(missionId: string): string {

@@ -3,6 +3,7 @@ import { AuthPage } from '../pages/AuthPage'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 import { SystemAdminDashboardPage } from '../pages/SystemAdminDashboardPage'
 import { SystemAdminAgencyValidationPage } from '../pages/SystemAdminAgencyValidationPage'
+import { SystemAdminAgencyValidationDetailPage } from '../pages/SystemAdminAgencyValidationDetailPage'
 import { SystemAdminAgencyStatusPage } from '../pages/SystemAdminAgencyStatusPage'
 import { CommandStaffDashboardPage } from '../pages/CommandStaffDashboardPage'
 import { CommandStaffDronesMediaPage } from '../pages/CommandStaffDronesMediaPage'
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
         children: [
           { path: ROUTES.systemAdmin, element: <SystemAdminDashboardPage /> },
           { path: ROUTES.systemAdminAgencyValidation, element: <SystemAdminAgencyValidationPage /> },
+          { path: ROUTES.systemAdminAgencyValidationDetail, element: <SystemAdminAgencyValidationDetailPage /> },
           { path: ROUTES.systemAdminAgencyStatus, element: <SystemAdminAgencyStatusPage /> },
         ],
       },

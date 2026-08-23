@@ -1,14 +1,16 @@
 import type { ReactNode } from 'react'
-import { Building2, Mail, Phone, Clock, Check, X, RotateCcw } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Building2, Mail, Phone, Clock, RotateCcw, Search } from 'lucide-react'
 import { Card, Button, Badge, EmptyState } from '../ui'
 import { formatDateTime } from '../../lib/formatDateTime'
+import { AGENCY_REGISTRATION_STATUS_LABEL, AGENCY_REGISTRATION_STATUS_TONE } from '../../lib/labels'
+import { systemAdminAgencyValidationDetailPath } from '../../routes/paths'
 import type { Agency } from '../../types/agency'
 
 interface AgencyValidationListProps {
   pendingAgencies: Agency[]
+  resubmissionRequiredAgencies: Agency[]
   rejectedAgencies: Agency[]
-  onApprove: (agencyId: string) => void
-  onReject: (agencyId: string) => void
   onResubmit: (agencyId: string) => void
 }
 
@@ -41,9 +43,8 @@ function AgencyRow({ agency, children }: { agency: Agency; children: ReactNode }
 
 export function AgencyValidationList({
   pendingAgencies,
+  resubmissionRequiredAgencies,
   rejectedAgencies,
-  onApprove,
-  onReject,
   onResubmit,
 }: AgencyValidationListProps) {
   return (
@@ -57,15 +58,16 @@ export function AgencyValidationList({
         ) : (
           pendingAgencies.map((agency) => (
             <AgencyRow key={agency.id} agency={agency}>
-              <Badge tone="warning">Pending</Badge>
-              <Button size="sm" variant="danger" onClick={() => onReject(agency.id)}>
-                <X className="size-3.5" />
-                Reject
-              </Button>
-              <Button size="sm" onClick={() => onApprove(agency.id)}>
-                <Check className="size-3.5" />
-                Approve
-              </Button>
+              <Badge tone={AGENCY_REGISTRATION_STATUS_TONE[agency.registrationStatus]}>
+                {AGENCY_REGISTRATION_STATUS_LABEL[agency.registrationStatus]}
+              </Badge>
+              <Link
+                to={systemAdminAgencyValidationDetailPath(agency.id)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-accent bg-accent px-2 text-xs font-medium text-foreground-inverse hover:bg-accent-hover"
+              >
+                <Search className="size-3.5" />
+                Review Registration
+              </Link>
             </AgencyRow>
           ))
         )}
@@ -73,17 +75,50 @@ export function AgencyValidationList({
 
       <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-          Rejected — Awaiting Resubmission ({rejectedAgencies.length})
+          Resubmission Required ({resubmissionRequiredAgencies.length})
+        </p>
+        {resubmissionRequiredAgencies.length === 0 ? (
+          <EmptyState icon={Building2} title="No agencies awaiting resubmission" />
+        ) : (
+          resubmissionRequiredAgencies.map((agency) => (
+            <AgencyRow key={agency.id} agency={agency}>
+              <Badge tone={AGENCY_REGISTRATION_STATUS_TONE[agency.registrationStatus]}>
+                {AGENCY_REGISTRATION_STATUS_LABEL[agency.registrationStatus]}
+              </Badge>
+              <Link
+                to={systemAdminAgencyValidationDetailPath(agency.id)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface-secondary px-2 text-xs font-medium text-foreground hover:bg-border"
+              >
+                <Search className="size-3.5" />
+                Review Registration
+              </Link>
+            </AgencyRow>
+          ))
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
+          Rejected ({rejectedAgencies.length})
         </p>
         {rejectedAgencies.length === 0 ? (
           <EmptyState icon={Building2} title="No rejected agencies" />
         ) : (
           rejectedAgencies.map((agency) => (
             <AgencyRow key={agency.id} agency={agency}>
-              <Badge tone="danger">Rejected</Badge>
+              <Badge tone={AGENCY_REGISTRATION_STATUS_TONE[agency.registrationStatus]}>
+                {AGENCY_REGISTRATION_STATUS_LABEL[agency.registrationStatus]}
+              </Badge>
+              <Link
+                to={systemAdminAgencyValidationDetailPath(agency.id)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface-secondary px-2 text-xs font-medium text-foreground hover:bg-border"
+              >
+                <Search className="size-3.5" />
+                View Details
+              </Link>
               <Button size="sm" variant="secondary" onClick={() => onResubmit(agency.id)}>
                 <RotateCcw className="size-3.5" />
-                Resubmit for Review
+                Reopen for Review
               </Button>
             </AgencyRow>
           ))
