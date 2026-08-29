@@ -17,6 +17,7 @@ export const ROUTES = {
   commandStaffDroneRegistration: '/command-staff/drones/register',
   commandStaffLiveMonitoring: '/command-staff/live-monitoring',
   commandStaffDetections: '/command-staff/detections',
+  commandStaffLogs: '/command-staff/logs',
   commandStaffIncidents: '/command-staff/incidents',
   commandStaffIncidentDetail: '/command-staff/incidents/:incidentId',
   commandStaffMap: '/command-staff/map',

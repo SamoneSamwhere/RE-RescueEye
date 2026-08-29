@@ -12,20 +12,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// Platform-level admin
-model PlatformAdmin {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique @db.VarChar(120)
-  passwordHash String  @db.VarChar(255)
-  name      String    @db.VarChar(100)
-  createdAt DateTime  @default(now())
-  lastLogin DateTime?
-
-  validatedAgencies Agency[]
-
-  @@map("platform_admin")
-}
-
 // Organizations subscribing to the platform
 model Agency {
   id                 Int       @id @default(autoincrement())

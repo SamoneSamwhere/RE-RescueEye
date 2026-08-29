@@ -6,10 +6,7 @@ import { Button } from '../ui'
 import { ThemeToggle } from './ThemeToggle'
 import logo from '../../assets/logo.png'
 
-const NAV_LINKS = [
-  { label: 'Capabilities', href: '#capabilities' },
-  { label: 'hello', href: '#workflow' },
-]
+const NAV_LINKS = []
 
 export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false)

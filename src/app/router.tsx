@@ -10,6 +10,7 @@ import { CommandStaffDashboardPage } from '../pages/CommandStaffDashboardPage'
 import { CommandStaffDronesMediaPage } from '../pages/CommandStaffDronesMediaPage'
 import { CommandStaffLiveMonitoringPage } from '../pages/CommandStaffLiveMonitoringPage'
 import { CommandStaffDetectionReviewPage } from '../pages/CommandStaffDetectionReviewPage'
+import { CommandStaffLogsPage } from '../pages/CommandStaffClassificationLogPage'
 import { CommandStaffIncidentsPage } from '../pages/CommandStaffIncidentsPage'
 import { CommandStaffIncidentDetailPage } from '../pages/CommandStaffIncidentDetailPage'
 import { CommandStaffMapPage } from '../pages/CommandStaffMapPage'
@@ -96,6 +97,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.commandStaffDroneRegistration, element: <CommandStaffDroneRegistrationPage /> },
           { path: ROUTES.commandStaffLiveMonitoring, element: <CommandStaffLiveMonitoringPage /> },
           { path: ROUTES.commandStaffDetections, element: <CommandStaffDetectionReviewPage /> },
+          { path: ROUTES.commandStaffLogs, element: <CommandStaffLogsPage /> },
           { path: ROUTES.commandStaffIncidents, element: <CommandStaffIncidentsPage /> },
           { path: ROUTES.commandStaffIncidentDetail, element: <CommandStaffIncidentDetailPage /> },
           { path: ROUTES.commandStaffMap, element: <CommandStaffMapPage /> },
