@@ -270,11 +270,25 @@ export type EnumDutyStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumDutyStatusFilter<$PrismaModel>
 }
 
+export type EnumDroneTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.DroneType | Prisma.EnumDroneTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel> | $Enums.DroneType
+}
+
 export type EnumDroneStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.DroneStatus | Prisma.EnumDroneStatusFieldRefInput<$PrismaModel>
   in?: $Enums.DroneStatus[] | Prisma.ListEnumDroneStatusFieldRefInput<$PrismaModel>
   notIn?: $Enums.DroneStatus[] | Prisma.ListEnumDroneStatusFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel> | $Enums.DroneStatus
+}
+
+export type EnumOperationalStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalStatus | Prisma.EnumOperationalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel> | $Enums.OperationalStatus
 }
 
 export type FloatNullableFilter<$PrismaModel = never> = {
@@ -288,6 +302,16 @@ export type FloatNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedFloatNullableFilter<$PrismaModel> | number | null
 }
 
+export type EnumDroneTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DroneType | Prisma.EnumDroneTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDroneTypeWithAggregatesFilter<$PrismaModel> | $Enums.DroneType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel>
+}
+
 export type EnumDroneStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.DroneStatus | Prisma.EnumDroneStatusFieldRefInput<$PrismaModel>
   in?: $Enums.DroneStatus[] | Prisma.ListEnumDroneStatusFieldRefInput<$PrismaModel>
@@ -296,6 +320,16 @@ export type EnumDroneStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel>
+}
+
+export type EnumOperationalStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalStatus | Prisma.EnumOperationalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalStatusWithAggregatesFilter<$PrismaModel> | $Enums.OperationalStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel>
 }
 
 export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -807,11 +841,35 @@ export type NestedEnumDutyStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumDutyStatusFilter<$PrismaModel>
 }
 
+export type NestedEnumDroneTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.DroneType | Prisma.EnumDroneTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel> | $Enums.DroneType
+}
+
 export type NestedEnumDroneStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.DroneStatus | Prisma.EnumDroneStatusFieldRefInput<$PrismaModel>
   in?: $Enums.DroneStatus[] | Prisma.ListEnumDroneStatusFieldRefInput<$PrismaModel>
   notIn?: $Enums.DroneStatus[] | Prisma.ListEnumDroneStatusFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel> | $Enums.DroneStatus
+}
+
+export type NestedEnumOperationalStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalStatus | Prisma.EnumOperationalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel> | $Enums.OperationalStatus
+}
+
+export type NestedEnumDroneTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DroneType | Prisma.EnumDroneTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DroneType[] | Prisma.ListEnumDroneTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDroneTypeWithAggregatesFilter<$PrismaModel> | $Enums.DroneType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDroneTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumDroneStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -822,6 +880,16 @@ export type NestedEnumDroneStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDroneStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumOperationalStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalStatus | Prisma.EnumOperationalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalStatus[] | Prisma.ListEnumOperationalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalStatusWithAggregatesFilter<$PrismaModel> | $Enums.OperationalStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalStatusFilter<$PrismaModel>
 }
 
 export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {

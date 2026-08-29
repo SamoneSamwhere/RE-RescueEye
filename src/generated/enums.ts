@@ -54,6 +54,25 @@ export const DroneStatus = {
 export type DroneStatus = (typeof DroneStatus)[keyof typeof DroneStatus]
 
 
+export const DroneType = {
+  QUADCOPTER: 'QUADCOPTER',
+  FIXED_WING: 'FIXED_WING',
+  HYBRID: 'HYBRID',
+  OTHER: 'OTHER'
+} as const
+
+export type DroneType = (typeof DroneType)[keyof typeof DroneType]
+
+
+export const OperationalStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  MAINTENANCE: 'MAINTENANCE'
+} as const
+
+export type OperationalStatus = (typeof OperationalStatus)[keyof typeof OperationalStatus]
+
+
 export const DetectionClass = {
   CASUALTY: 'CASUALTY',
   DAMAGE_MINOR: 'DAMAGE_MINOR',

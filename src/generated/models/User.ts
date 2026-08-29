@@ -271,6 +271,7 @@ export type UserWhereInput = {
   agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
   createdAgencies?: Prisma.AgencyListRelationFilter
   dronesAdded?: Prisma.DroneListRelationFilter
+  dronesAssigned?: Prisma.DroneListRelationFilter
   detectionsReviewed?: Prisma.DetectionListRelationFilter
   incidentsReported?: Prisma.IncidentListRelationFilter
   responses?: Prisma.ResponseListRelationFilter
@@ -293,6 +294,7 @@ export type UserOrderByWithRelationInput = {
   agency?: Prisma.AgencyOrderByWithRelationInput
   createdAgencies?: Prisma.AgencyOrderByRelationAggregateInput
   dronesAdded?: Prisma.DroneOrderByRelationAggregateInput
+  dronesAssigned?: Prisma.DroneOrderByRelationAggregateInput
   detectionsReviewed?: Prisma.DetectionOrderByRelationAggregateInput
   incidentsReported?: Prisma.IncidentOrderByRelationAggregateInput
   responses?: Prisma.ResponseOrderByRelationAggregateInput
@@ -318,6 +320,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
   createdAgencies?: Prisma.AgencyListRelationFilter
   dronesAdded?: Prisma.DroneListRelationFilter
+  dronesAssigned?: Prisma.DroneListRelationFilter
   detectionsReviewed?: Prisma.DetectionListRelationFilter
   incidentsReported?: Prisma.IncidentListRelationFilter
   responses?: Prisma.ResponseListRelationFilter
@@ -374,6 +377,7 @@ export type UserCreateInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -395,6 +399,7 @@ export type UserUncheckedCreateInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -415,6 +420,7 @@ export type UserUpdateInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -436,6 +442,7 @@ export type UserUncheckedUpdateInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -633,12 +640,28 @@ export type UserCreateNestedOneWithoutDronesAddedInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
+export type UserCreateNestedOneWithoutDronesAssignedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDronesAssignedInput, Prisma.UserUncheckedCreateWithoutDronesAssignedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDronesAssignedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
 export type UserUpdateOneRequiredWithoutDronesAddedNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutDronesAddedInput, Prisma.UserUncheckedCreateWithoutDronesAddedInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutDronesAddedInput
   upsert?: Prisma.UserUpsertWithoutDronesAddedInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDronesAddedInput, Prisma.UserUpdateWithoutDronesAddedInput>, Prisma.UserUncheckedUpdateWithoutDronesAddedInput>
+}
+
+export type UserUpdateOneWithoutDronesAssignedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDronesAssignedInput, Prisma.UserUncheckedCreateWithoutDronesAssignedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDronesAssignedInput
+  upsert?: Prisma.UserUpsertWithoutDronesAssignedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDronesAssignedInput, Prisma.UserUpdateWithoutDronesAssignedInput>, Prisma.UserUncheckedUpdateWithoutDronesAssignedInput>
 }
 
 export type UserCreateNestedOneWithoutDetectionsReviewedInput = {
@@ -725,6 +748,7 @@ export type UserCreateWithoutCreatedAgenciesInput = {
   lastLogin?: Date | string | null
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -745,6 +769,7 @@ export type UserUncheckedCreateWithoutCreatedAgenciesInput = {
   createdAt?: Date | string
   lastLogin?: Date | string | null
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -769,6 +794,7 @@ export type UserCreateWithoutAgencyInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -789,6 +815,7 @@ export type UserUncheckedCreateWithoutAgencyInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -829,6 +856,7 @@ export type UserUpdateWithoutCreatedAgenciesInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -849,6 +877,7 @@ export type UserUncheckedUpdateWithoutCreatedAgenciesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -901,6 +930,7 @@ export type UserCreateWithoutDronesAddedInput = {
   lastLogin?: Date | string | null
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -921,6 +951,7 @@ export type UserUncheckedCreateWithoutDronesAddedInput = {
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -931,6 +962,52 @@ export type UserUncheckedCreateWithoutDronesAddedInput = {
 export type UserCreateOrConnectWithoutDronesAddedInput = {
   where: Prisma.UserWhereUniqueInput
   create: Prisma.XOR<Prisma.UserCreateWithoutDronesAddedInput, Prisma.UserUncheckedCreateWithoutDronesAddedInput>
+}
+
+export type UserCreateWithoutDronesAssignedInput = {
+  email: string
+  passwordHash: string
+  name: string
+  phone?: string | null
+  role: $Enums.UserRole
+  active?: boolean
+  dutyStatus?: $Enums.DutyStatus
+  createdAt?: Date | string
+  lastLogin?: Date | string | null
+  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
+  incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
+  responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
+  mediaUploaded?: Prisma.MediaCreateNestedManyWithoutUploaderInput
+  alertsReceived?: Prisma.AlertCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutDronesAssignedInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  name: string
+  phone?: string | null
+  role: $Enums.UserRole
+  agencyId: number
+  active?: boolean
+  dutyStatus?: $Enums.DutyStatus
+  createdAt?: Date | string
+  lastLogin?: Date | string | null
+  createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
+  incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
+  responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
+  mediaUploaded?: Prisma.MediaUncheckedCreateNestedManyWithoutUploaderInput
+  alertsReceived?: Prisma.AlertUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutDronesAssignedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDronesAssignedInput, Prisma.UserUncheckedCreateWithoutDronesAssignedInput>
 }
 
 export type UserUpsertWithoutDronesAddedInput = {
@@ -956,6 +1033,7 @@ export type UserUpdateWithoutDronesAddedInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -976,6 +1054,59 @@ export type UserUncheckedUpdateWithoutDronesAddedInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
+  detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
+  incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
+  responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
+  mediaUploaded?: Prisma.MediaUncheckedUpdateManyWithoutUploaderNestedInput
+  alertsReceived?: Prisma.AlertUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUpsertWithoutDronesAssignedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDronesAssignedInput, Prisma.UserUncheckedUpdateWithoutDronesAssignedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDronesAssignedInput, Prisma.UserUncheckedCreateWithoutDronesAssignedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDronesAssignedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDronesAssignedInput, Prisma.UserUncheckedUpdateWithoutDronesAssignedInput>
+}
+
+export type UserUpdateWithoutDronesAssignedInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
+  incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
+  responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
+  mediaUploaded?: Prisma.MediaUpdateManyWithoutUploaderNestedInput
+  alertsReceived?: Prisma.AlertUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDronesAssignedInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -996,6 +1127,7 @@ export type UserCreateWithoutDetectionsReviewedInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
   mediaUploaded?: Prisma.MediaCreateNestedManyWithoutUploaderInput
@@ -1016,6 +1148,7 @@ export type UserUncheckedCreateWithoutDetectionsReviewedInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
   mediaUploaded?: Prisma.MediaUncheckedCreateNestedManyWithoutUploaderInput
@@ -1051,6 +1184,7 @@ export type UserUpdateWithoutDetectionsReviewedInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
   mediaUploaded?: Prisma.MediaUpdateManyWithoutUploaderNestedInput
@@ -1071,6 +1205,7 @@ export type UserUncheckedUpdateWithoutDetectionsReviewedInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
   mediaUploaded?: Prisma.MediaUncheckedUpdateManyWithoutUploaderNestedInput
@@ -1090,6 +1225,7 @@ export type UserCreateWithoutIncidentsReportedInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
   mediaUploaded?: Prisma.MediaCreateNestedManyWithoutUploaderInput
@@ -1110,6 +1246,7 @@ export type UserUncheckedCreateWithoutIncidentsReportedInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
   mediaUploaded?: Prisma.MediaUncheckedCreateNestedManyWithoutUploaderInput
@@ -1145,6 +1282,7 @@ export type UserUpdateWithoutIncidentsReportedInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
   mediaUploaded?: Prisma.MediaUpdateManyWithoutUploaderNestedInput
@@ -1165,6 +1303,7 @@ export type UserUncheckedUpdateWithoutIncidentsReportedInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
   mediaUploaded?: Prisma.MediaUncheckedUpdateManyWithoutUploaderNestedInput
@@ -1184,6 +1323,7 @@ export type UserCreateWithoutResponsesInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   mediaUploaded?: Prisma.MediaCreateNestedManyWithoutUploaderInput
@@ -1204,6 +1344,7 @@ export type UserUncheckedCreateWithoutResponsesInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   mediaUploaded?: Prisma.MediaUncheckedCreateNestedManyWithoutUploaderInput
@@ -1239,6 +1380,7 @@ export type UserUpdateWithoutResponsesInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   mediaUploaded?: Prisma.MediaUpdateManyWithoutUploaderNestedInput
@@ -1259,6 +1401,7 @@ export type UserUncheckedUpdateWithoutResponsesInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   mediaUploaded?: Prisma.MediaUncheckedUpdateManyWithoutUploaderNestedInput
@@ -1278,6 +1421,7 @@ export type UserCreateWithoutAlertsReceivedInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -1298,6 +1442,7 @@ export type UserUncheckedCreateWithoutAlertsReceivedInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -1333,6 +1478,7 @@ export type UserUpdateWithoutAlertsReceivedInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -1353,6 +1499,7 @@ export type UserUncheckedUpdateWithoutAlertsReceivedInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -1372,6 +1519,7 @@ export type UserCreateWithoutMediaUploadedInput = {
   agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
@@ -1392,6 +1540,7 @@ export type UserUncheckedCreateWithoutMediaUploadedInput = {
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
@@ -1427,6 +1576,7 @@ export type UserUpdateWithoutMediaUploadedInput = {
   agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -1447,6 +1597,7 @@ export type UserUncheckedUpdateWithoutMediaUploadedInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -1478,6 +1629,7 @@ export type UserUpdateWithoutAgencyInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
@@ -1498,6 +1650,7 @@ export type UserUncheckedUpdateWithoutAgencyInput = {
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
@@ -1526,6 +1679,7 @@ export type UserUncheckedUpdateManyWithoutAgencyInput = {
 export type UserCountOutputType = {
   createdAgencies: number
   dronesAdded: number
+  dronesAssigned: number
   detectionsReviewed: number
   incidentsReported: number
   responses: number
@@ -1536,6 +1690,7 @@ export type UserCountOutputType = {
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   createdAgencies?: boolean | UserCountOutputTypeCountCreatedAgenciesArgs
   dronesAdded?: boolean | UserCountOutputTypeCountDronesAddedArgs
+  dronesAssigned?: boolean | UserCountOutputTypeCountDronesAssignedArgs
   detectionsReviewed?: boolean | UserCountOutputTypeCountDetectionsReviewedArgs
   incidentsReported?: boolean | UserCountOutputTypeCountIncidentsReportedArgs
   responses?: boolean | UserCountOutputTypeCountResponsesArgs
@@ -1564,6 +1719,13 @@ export type UserCountOutputTypeCountCreatedAgenciesArgs<ExtArgs extends runtime.
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountDronesAddedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DroneWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDronesAssignedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.DroneWhereInput
 }
 
@@ -1618,6 +1780,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
   createdAgencies?: boolean | Prisma.User$createdAgenciesArgs<ExtArgs>
   dronesAdded?: boolean | Prisma.User$dronesAddedArgs<ExtArgs>
+  dronesAssigned?: boolean | Prisma.User$dronesAssignedArgs<ExtArgs>
   detectionsReviewed?: boolean | Prisma.User$detectionsReviewedArgs<ExtArgs>
   incidentsReported?: boolean | Prisma.User$incidentsReportedArgs<ExtArgs>
   responses?: boolean | Prisma.User$responsesArgs<ExtArgs>
@@ -1675,6 +1838,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
   createdAgencies?: boolean | Prisma.User$createdAgenciesArgs<ExtArgs>
   dronesAdded?: boolean | Prisma.User$dronesAddedArgs<ExtArgs>
+  dronesAssigned?: boolean | Prisma.User$dronesAssignedArgs<ExtArgs>
   detectionsReviewed?: boolean | Prisma.User$detectionsReviewedArgs<ExtArgs>
   incidentsReported?: boolean | Prisma.User$incidentsReportedArgs<ExtArgs>
   responses?: boolean | Prisma.User$responsesArgs<ExtArgs>
@@ -1695,6 +1859,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     agency: Prisma.$AgencyPayload<ExtArgs>
     createdAgencies: Prisma.$AgencyPayload<ExtArgs>[]
     dronesAdded: Prisma.$DronePayload<ExtArgs>[]
+    dronesAssigned: Prisma.$DronePayload<ExtArgs>[]
     detectionsReviewed: Prisma.$DetectionPayload<ExtArgs>[]
     incidentsReported: Prisma.$IncidentPayload<ExtArgs>[]
     responses: Prisma.$ResponsePayload<ExtArgs>[]
@@ -2110,6 +2275,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   agency<T extends Prisma.AgencyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgencyDefaultArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   createdAgencies<T extends Prisma.User$createdAgenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dronesAdded<T extends Prisma.User$dronesAddedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dronesAddedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DronePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  dronesAssigned<T extends Prisma.User$dronesAssignedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dronesAssignedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DronePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   detectionsReviewed<T extends Prisma.User$detectionsReviewedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$detectionsReviewedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DetectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidentsReported<T extends Prisma.User$incidentsReportedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$incidentsReportedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   responses<T extends Prisma.User$responsesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$responsesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResponsePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2583,6 +2749,30 @@ export type User$createdAgenciesArgs<ExtArgs extends runtime.Types.Extensions.In
  * User.dronesAdded
  */
 export type User$dronesAddedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Drone
+   */
+  select?: Prisma.DroneSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Drone
+   */
+  omit?: Prisma.DroneOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DroneInclude<ExtArgs> | null
+  where?: Prisma.DroneWhereInput
+  orderBy?: Prisma.DroneOrderByWithRelationInput | Prisma.DroneOrderByWithRelationInput[]
+  cursor?: Prisma.DroneWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DroneScalarFieldEnum | Prisma.DroneScalarFieldEnum[]
+}
+
+/**
+ * User.dronesAssigned
+ */
+export type User$dronesAssignedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Drone
    */

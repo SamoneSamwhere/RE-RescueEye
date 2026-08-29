@@ -1251,8 +1251,18 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const DroneScalarFieldEnum = {
   id: 'id',
   callsign: 'callsign',
+  manufacturer: 'manufacturer',
+  model: 'model',
+  droneType: 'droneType',
+  serialNumber: 'serialNumber',
+  registrationNumber: 'registrationNumber',
   status: 'status',
+  operationalStatus: 'operationalStatus',
   addedBy: 'addedBy',
+  assignedOperatorId: 'assignedOperatorId',
+  dateAcquired: 'dateAcquired',
+  lastInspectionDate: 'lastInspectionDate',
+  notes: 'notes',
   lastLat: 'lastLat',
   lastLng: 'lastLng',
   lastFeedAt: 'lastFeedAt',
@@ -1496,6 +1506,20 @@ export type ListEnumDutyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 
 
 /**
+ * Reference to a field of type 'DroneType'
+ */
+export type EnumDroneTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneType'>
+    
+
+
+/**
+ * Reference to a field of type 'DroneType[]'
+ */
+export type ListEnumDroneTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneType[]'>
+    
+
+
+/**
  * Reference to a field of type 'DroneStatus'
  */
 export type EnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneStatus'>
@@ -1506,6 +1530,20 @@ export type EnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'DroneStatus[]'
  */
 export type ListEnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'OperationalStatus'
+ */
+export type EnumOperationalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OperationalStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'OperationalStatus[]'
+ */
+export type ListEnumOperationalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OperationalStatus[]'>
     
 
 

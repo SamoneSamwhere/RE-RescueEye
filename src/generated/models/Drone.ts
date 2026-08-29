@@ -29,6 +29,7 @@ export type AggregateDrone = {
 export type DroneAvgAggregateOutputType = {
   id: number | null
   addedBy: number | null
+  assignedOperatorId: number | null
   lastLat: number | null
   lastLng: number | null
   agencyId: number | null
@@ -37,6 +38,7 @@ export type DroneAvgAggregateOutputType = {
 export type DroneSumAggregateOutputType = {
   id: number | null
   addedBy: number | null
+  assignedOperatorId: number | null
   lastLat: number | null
   lastLng: number | null
   agencyId: number | null
@@ -45,8 +47,18 @@ export type DroneSumAggregateOutputType = {
 export type DroneMinAggregateOutputType = {
   id: number | null
   callsign: string | null
+  manufacturer: string | null
+  model: string | null
+  droneType: $Enums.DroneType | null
+  serialNumber: string | null
+  registrationNumber: string | null
   status: $Enums.DroneStatus | null
+  operationalStatus: $Enums.OperationalStatus | null
   addedBy: number | null
+  assignedOperatorId: number | null
+  dateAcquired: Date | null
+  lastInspectionDate: Date | null
+  notes: string | null
   lastLat: number | null
   lastLng: number | null
   lastFeedAt: Date | null
@@ -58,8 +70,18 @@ export type DroneMinAggregateOutputType = {
 export type DroneMaxAggregateOutputType = {
   id: number | null
   callsign: string | null
+  manufacturer: string | null
+  model: string | null
+  droneType: $Enums.DroneType | null
+  serialNumber: string | null
+  registrationNumber: string | null
   status: $Enums.DroneStatus | null
+  operationalStatus: $Enums.OperationalStatus | null
   addedBy: number | null
+  assignedOperatorId: number | null
+  dateAcquired: Date | null
+  lastInspectionDate: Date | null
+  notes: string | null
   lastLat: number | null
   lastLng: number | null
   lastFeedAt: Date | null
@@ -71,8 +93,18 @@ export type DroneMaxAggregateOutputType = {
 export type DroneCountAggregateOutputType = {
   id: number
   callsign: number
+  manufacturer: number
+  model: number
+  droneType: number
+  serialNumber: number
+  registrationNumber: number
   status: number
+  operationalStatus: number
   addedBy: number
+  assignedOperatorId: number
+  dateAcquired: number
+  lastInspectionDate: number
+  notes: number
   lastLat: number
   lastLng: number
   lastFeedAt: number
@@ -86,6 +118,7 @@ export type DroneCountAggregateOutputType = {
 export type DroneAvgAggregateInputType = {
   id?: true
   addedBy?: true
+  assignedOperatorId?: true
   lastLat?: true
   lastLng?: true
   agencyId?: true
@@ -94,6 +127,7 @@ export type DroneAvgAggregateInputType = {
 export type DroneSumAggregateInputType = {
   id?: true
   addedBy?: true
+  assignedOperatorId?: true
   lastLat?: true
   lastLng?: true
   agencyId?: true
@@ -102,8 +136,18 @@ export type DroneSumAggregateInputType = {
 export type DroneMinAggregateInputType = {
   id?: true
   callsign?: true
+  manufacturer?: true
+  model?: true
+  droneType?: true
+  serialNumber?: true
+  registrationNumber?: true
   status?: true
+  operationalStatus?: true
   addedBy?: true
+  assignedOperatorId?: true
+  dateAcquired?: true
+  lastInspectionDate?: true
+  notes?: true
   lastLat?: true
   lastLng?: true
   lastFeedAt?: true
@@ -115,8 +159,18 @@ export type DroneMinAggregateInputType = {
 export type DroneMaxAggregateInputType = {
   id?: true
   callsign?: true
+  manufacturer?: true
+  model?: true
+  droneType?: true
+  serialNumber?: true
+  registrationNumber?: true
   status?: true
+  operationalStatus?: true
   addedBy?: true
+  assignedOperatorId?: true
+  dateAcquired?: true
+  lastInspectionDate?: true
+  notes?: true
   lastLat?: true
   lastLng?: true
   lastFeedAt?: true
@@ -128,8 +182,18 @@ export type DroneMaxAggregateInputType = {
 export type DroneCountAggregateInputType = {
   id?: true
   callsign?: true
+  manufacturer?: true
+  model?: true
+  droneType?: true
+  serialNumber?: true
+  registrationNumber?: true
   status?: true
+  operationalStatus?: true
   addedBy?: true
+  assignedOperatorId?: true
+  dateAcquired?: true
+  lastInspectionDate?: true
+  notes?: true
   lastLat?: true
   lastLng?: true
   lastFeedAt?: true
@@ -228,8 +292,18 @@ export type DroneGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 export type DroneGroupByOutputType = {
   id: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber: string | null
   status: $Enums.DroneStatus
+  operationalStatus: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId: number | null
+  dateAcquired: Date
+  lastInspectionDate: Date | null
+  notes: string | null
   lastLat: number | null
   lastLng: number | null
   lastFeedAt: Date | null
@@ -264,8 +338,18 @@ export type DroneWhereInput = {
   NOT?: Prisma.DroneWhereInput | Prisma.DroneWhereInput[]
   id?: Prisma.IntFilter<"Drone"> | number
   callsign?: Prisma.StringFilter<"Drone"> | string
+  manufacturer?: Prisma.StringFilter<"Drone"> | string
+  model?: Prisma.StringFilter<"Drone"> | string
+  droneType?: Prisma.EnumDroneTypeFilter<"Drone"> | $Enums.DroneType
+  serialNumber?: Prisma.StringFilter<"Drone"> | string
+  registrationNumber?: Prisma.StringNullableFilter<"Drone"> | string | null
   status?: Prisma.EnumDroneStatusFilter<"Drone"> | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFilter<"Drone"> | $Enums.OperationalStatus
   addedBy?: Prisma.IntFilter<"Drone"> | number
+  assignedOperatorId?: Prisma.IntNullableFilter<"Drone"> | number | null
+  dateAcquired?: Prisma.DateTimeFilter<"Drone"> | Date | string
+  lastInspectionDate?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
+  notes?: Prisma.StringNullableFilter<"Drone"> | string | null
   lastLat?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastLng?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastFeedAt?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
@@ -273,6 +357,7 @@ export type DroneWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Drone"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Drone"> | Date | string
   operator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assignedOperator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
   detections?: Prisma.DetectionListRelationFilter
 }
@@ -280,8 +365,18 @@ export type DroneWhereInput = {
 export type DroneOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   callsign?: Prisma.SortOrder
+  manufacturer?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  droneType?: Prisma.SortOrder
+  serialNumber?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  operationalStatus?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrderInput | Prisma.SortOrder
+  dateAcquired?: Prisma.SortOrder
+  lastInspectionDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLat?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLng?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFeedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -289,18 +384,29 @@ export type DroneOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   operator?: Prisma.UserOrderByWithRelationInput
+  assignedOperator?: Prisma.UserOrderByWithRelationInput
   agency?: Prisma.AgencyOrderByWithRelationInput
   detections?: Prisma.DetectionOrderByRelationAggregateInput
 }
 
 export type DroneWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  serialNumber?: string
+  registrationNumber?: string
   AND?: Prisma.DroneWhereInput | Prisma.DroneWhereInput[]
   OR?: Prisma.DroneWhereInput[]
   NOT?: Prisma.DroneWhereInput | Prisma.DroneWhereInput[]
   callsign?: Prisma.StringFilter<"Drone"> | string
+  manufacturer?: Prisma.StringFilter<"Drone"> | string
+  model?: Prisma.StringFilter<"Drone"> | string
+  droneType?: Prisma.EnumDroneTypeFilter<"Drone"> | $Enums.DroneType
   status?: Prisma.EnumDroneStatusFilter<"Drone"> | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFilter<"Drone"> | $Enums.OperationalStatus
   addedBy?: Prisma.IntFilter<"Drone"> | number
+  assignedOperatorId?: Prisma.IntNullableFilter<"Drone"> | number | null
+  dateAcquired?: Prisma.DateTimeFilter<"Drone"> | Date | string
+  lastInspectionDate?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
+  notes?: Prisma.StringNullableFilter<"Drone"> | string | null
   lastLat?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastLng?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastFeedAt?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
@@ -308,15 +414,26 @@ export type DroneWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Drone"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Drone"> | Date | string
   operator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assignedOperator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
   detections?: Prisma.DetectionListRelationFilter
-}, "id">
+}, "id" | "serialNumber" | "registrationNumber">
 
 export type DroneOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   callsign?: Prisma.SortOrder
+  manufacturer?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  droneType?: Prisma.SortOrder
+  serialNumber?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  operationalStatus?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrderInput | Prisma.SortOrder
+  dateAcquired?: Prisma.SortOrder
+  lastInspectionDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLat?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLng?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFeedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -336,8 +453,18 @@ export type DroneScalarWhereWithAggregatesInput = {
   NOT?: Prisma.DroneScalarWhereWithAggregatesInput | Prisma.DroneScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Drone"> | number
   callsign?: Prisma.StringWithAggregatesFilter<"Drone"> | string
+  manufacturer?: Prisma.StringWithAggregatesFilter<"Drone"> | string
+  model?: Prisma.StringWithAggregatesFilter<"Drone"> | string
+  droneType?: Prisma.EnumDroneTypeWithAggregatesFilter<"Drone"> | $Enums.DroneType
+  serialNumber?: Prisma.StringWithAggregatesFilter<"Drone"> | string
+  registrationNumber?: Prisma.StringNullableWithAggregatesFilter<"Drone"> | string | null
   status?: Prisma.EnumDroneStatusWithAggregatesFilter<"Drone"> | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusWithAggregatesFilter<"Drone"> | $Enums.OperationalStatus
   addedBy?: Prisma.IntWithAggregatesFilter<"Drone"> | number
+  assignedOperatorId?: Prisma.IntNullableWithAggregatesFilter<"Drone"> | number | null
+  dateAcquired?: Prisma.DateTimeWithAggregatesFilter<"Drone"> | Date | string
+  lastInspectionDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Drone"> | Date | string | null
+  notes?: Prisma.StringNullableWithAggregatesFilter<"Drone"> | string | null
   lastLat?: Prisma.FloatNullableWithAggregatesFilter<"Drone"> | number | null
   lastLng?: Prisma.FloatNullableWithAggregatesFilter<"Drone"> | number | null
   lastFeedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Drone"> | Date | string | null
@@ -348,13 +475,23 @@ export type DroneScalarWhereWithAggregatesInput = {
 
 export type DroneCreateInput = {
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   operator: Prisma.UserCreateNestedOneWithoutDronesAddedInput
+  assignedOperator?: Prisma.UserCreateNestedOneWithoutDronesAssignedInput
   agency: Prisma.AgencyCreateNestedOneWithoutDronesInput
   detections?: Prisma.DetectionCreateNestedManyWithoutDroneInput
 }
@@ -362,8 +499,18 @@ export type DroneCreateInput = {
 export type DroneUncheckedCreateInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -375,13 +522,23 @@ export type DroneUncheckedCreateInput = {
 
 export type DroneUpdateInput = {
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   operator?: Prisma.UserUpdateOneRequiredWithoutDronesAddedNestedInput
+  assignedOperator?: Prisma.UserUpdateOneWithoutDronesAssignedNestedInput
   agency?: Prisma.AgencyUpdateOneRequiredWithoutDronesNestedInput
   detections?: Prisma.DetectionUpdateManyWithoutDroneNestedInput
 }
@@ -389,8 +546,18 @@ export type DroneUpdateInput = {
 export type DroneUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
   addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -403,8 +570,18 @@ export type DroneUncheckedUpdateInput = {
 export type DroneCreateManyInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -415,7 +592,16 @@ export type DroneCreateManyInput = {
 
 export type DroneUpdateManyMutationInput = {
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -426,8 +612,18 @@ export type DroneUpdateManyMutationInput = {
 export type DroneUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
   addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -449,8 +645,18 @@ export type DroneOrderByRelationAggregateInput = {
 export type DroneCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   callsign?: Prisma.SortOrder
+  manufacturer?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  droneType?: Prisma.SortOrder
+  serialNumber?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  operationalStatus?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrder
+  dateAcquired?: Prisma.SortOrder
+  lastInspectionDate?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   lastLat?: Prisma.SortOrder
   lastLng?: Prisma.SortOrder
   lastFeedAt?: Prisma.SortOrder
@@ -462,6 +668,7 @@ export type DroneCountOrderByAggregateInput = {
 export type DroneAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrder
   lastLat?: Prisma.SortOrder
   lastLng?: Prisma.SortOrder
   agencyId?: Prisma.SortOrder
@@ -470,8 +677,18 @@ export type DroneAvgOrderByAggregateInput = {
 export type DroneMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   callsign?: Prisma.SortOrder
+  manufacturer?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  droneType?: Prisma.SortOrder
+  serialNumber?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  operationalStatus?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrder
+  dateAcquired?: Prisma.SortOrder
+  lastInspectionDate?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   lastLat?: Prisma.SortOrder
   lastLng?: Prisma.SortOrder
   lastFeedAt?: Prisma.SortOrder
@@ -483,8 +700,18 @@ export type DroneMaxOrderByAggregateInput = {
 export type DroneMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   callsign?: Prisma.SortOrder
+  manufacturer?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  droneType?: Prisma.SortOrder
+  serialNumber?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  operationalStatus?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrder
+  dateAcquired?: Prisma.SortOrder
+  lastInspectionDate?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   lastLat?: Prisma.SortOrder
   lastLng?: Prisma.SortOrder
   lastFeedAt?: Prisma.SortOrder
@@ -496,6 +723,7 @@ export type DroneMinOrderByAggregateInput = {
 export type DroneSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   addedBy?: Prisma.SortOrder
+  assignedOperatorId?: Prisma.SortOrder
   lastLat?: Prisma.SortOrder
   lastLng?: Prisma.SortOrder
   agencyId?: Prisma.SortOrder
@@ -555,10 +783,24 @@ export type DroneCreateNestedManyWithoutOperatorInput = {
   connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
 }
 
+export type DroneCreateNestedManyWithoutAssignedOperatorInput = {
+  create?: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput> | Prisma.DroneCreateWithoutAssignedOperatorInput[] | Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput[]
+  connectOrCreate?: Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput | Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput[]
+  createMany?: Prisma.DroneCreateManyAssignedOperatorInputEnvelope
+  connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+}
+
 export type DroneUncheckedCreateNestedManyWithoutOperatorInput = {
   create?: Prisma.XOR<Prisma.DroneCreateWithoutOperatorInput, Prisma.DroneUncheckedCreateWithoutOperatorInput> | Prisma.DroneCreateWithoutOperatorInput[] | Prisma.DroneUncheckedCreateWithoutOperatorInput[]
   connectOrCreate?: Prisma.DroneCreateOrConnectWithoutOperatorInput | Prisma.DroneCreateOrConnectWithoutOperatorInput[]
   createMany?: Prisma.DroneCreateManyOperatorInputEnvelope
+  connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+}
+
+export type DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput = {
+  create?: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput> | Prisma.DroneCreateWithoutAssignedOperatorInput[] | Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput[]
+  connectOrCreate?: Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput | Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput[]
+  createMany?: Prisma.DroneCreateManyAssignedOperatorInputEnvelope
   connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
 }
 
@@ -576,6 +818,20 @@ export type DroneUpdateManyWithoutOperatorNestedInput = {
   deleteMany?: Prisma.DroneScalarWhereInput | Prisma.DroneScalarWhereInput[]
 }
 
+export type DroneUpdateManyWithoutAssignedOperatorNestedInput = {
+  create?: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput> | Prisma.DroneCreateWithoutAssignedOperatorInput[] | Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput[]
+  connectOrCreate?: Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput | Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput[]
+  upsert?: Prisma.DroneUpsertWithWhereUniqueWithoutAssignedOperatorInput | Prisma.DroneUpsertWithWhereUniqueWithoutAssignedOperatorInput[]
+  createMany?: Prisma.DroneCreateManyAssignedOperatorInputEnvelope
+  set?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  disconnect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  delete?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  update?: Prisma.DroneUpdateWithWhereUniqueWithoutAssignedOperatorInput | Prisma.DroneUpdateWithWhereUniqueWithoutAssignedOperatorInput[]
+  updateMany?: Prisma.DroneUpdateManyWithWhereWithoutAssignedOperatorInput | Prisma.DroneUpdateManyWithWhereWithoutAssignedOperatorInput[]
+  deleteMany?: Prisma.DroneScalarWhereInput | Prisma.DroneScalarWhereInput[]
+}
+
 export type DroneUncheckedUpdateManyWithoutOperatorNestedInput = {
   create?: Prisma.XOR<Prisma.DroneCreateWithoutOperatorInput, Prisma.DroneUncheckedCreateWithoutOperatorInput> | Prisma.DroneCreateWithoutOperatorInput[] | Prisma.DroneUncheckedCreateWithoutOperatorInput[]
   connectOrCreate?: Prisma.DroneCreateOrConnectWithoutOperatorInput | Prisma.DroneCreateOrConnectWithoutOperatorInput[]
@@ -590,8 +846,30 @@ export type DroneUncheckedUpdateManyWithoutOperatorNestedInput = {
   deleteMany?: Prisma.DroneScalarWhereInput | Prisma.DroneScalarWhereInput[]
 }
 
+export type DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput = {
+  create?: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput> | Prisma.DroneCreateWithoutAssignedOperatorInput[] | Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput[]
+  connectOrCreate?: Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput | Prisma.DroneCreateOrConnectWithoutAssignedOperatorInput[]
+  upsert?: Prisma.DroneUpsertWithWhereUniqueWithoutAssignedOperatorInput | Prisma.DroneUpsertWithWhereUniqueWithoutAssignedOperatorInput[]
+  createMany?: Prisma.DroneCreateManyAssignedOperatorInputEnvelope
+  set?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  disconnect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  delete?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  connect?: Prisma.DroneWhereUniqueInput | Prisma.DroneWhereUniqueInput[]
+  update?: Prisma.DroneUpdateWithWhereUniqueWithoutAssignedOperatorInput | Prisma.DroneUpdateWithWhereUniqueWithoutAssignedOperatorInput[]
+  updateMany?: Prisma.DroneUpdateManyWithWhereWithoutAssignedOperatorInput | Prisma.DroneUpdateManyWithWhereWithoutAssignedOperatorInput[]
+  deleteMany?: Prisma.DroneScalarWhereInput | Prisma.DroneScalarWhereInput[]
+}
+
+export type EnumDroneTypeFieldUpdateOperationsInput = {
+  set?: $Enums.DroneType
+}
+
 export type EnumDroneStatusFieldUpdateOperationsInput = {
   set?: $Enums.DroneStatus
+}
+
+export type EnumOperationalStatusFieldUpdateOperationsInput = {
+  set?: $Enums.OperationalStatus
 }
 
 export type NullableFloatFieldUpdateOperationsInput = {
@@ -618,21 +896,41 @@ export type DroneUpdateOneRequiredWithoutDetectionsNestedInput = {
 
 export type DroneCreateWithoutAgencyInput = {
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   operator: Prisma.UserCreateNestedOneWithoutDronesAddedInput
+  assignedOperator?: Prisma.UserCreateNestedOneWithoutDronesAssignedInput
   detections?: Prisma.DetectionCreateNestedManyWithoutDroneInput
 }
 
 export type DroneUncheckedCreateWithoutAgencyInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -673,8 +971,18 @@ export type DroneScalarWhereInput = {
   NOT?: Prisma.DroneScalarWhereInput | Prisma.DroneScalarWhereInput[]
   id?: Prisma.IntFilter<"Drone"> | number
   callsign?: Prisma.StringFilter<"Drone"> | string
+  manufacturer?: Prisma.StringFilter<"Drone"> | string
+  model?: Prisma.StringFilter<"Drone"> | string
+  droneType?: Prisma.EnumDroneTypeFilter<"Drone"> | $Enums.DroneType
+  serialNumber?: Prisma.StringFilter<"Drone"> | string
+  registrationNumber?: Prisma.StringNullableFilter<"Drone"> | string | null
   status?: Prisma.EnumDroneStatusFilter<"Drone"> | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFilter<"Drone"> | $Enums.OperationalStatus
   addedBy?: Prisma.IntFilter<"Drone"> | number
+  assignedOperatorId?: Prisma.IntNullableFilter<"Drone"> | number | null
+  dateAcquired?: Prisma.DateTimeFilter<"Drone"> | Date | string
+  lastInspectionDate?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
+  notes?: Prisma.StringNullableFilter<"Drone"> | string | null
   lastLat?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastLng?: Prisma.FloatNullableFilter<"Drone"> | number | null
   lastFeedAt?: Prisma.DateTimeNullableFilter<"Drone"> | Date | string | null
@@ -685,12 +993,22 @@ export type DroneScalarWhereInput = {
 
 export type DroneCreateWithoutOperatorInput = {
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  assignedOperator?: Prisma.UserCreateNestedOneWithoutDronesAssignedInput
   agency: Prisma.AgencyCreateNestedOneWithoutDronesInput
   detections?: Prisma.DetectionCreateNestedManyWithoutDroneInput
 }
@@ -698,7 +1016,17 @@ export type DroneCreateWithoutOperatorInput = {
 export type DroneUncheckedCreateWithoutOperatorInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -718,6 +1046,61 @@ export type DroneCreateManyOperatorInputEnvelope = {
   skipDuplicates?: boolean
 }
 
+export type DroneCreateWithoutAssignedOperatorInput = {
+  callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
+  status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
+  lastLat?: number | null
+  lastLng?: number | null
+  lastFeedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  operator: Prisma.UserCreateNestedOneWithoutDronesAddedInput
+  agency: Prisma.AgencyCreateNestedOneWithoutDronesInput
+  detections?: Prisma.DetectionCreateNestedManyWithoutDroneInput
+}
+
+export type DroneUncheckedCreateWithoutAssignedOperatorInput = {
+  id?: number
+  callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
+  status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  addedBy: number
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
+  lastLat?: number | null
+  lastLng?: number | null
+  lastFeedAt?: Date | string | null
+  agencyId: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  detections?: Prisma.DetectionUncheckedCreateNestedManyWithoutDroneInput
+}
+
+export type DroneCreateOrConnectWithoutAssignedOperatorInput = {
+  where: Prisma.DroneWhereUniqueInput
+  create: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput>
+}
+
+export type DroneCreateManyAssignedOperatorInputEnvelope = {
+  data: Prisma.DroneCreateManyAssignedOperatorInput | Prisma.DroneCreateManyAssignedOperatorInput[]
+  skipDuplicates?: boolean
+}
+
 export type DroneUpsertWithWhereUniqueWithoutOperatorInput = {
   where: Prisma.DroneWhereUniqueInput
   update: Prisma.XOR<Prisma.DroneUpdateWithoutOperatorInput, Prisma.DroneUncheckedUpdateWithoutOperatorInput>
@@ -734,23 +1117,59 @@ export type DroneUpdateManyWithWhereWithoutOperatorInput = {
   data: Prisma.XOR<Prisma.DroneUpdateManyMutationInput, Prisma.DroneUncheckedUpdateManyWithoutOperatorInput>
 }
 
+export type DroneUpsertWithWhereUniqueWithoutAssignedOperatorInput = {
+  where: Prisma.DroneWhereUniqueInput
+  update: Prisma.XOR<Prisma.DroneUpdateWithoutAssignedOperatorInput, Prisma.DroneUncheckedUpdateWithoutAssignedOperatorInput>
+  create: Prisma.XOR<Prisma.DroneCreateWithoutAssignedOperatorInput, Prisma.DroneUncheckedCreateWithoutAssignedOperatorInput>
+}
+
+export type DroneUpdateWithWhereUniqueWithoutAssignedOperatorInput = {
+  where: Prisma.DroneWhereUniqueInput
+  data: Prisma.XOR<Prisma.DroneUpdateWithoutAssignedOperatorInput, Prisma.DroneUncheckedUpdateWithoutAssignedOperatorInput>
+}
+
+export type DroneUpdateManyWithWhereWithoutAssignedOperatorInput = {
+  where: Prisma.DroneScalarWhereInput
+  data: Prisma.XOR<Prisma.DroneUpdateManyMutationInput, Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorInput>
+}
+
 export type DroneCreateWithoutDetectionsInput = {
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   operator: Prisma.UserCreateNestedOneWithoutDronesAddedInput
+  assignedOperator?: Prisma.UserCreateNestedOneWithoutDronesAssignedInput
   agency: Prisma.AgencyCreateNestedOneWithoutDronesInput
 }
 
 export type DroneUncheckedCreateWithoutDetectionsInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -777,21 +1196,41 @@ export type DroneUpdateToOneWithWhereWithoutDetectionsInput = {
 
 export type DroneUpdateWithoutDetectionsInput = {
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   operator?: Prisma.UserUpdateOneRequiredWithoutDronesAddedNestedInput
+  assignedOperator?: Prisma.UserUpdateOneWithoutDronesAssignedNestedInput
   agency?: Prisma.AgencyUpdateOneRequiredWithoutDronesNestedInput
 }
 
 export type DroneUncheckedUpdateWithoutDetectionsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
   addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -803,8 +1242,18 @@ export type DroneUncheckedUpdateWithoutDetectionsInput = {
 export type DroneCreateManyAgencyInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
   addedBy: number
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -814,21 +1263,41 @@ export type DroneCreateManyAgencyInput = {
 
 export type DroneUpdateWithoutAgencyInput = {
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   operator?: Prisma.UserUpdateOneRequiredWithoutDronesAddedNestedInput
+  assignedOperator?: Prisma.UserUpdateOneWithoutDronesAssignedNestedInput
   detections?: Prisma.DetectionUpdateManyWithoutDroneNestedInput
 }
 
 export type DroneUncheckedUpdateWithoutAgencyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
   addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -840,8 +1309,18 @@ export type DroneUncheckedUpdateWithoutAgencyInput = {
 export type DroneUncheckedUpdateManyWithoutAgencyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
   addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -852,7 +1331,39 @@ export type DroneUncheckedUpdateManyWithoutAgencyInput = {
 export type DroneCreateManyOperatorInput = {
   id?: number
   callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
   status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  assignedOperatorId?: number | null
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
+  lastLat?: number | null
+  lastLng?: number | null
+  lastFeedAt?: Date | string | null
+  agencyId: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DroneCreateManyAssignedOperatorInput = {
+  id?: number
+  callsign: string
+  manufacturer: string
+  model: string
+  droneType: $Enums.DroneType
+  serialNumber: string
+  registrationNumber?: string | null
+  status: $Enums.DroneStatus
+  operationalStatus?: $Enums.OperationalStatus
+  addedBy: number
+  dateAcquired: Date | string
+  lastInspectionDate?: Date | string | null
+  notes?: string | null
   lastLat?: number | null
   lastLng?: number | null
   lastFeedAt?: Date | string | null
@@ -863,12 +1374,22 @@ export type DroneCreateManyOperatorInput = {
 
 export type DroneUpdateWithoutOperatorInput = {
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignedOperator?: Prisma.UserUpdateOneWithoutDronesAssignedNestedInput
   agency?: Prisma.AgencyUpdateOneRequiredWithoutDronesNestedInput
   detections?: Prisma.DetectionUpdateManyWithoutDroneNestedInput
 }
@@ -876,7 +1397,17 @@ export type DroneUpdateWithoutOperatorInput = {
 export type DroneUncheckedUpdateWithoutOperatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -889,7 +1420,84 @@ export type DroneUncheckedUpdateWithoutOperatorInput = {
 export type DroneUncheckedUpdateManyWithoutOperatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  assignedOperatorId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DroneUpdateWithoutAssignedOperatorInput = {
+  callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  operator?: Prisma.UserUpdateOneRequiredWithoutDronesAddedNestedInput
+  agency?: Prisma.AgencyUpdateOneRequiredWithoutDronesNestedInput
+  detections?: Prisma.DetectionUpdateManyWithoutDroneNestedInput
+}
+
+export type DroneUncheckedUpdateWithoutAssignedOperatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  detections?: Prisma.DetectionUncheckedUpdateManyWithoutDroneNestedInput
+}
+
+export type DroneUncheckedUpdateManyWithoutAssignedOperatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  callsign?: Prisma.StringFieldUpdateOperationsInput | string
+  manufacturer?: Prisma.StringFieldUpdateOperationsInput | string
+  model?: Prisma.StringFieldUpdateOperationsInput | string
+  droneType?: Prisma.EnumDroneTypeFieldUpdateOperationsInput | $Enums.DroneType
+  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumDroneStatusFieldUpdateOperationsInput | $Enums.DroneStatus
+  operationalStatus?: Prisma.EnumOperationalStatusFieldUpdateOperationsInput | $Enums.OperationalStatus
+  addedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  dateAcquired?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastInspectionDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastLng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lastFeedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -932,8 +1540,18 @@ export type DroneCountOutputTypeCountDetectionsArgs<ExtArgs extends runtime.Type
 export type DroneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   callsign?: boolean
+  manufacturer?: boolean
+  model?: boolean
+  droneType?: boolean
+  serialNumber?: boolean
+  registrationNumber?: boolean
   status?: boolean
+  operationalStatus?: boolean
   addedBy?: boolean
+  assignedOperatorId?: boolean
+  dateAcquired?: boolean
+  lastInspectionDate?: boolean
+  notes?: boolean
   lastLat?: boolean
   lastLng?: boolean
   lastFeedAt?: boolean
@@ -941,6 +1559,7 @@ export type DroneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAt?: boolean
   updatedAt?: boolean
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
   detections?: boolean | Prisma.Drone$detectionsArgs<ExtArgs>
   _count?: boolean | Prisma.DroneCountOutputTypeDefaultArgs<ExtArgs>
@@ -949,8 +1568,18 @@ export type DroneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 export type DroneSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   callsign?: boolean
+  manufacturer?: boolean
+  model?: boolean
+  droneType?: boolean
+  serialNumber?: boolean
+  registrationNumber?: boolean
   status?: boolean
+  operationalStatus?: boolean
   addedBy?: boolean
+  assignedOperatorId?: boolean
+  dateAcquired?: boolean
+  lastInspectionDate?: boolean
+  notes?: boolean
   lastLat?: boolean
   lastLng?: boolean
   lastFeedAt?: boolean
@@ -958,14 +1587,25 @@ export type DroneSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   createdAt?: boolean
   updatedAt?: boolean
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["drone"]>
 
 export type DroneSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   callsign?: boolean
+  manufacturer?: boolean
+  model?: boolean
+  droneType?: boolean
+  serialNumber?: boolean
+  registrationNumber?: boolean
   status?: boolean
+  operationalStatus?: boolean
   addedBy?: boolean
+  assignedOperatorId?: boolean
+  dateAcquired?: boolean
+  lastInspectionDate?: boolean
+  notes?: boolean
   lastLat?: boolean
   lastLng?: boolean
   lastFeedAt?: boolean
@@ -973,14 +1613,25 @@ export type DroneSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   createdAt?: boolean
   updatedAt?: boolean
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["drone"]>
 
 export type DroneSelectScalar = {
   id?: boolean
   callsign?: boolean
+  manufacturer?: boolean
+  model?: boolean
+  droneType?: boolean
+  serialNumber?: boolean
+  registrationNumber?: boolean
   status?: boolean
+  operationalStatus?: boolean
   addedBy?: boolean
+  assignedOperatorId?: boolean
+  dateAcquired?: boolean
+  lastInspectionDate?: boolean
+  notes?: boolean
   lastLat?: boolean
   lastLng?: boolean
   lastFeedAt?: boolean
@@ -989,19 +1640,22 @@ export type DroneSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DroneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "callsign" | "status" | "addedBy" | "lastLat" | "lastLng" | "lastFeedAt" | "agencyId" | "createdAt" | "updatedAt", ExtArgs["result"]["drone"]>
+export type DroneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "callsign" | "manufacturer" | "model" | "droneType" | "serialNumber" | "registrationNumber" | "status" | "operationalStatus" | "addedBy" | "assignedOperatorId" | "dateAcquired" | "lastInspectionDate" | "notes" | "lastLat" | "lastLng" | "lastFeedAt" | "agencyId" | "createdAt" | "updatedAt", ExtArgs["result"]["drone"]>
 export type DroneInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
   detections?: boolean | Prisma.Drone$detectionsArgs<ExtArgs>
   _count?: boolean | Prisma.DroneCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DroneIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
 }
 export type DroneIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   operator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignedOperator?: boolean | Prisma.Drone$assignedOperatorArgs<ExtArgs>
   agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
 }
 
@@ -1009,14 +1663,25 @@ export type $DronePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name: "Drone"
   objects: {
     operator: Prisma.$UserPayload<ExtArgs>
+    assignedOperator: Prisma.$UserPayload<ExtArgs> | null
     agency: Prisma.$AgencyPayload<ExtArgs>
     detections: Prisma.$DetectionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     callsign: string
+    manufacturer: string
+    model: string
+    droneType: $Enums.DroneType
+    serialNumber: string
+    registrationNumber: string | null
     status: $Enums.DroneStatus
+    operationalStatus: $Enums.OperationalStatus
     addedBy: number
+    assignedOperatorId: number | null
+    dateAcquired: Date
+    lastInspectionDate: Date | null
+    notes: string | null
     lastLat: number | null
     lastLng: number | null
     lastFeedAt: Date | null
@@ -1418,6 +2083,7 @@ readonly fields: DroneFieldRefs;
 export interface Prisma__DroneClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   operator<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  assignedOperator<T extends Prisma.Drone$assignedOperatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Drone$assignedOperatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   agency<T extends Prisma.AgencyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgencyDefaultArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   detections<T extends Prisma.Drone$detectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Drone$detectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DetectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1451,8 +2117,18 @@ export interface Prisma__DroneClient<T, Null = never, ExtArgs extends runtime.Ty
 export interface DroneFieldRefs {
   readonly id: Prisma.FieldRef<"Drone", 'Int'>
   readonly callsign: Prisma.FieldRef<"Drone", 'String'>
+  readonly manufacturer: Prisma.FieldRef<"Drone", 'String'>
+  readonly model: Prisma.FieldRef<"Drone", 'String'>
+  readonly droneType: Prisma.FieldRef<"Drone", 'DroneType'>
+  readonly serialNumber: Prisma.FieldRef<"Drone", 'String'>
+  readonly registrationNumber: Prisma.FieldRef<"Drone", 'String'>
   readonly status: Prisma.FieldRef<"Drone", 'DroneStatus'>
+  readonly operationalStatus: Prisma.FieldRef<"Drone", 'OperationalStatus'>
   readonly addedBy: Prisma.FieldRef<"Drone", 'Int'>
+  readonly assignedOperatorId: Prisma.FieldRef<"Drone", 'Int'>
+  readonly dateAcquired: Prisma.FieldRef<"Drone", 'DateTime'>
+  readonly lastInspectionDate: Prisma.FieldRef<"Drone", 'DateTime'>
+  readonly notes: Prisma.FieldRef<"Drone", 'String'>
   readonly lastLat: Prisma.FieldRef<"Drone", 'Float'>
   readonly lastLng: Prisma.FieldRef<"Drone", 'Float'>
   readonly lastFeedAt: Prisma.FieldRef<"Drone", 'DateTime'>
@@ -1857,6 +2533,25 @@ export type DroneDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Drones to delete.
    */
   limit?: number
+}
+
+/**
+ * Drone.assignedOperator
+ */
+export type Drone$assignedOperatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**
