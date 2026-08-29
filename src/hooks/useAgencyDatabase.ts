@@ -36,7 +36,7 @@ export function useAgencyDatabase() {
             name: input.adminFullName,
             phone: input.adminPhone,
             role: 'AGENCY_ADMIN',
-            agency_id: null, // Will be set after agency creation
+            agencyId: null, // Will be set after agency creation
             active: false, // Inactive until approved
             created_at: new Date().toISOString(),
           },
@@ -65,10 +65,10 @@ export function useAgencyDatabase() {
       if (agencyError) throw agencyError
       if (!agencyData) throw new Error('Failed to create agency')
 
-      // Step 3: Update user with agency_id
+      // Step 3: Update user with agencyId
       const { error: updateError } = await supabase
         .from('user')
-        .update({ agency_id: agencyData.id })
+        .update({ agencyId: agencyData.id })
         .eq('id', userData.id)
 
       if (updateError) throw updateError
