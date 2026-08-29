@@ -210,9 +210,6 @@ export function AuthPage() {
             <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
               <div className="max-w-md">
                 <h2 className="text-xl font-semibold text-foreground">Sign In</h2>
-                <p className="mt-1 text-sm leading-relaxed text-foreground-secondary">
-                  Access your agency&apos;s live response workspace using your agency-issued credentials.
-                </p>
               </div>
 
               <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
@@ -265,7 +262,7 @@ export function AuthPage() {
                   </p>
                 ) : null}
 
-                <Button type="submit" className="mt-1 self-center">
+                <Button type="submit" className="mt-1 self-center px-8">
                   Sign in
                 </Button>
               </form>
@@ -315,9 +312,6 @@ export function AuthPage() {
               ) : (
                 <>
                   <h2 className="text-xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
-                  <p className="mt-1 max-w-md text-sm leading-relaxed text-foreground-secondary">
-                    Access your agency&apos;s live response workspace using your agency-issued credentials.
-                  </p>
                   <RegistrationStepper steps={STEP_LABELS} currentStep={currentStep} />
 
                   <form className="flex flex-col gap-4" onSubmit={handleSignupSubmit}>

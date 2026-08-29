@@ -8,7 +8,7 @@ import logo from '../../assets/logo.png'
 
 const NAV_LINKS = [
   { label: 'Capabilities', href: '#capabilities' },
-  { label: 'How it works', href: '#workflow' },
+  { label: 'hello', href: '#workflow' },
 ]
 
 export function LandingHeader() {

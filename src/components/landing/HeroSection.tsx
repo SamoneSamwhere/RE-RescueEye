@@ -105,8 +105,8 @@ export function HeroSection() {
               <ArrowRight className="size-4" />
             </Button>
           </Link>
-          <a
-            href="#workflow"
+          <Link
+            to={ROUTES.login}
             className="inline-block transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
           >
             <Button
@@ -115,9 +115,9 @@ export function HeroSection() {
               className="gap-2 border-white/25 px-6 text-foreground-inverse hover:bg-white/10"
             >
               <PlayCircle className="size-4" />
-              See how it works
+              Log in
             </Button>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
