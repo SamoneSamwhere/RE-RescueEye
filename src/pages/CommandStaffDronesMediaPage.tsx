@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Sparkles, ArrowRight } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
-import { DroneList, RegisterDroneModal } from '../components/drones'
+import { DroneList } from '../components/drones'
 import { FeedModal, MediaHistoryTable } from '../components/media'
 import type { MediaHistoryItem } from '../components/media'
 import { useAuth } from '../features/auth'
@@ -17,10 +17,8 @@ const CONNECT_DELAY_MS = 800
 export function CommandStaffDronesMediaPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { drones, liveDroneIds, mediaAssets, registerDrone, connectDrone, startLiveFeed, captureMedia } =
+  const { drones, liveDroneIds, mediaAssets, connectDrone, startLiveFeed, captureMedia } =
     useCommandStaffData()
-
-  const [registerModalOpen, setRegisterModalOpen] = useState(false)
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)
@@ -97,7 +95,7 @@ export function CommandStaffDronesMediaPage() {
             onConnect={handleConnect}
             onSelectFeedSource={handleSelectFeedSource}
             onViewLive={() => navigate(ROUTES.commandStaffLiveMonitoring)}
-            onRegisterClick={() => setRegisterModalOpen(true)}
+            onRegisterClick={() => navigate(ROUTES.commandStaffDroneRegistration)}
           />
         </Reveal>
 
@@ -121,13 +119,6 @@ export function CommandStaffDronesMediaPage() {
           <MediaHistoryTable items={mediaHistoryItems} />
         </Reveal>
       </div>
-
-      <RegisterDroneModal
-        open={registerModalOpen}
-        onClose={() => setRegisterModalOpen(false)}
-        onRegister={registerDrone}
-        existingSerialNumbers={drones.map((d) => d.serialNumber)}
-      />
 
       {selectedDrone ? (
         <FeedModal

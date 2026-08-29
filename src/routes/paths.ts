@@ -14,6 +14,7 @@ export const ROUTES = {
   agencyAdminSettings: '/agency-admin/settings',
   commandStaff: '/command-staff',
   commandStaffMedia: '/command-staff/drones-media',
+  commandStaffDroneRegistration: '/command-staff/drones/register',
   commandStaffLiveMonitoring: '/command-staff/live-monitoring',
   commandStaffDetections: '/command-staff/detections',
   commandStaffIncidents: '/command-staff/incidents',

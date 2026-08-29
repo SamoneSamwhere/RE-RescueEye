@@ -37,7 +37,19 @@ interface CommandStaffDataContextValue {
   dispatchIncident: (incidentId: string, responderUserId: string) => Mission | null
   closeIncident: (incidentId: string) => void
   captureMedia: (sourceType: MediaSourceType, droneId: string | undefined, fileName?: string) => Detection
-  registerDrone: (input: { name: string; serialNumber: string }) => void
+  registerDrone: (input: {
+    name: string
+    manufacturer: string
+    model: string
+    droneType: string
+    serialNumber: string
+    registrationNumber?: string
+    dateAcquired: string
+    operationalStatus: string
+    assignedOperatorId?: string
+    lastInspectionDate?: string
+    notes?: string
+  }) => void
   connectDrone: (droneId: string) => void
   startLiveFeed: (droneId: string) => void
   stopLiveFeed: (droneId: string) => void
@@ -274,13 +286,34 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     updateIncident(incidentId, { status: 'CLOSED', closedByUserId: session.id, closedAt: now().toISOString() })
   }
 
-  function registerDrone(input: { name: string; serialNumber: string }) {
+  function registerDrone(input: {
+    name: string
+    manufacturer: string
+    model: string
+    droneType: string
+    serialNumber: string
+    registrationNumber?: string
+    dateAcquired: string
+    operationalStatus: string
+    assignedOperatorId?: string
+    lastInspectionDate?: string
+    notes?: string
+  }) {
     if (!agencyId) return
     addDrone({
       id: generateId('drone'),
       agencyId,
       name: input.name,
+      manufacturer: input.manufacturer,
+      model: input.model,
+      droneType: input.droneType as any,
       serialNumber: input.serialNumber,
+      registrationNumber: input.registrationNumber,
+      assignedOperatorId: input.assignedOperatorId,
+      dateAcquired: input.dateAcquired,
+      operationalStatus: input.operationalStatus as any,
+      lastInspectionDate: input.lastInspectionDate,
+      notes: input.notes,
       connectionStatus: 'DISCONNECTED',
       registeredAt: now().toISOString(),
     })

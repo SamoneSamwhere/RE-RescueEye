@@ -1,0 +1,6 @@
+export { DroneInfoStep } from './DroneInfoStep'
+export { RegistrationDetailsStep } from './RegistrationDetailsStep'
+export { AssignmentStep } from './AssignmentStep'
+export { ReviewStep } from './ReviewStep'
+export type { DroneRegistrationData } from './types'
+export { EMPTY_REGISTRATION_DATA } from './types'

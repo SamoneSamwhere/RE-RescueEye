@@ -14,6 +14,7 @@ import { CommandStaffIncidentsPage } from '../pages/CommandStaffIncidentsPage'
 import { CommandStaffIncidentDetailPage } from '../pages/CommandStaffIncidentDetailPage'
 import { CommandStaffMapPage } from '../pages/CommandStaffMapPage'
 import { CommandStaffSettingsPage } from '../pages/CommandStaffSettingsPage'
+import { CommandStaffDroneRegistrationPage } from '../pages/CommandStaffDroneRegistrationPage'
 import { FieldResponderHomePage } from '../pages/FieldResponderHomePage'
 import { FieldResponderMapPage } from '../pages/FieldResponderMapPage'
 import { FieldResponderProfilePage } from '../pages/FieldResponderProfilePage'
@@ -92,6 +93,7 @@ export const router = createBrowserRouter([
         children: [
           { path: ROUTES.commandStaff, element: <CommandStaffDashboardPage /> },
           { path: ROUTES.commandStaffMedia, element: <CommandStaffDronesMediaPage /> },
+          { path: ROUTES.commandStaffDroneRegistration, element: <CommandStaffDroneRegistrationPage /> },
           { path: ROUTES.commandStaffLiveMonitoring, element: <CommandStaffLiveMonitoringPage /> },
           { path: ROUTES.commandStaffDetections, element: <CommandStaffDetectionReviewPage /> },
           { path: ROUTES.commandStaffIncidents, element: <CommandStaffIncidentsPage /> },
