@@ -20,6 +20,10 @@ import type {
   DocumentErrors,
   DocumentId,
 } from '../components/landing/registration'
+import { useAgencyStore } from '../state/AgencyStore'
+import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
+import { generateId } from '../lib/id'
+import { now } from '../lib/now'
 import { cn } from '../lib/cn'
 
 type AuthMode = 'signin' | 'signup'
@@ -89,6 +93,8 @@ const MOBILE_QUERY = '(max-width: 1023px)'
 
 export function AuthPage() {
   const { login, session } = useAuth()
+  const { addAgency } = useAgencyStore()
+  const { createAgency: createAgencyInDb, isLoading: isCreatingAgency } = useAgencyDatabase()
   const [searchParams, setSearchParams] = useSearchParams()
   const mode: AuthMode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
 
@@ -187,7 +193,7 @@ export function AuthPage() {
     setCurrentStep((step) => Math.max(0, step - 1))
   }
 
-  function handleSignupSubmit(event: FormEvent) {
+  async function handleSignupSubmit(event: FormEvent) {
     event.preventDefault()
     const stepError = validateDocumentsStep(documents, documentErrors, agreedToTerms)
     if (stepError) {
@@ -195,6 +201,48 @@ export function AuthPage() {
       return
     }
     setSignupError(null)
+
+    // Create agency in Supabase
+    const result = await createAgencyInDb({
+      agencyName: agency.agencyName,
+      agencyType: agency.agencyType,
+      agencyAddress: agency.agencyAddress,
+      agencyPhone: agency.agencyPhone,
+      agencyEmail: agency.agencyEmail,
+      agencyWebsite: agency.agencyWebsite,
+      adminFullName: admin.fullName,
+      adminPosition: admin.position,
+      adminEmail: admin.email,
+      adminPhone: admin.phone,
+      adminPassword: admin.password,
+    })
+
+    if (!result.success) {
+      setSignupError(result.error || 'Failed to create agency. Please try again.')
+      return
+    }
+
+    // Also add to local mock store for consistency
+    addAgency({
+      id: `agency-${result.agencyId}`,
+      name: agency.agencyName,
+      agencyType: agency.agencyType,
+      address: agency.agencyAddress,
+      contactPhone: agency.agencyPhone,
+      contactEmail: agency.agencyEmail,
+      website: agency.agencyWebsite || undefined,
+      agencyAdmin: {
+        fullName: admin.fullName,
+        position: admin.position,
+        email: admin.email,
+        phone: admin.phone,
+      },
+      documents: [],
+      registrationStatus: 'PENDING',
+      accountStatus: 'INACTIVE',
+      registeredAt: now().toISOString(),
+    })
+
     setSubmitted(true)
   }
 
@@ -357,8 +405,8 @@ export function AuthPage() {
                           Continue
                         </Button>
                       ) : (
-                        <Button type="submit">
-                          Submit Registration
+                        <Button type="submit" disabled={isCreatingAgency}>
+                          {isCreatingAgency ? 'Submitting...' : 'Submit Registration'}
                         </Button>
                       )}
                     </div>
