@@ -1,4 +1,5 @@
-import { Mail, Phone, Building2, Clock, LogOut } from 'lucide-react'
+import { Mail, Phone, Building2, Clock, LogOut, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { MobileShell } from '../components/layout'
 import { Card, Badge, Button } from '../components/ui'
 import { useAuth } from '../features/auth'
@@ -7,6 +8,7 @@ import { mockUsers } from '../data/mockUsers'
 import { formatDateTime } from '../lib/formatDateTime'
 import { notificationsFor } from '../lib/notifications'
 import { useNotificationStore } from '../state/NotificationStore'
+import { ROUTES } from '../routes/paths'
 
 function ProfileField({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value: string }) {
   return (
@@ -21,6 +23,7 @@ function ProfileField({ icon: Icon, label, value }: { icon: typeof Mail; label: 
 }
 
 export function FieldResponderProfilePage() {
+  const navigate = useNavigate()
   const { session, logout } = useAuth()
   const { notifications: allNotifications } = useNotificationStore()
   const currentUser = session ? mockUsers.find((u) => u.id === session.id) : undefined
@@ -60,6 +63,11 @@ export function FieldResponderProfilePage() {
             <ProfileField icon={Clock} label="Last Login" value={formatDateTime(currentUser.lastLoginAt)} />
           ) : null}
         </Card>
+
+        <Button variant="secondary" className="w-full" onClick={() => navigate(ROUTES.fieldResponderSettings)}>
+          <Settings className="size-4" />
+          Edit Profile & Settings
+        </Button>
 
         <Button variant="outline" className="w-full" onClick={logout}>
           <LogOut className="size-4" />
