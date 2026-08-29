@@ -209,7 +209,7 @@ export function AuthPage() {
                 still be reachable by click/tab underneath. */}
             <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
               <div className="max-w-md">
-                <h2 className="text-xl font-semibold text-foreground">Sign In</h2>
+                <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
 
               <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
@@ -223,7 +223,6 @@ export function AuthPage() {
                 <Field
                   label="Email"
                   htmlFor="email"
-                  hint="Use the email address provided by your agency administrator."
                 >
                   <Input
                     id="email"
@@ -239,7 +238,6 @@ export function AuthPage() {
                 <Field
                   label="Password"
                   htmlFor="password"
-                  hint="Enter the password associated with your RescueEye account."
                 >
                   <Input
                     id="password"
@@ -311,7 +309,7 @@ export function AuthPage() {
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
+                  <h2 className="text-center text-2xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
                   <RegistrationStepper steps={STEP_LABELS} currentStep={currentStep} />
 
                   <form className="flex flex-col gap-4" onSubmit={handleSignupSubmit}>
