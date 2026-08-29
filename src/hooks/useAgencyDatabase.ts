@@ -32,13 +32,13 @@ export function useAgencyDatabase() {
         .insert([
           {
             email: input.adminEmail,
-            password_hash: passwordHash,
+            passwordHash: passwordHash,
             name: input.adminFullName,
             phone: input.adminPhone,
             role: 'AGENCY_ADMIN',
             agencyId: null, // Will be set after agency creation
             active: false, // Inactive until approved
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
           },
         ])
         .select()
@@ -53,10 +53,10 @@ export function useAgencyDatabase() {
         .insert([
           {
             name: input.agencyName,
-            registration_status: 'PENDING',
-            subscription_status: 'ACTIVE',
-            created_by: userData.id,
-            created_at: new Date().toISOString(),
+            registrationStatus: 'PENDING',
+            subscriptionStatus: 'ACTIVE',
+            createdBy: userData.id,
+            createdAt: new Date().toISOString(),
           },
         ])
         .select()
