@@ -106,8 +106,9 @@ export function AgencyAdminUserCreationPage() {
     // Brief simulated latency so the loading state is actually visible — this is a mock backend with no real network call.
     await new Promise((resolve) => setTimeout(resolve, 600))
 
-    const result = createUser({
-      name: `${personnel.firstName} ${personnel.lastName}`.trim(),
+    const result = await createUser({
+      firstName: personnel.firstName,
+      lastName: personnel.lastName,
       email: personnel.email,
       phone: personnel.phone,
       password: account.password,

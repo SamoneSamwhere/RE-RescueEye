@@ -1,90 +1,130 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
-import { now } from '../../lib/now'
 import type { Agency, AgencyAccountStatus } from '../../types/agency'
 import { useAuth } from '../auth'
-import { useAgencyStore } from '../../state/AgencyStore'
+import { useAgencyDatabase } from '../../hooks/useAgencyDatabase'
+import type { DbAgency } from '../../hooks/useAgencyDatabase'
+import { supabase } from '../../lib/supabase'
 
 interface SystemAdminDataContextValue {
   agencies: Agency[]
-  approveAgency: (agencyId: string) => void
-  rejectAgency: (agencyId: string, reason: string) => void
-  requestResubmission: (agencyId: string, notes: string) => void
-  resubmitAgency: (agencyId: string) => void
-  setAgencyAccountStatus: (agencyId: string, status: AgencyAccountStatus) => void
+  isLoading: boolean
+  refresh: () => Promise<void>
+  approveAgency: (agencyId: string) => Promise<void>
+  rejectAgency: (agencyId: string, reason: string) => Promise<void>
+  requestResubmission: (agencyId: string, notes: string) => Promise<void>
+  resubmitAgency: (agencyId: string) => Promise<void>
+  setAgencyAccountStatus: (agencyId: string, status: AgencyAccountStatus) => Promise<void>
 }
 
 const SystemAdminDataContext = createContext<SystemAdminDataContextValue | undefined>(undefined)
 
+interface CreatorInfo {
+  firstName: string | null
+  lastName: string | null
+  position: string | null
+  email: string
+  phone: string | null
+}
+
+function mapDbAgencyToAgency(dbAgency: DbAgency, creator: CreatorInfo | undefined): Agency {
+  return {
+    id: String(dbAgency.id),
+    name: dbAgency.name,
+    agencyType: dbAgency.agencyType || '',
+    address: dbAgency.address || '',
+    website: dbAgency.website || undefined,
+    contactEmail: dbAgency.contactEmail || '',
+    contactPhone: dbAgency.contactPhone || undefined,
+    agencyAdmin: {
+      fullName: creator ? `${creator.firstName || ''} ${creator.lastName || ''}`.trim() : '',
+      position: creator?.position || '',
+      email: creator?.email || '',
+      phone: creator?.phone || '',
+    },
+    documents: [],
+    registrationStatus: dbAgency.registrationStatus,
+    accountStatus: dbAgency.accountStatus || 'INACTIVE',
+    registeredAt: dbAgency.createdAt,
+    reviewedByUserId: dbAgency.validatedBy ? String(dbAgency.validatedBy) : undefined,
+    reviewedAt: dbAgency.validatedAt || undefined,
+    reviewNotes: dbAgency.reviewNotes || undefined,
+  }
+}
+
 /**
- * Wraps the shared Agency store with the System Admin actions: reviewing a
- * PENDING (or RESUBMISSION_REQUIRED) registration — approve, reject, or ask
- * for corrections — and, once APPROVED, toggling ongoing account status. A
- * REJECTED agency is never a dead end — resubmit puts it back to PENDING for
- * another review pass, and account status changes never delete the agency
- * record.
+ * Wraps the real Supabase `agency`/`user` tables with the System Admin
+ * actions: reviewing a PENDING registration — approve, reject, or ask for
+ * corrections — and, once APPROVED, toggling ongoing account status.
  */
 export function SystemAdminDataProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
-  const { agencies, updateAgency } = useAgencyStore()
+  const db = useAgencyDatabase()
+  const [agencies, setAgencies] = useState<Agency[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const REVIEWABLE = new Set(['PENDING', 'RESUBMISSION_REQUIRED'])
+  const refresh = useCallback(async () => {
+    setIsLoading(true)
+    const dbAgencies = await db.getAgencies()
 
-  /** Only registrations still awaiting a decision can be approved. */
-  function approveAgency(agencyId: string) {
-    if (!REVIEWABLE.has(agencies.find((a) => a.id === agencyId)?.registrationStatus ?? '')) return
-    updateAgency(agencyId, {
-      registrationStatus: 'APPROVED',
-      accountStatus: 'ACTIVE',
-      reviewedByUserId: session?.id,
-      reviewedAt: now().toISOString(),
-      reviewNotes: undefined,
-    })
+    const creatorIds = Array.from(new Set(dbAgencies.map((a) => a.createdBy)))
+    let creatorsById = new Map<number, CreatorInfo>()
+    if (creatorIds.length > 0) {
+      const { data: creators, error: creatorsError } = await supabase
+        .from('user')
+        .select('id, firstName, lastName, position, email, phone')
+        .in('id', creatorIds)
+
+      if (!creatorsError && creators) {
+        creatorsById = new Map(creators.map((c) => [c.id, c]))
+      }
+    }
+
+    setAgencies(dbAgencies.map((a) => mapDbAgencyToAgency(a, creatorsById.get(a.createdBy))))
+    setIsLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  // Reviewer attribution (validatedBy) can't be set to a real user id yet — System Admin
+  // login is still mock-only, and the database has no row representing this session's identity.
+  async function approveAgency(agencyId: string) {
+    if (!session) return
+    const ok = await db.approveAgency(Number(agencyId), null)
+    if (ok) await refresh()
   }
 
-  /** Only registrations still awaiting a decision can be rejected. Requires a reason the agency admin will see. */
-  function rejectAgency(agencyId: string, reason: string) {
-    if (!REVIEWABLE.has(agencies.find((a) => a.id === agencyId)?.registrationStatus ?? '')) return
-    updateAgency(agencyId, {
-      registrationStatus: 'REJECTED',
-      accountStatus: 'INACTIVE',
-      reviewedByUserId: session?.id,
-      reviewedAt: now().toISOString(),
-      reviewNotes: reason,
-    })
+  async function rejectAgency(agencyId: string, reason: string) {
+    if (!session) return
+    const ok = await db.rejectAgency(Number(agencyId), null, reason)
+    if (ok) await refresh()
   }
 
-  /** Asks the agency to correct specific items instead of an outright rejection. */
-  function requestResubmission(agencyId: string, notes: string) {
-    if (!REVIEWABLE.has(agencies.find((a) => a.id === agencyId)?.registrationStatus ?? '')) return
-    updateAgency(agencyId, {
-      registrationStatus: 'RESUBMISSION_REQUIRED',
-      accountStatus: 'INACTIVE',
-      reviewedByUserId: session?.id,
-      reviewedAt: now().toISOString(),
-      reviewNotes: notes,
-    })
+  async function requestResubmission(agencyId: string, notes: string) {
+    if (!session) return
+    const ok = await db.requestResubmission(Number(agencyId), null, notes)
+    if (ok) await refresh()
   }
 
-  /** REJECTED -> PENDING: reopens the registration for another review pass. */
-  function resubmitAgency(agencyId: string) {
-    if (agencies.find((a) => a.id === agencyId)?.registrationStatus !== 'REJECTED') return
-    updateAgency(agencyId, {
-      registrationStatus: 'PENDING',
-      reviewedByUserId: undefined,
-      reviewedAt: undefined,
-      reviewNotes: undefined,
-    })
+  async function resubmitAgency(agencyId: string) {
+    const ok = await db.resubmitAgency(Number(agencyId))
+    if (ok) await refresh()
   }
 
-  function setAgencyAccountStatus(agencyId: string, status: AgencyAccountStatus) {
-    updateAgency(agencyId, { accountStatus: status })
+  async function setAgencyAccountStatus(agencyId: string, status: AgencyAccountStatus) {
+    const ok = await db.setAgencyAccountStatus(Number(agencyId), status)
+    if (ok) await refresh()
   }
 
   return (
     <SystemAdminDataContext.Provider
       value={{
         agencies,
+        isLoading,
+        refresh,
         approveAgency,
         rejectAgency,
         requestResubmission,

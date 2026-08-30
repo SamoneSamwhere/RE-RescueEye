@@ -102,6 +102,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   const [currentStep, setCurrentStep] = useState(0)
   const [agency, setAgency] = useState<AgencyInfoValues>({
@@ -161,9 +162,12 @@ export function AuthPage() {
     setSearchParams(params, { replace: true })
   }
 
-  function handleLoginSubmit(event: FormEvent) {
+  async function handleLoginSubmit(event: FormEvent) {
     event.preventDefault()
-    const result = login(email, password)
+    setLoginError(null)
+    setIsLoggingIn(true)
+    const result = await login(email, password)
+    setIsLoggingIn(false)
     if (!result.ok) {
       setLoginError(result.error)
     }
@@ -311,8 +315,8 @@ export function AuthPage() {
                   </p>
                 ) : null}
 
-                <Button type="submit" className="mt-1 self-center px-8">
-                  Sign in
+                <Button type="submit" className="mt-1 self-center px-8" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'Signing in…' : 'Sign in'}
                 </Button>
               </form>
 
