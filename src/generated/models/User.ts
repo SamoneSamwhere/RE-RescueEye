@@ -226,7 +226,7 @@ export type UserGroupByOutputType = {
   name: string
   phone: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId: number | null
   active: boolean
   dutyStatus: $Enums.DutyStatus
   createdAt: Date
@@ -263,13 +263,14 @@ export type UserWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
-  agencyId?: Prisma.IntFilter<"User"> | number
+  agencyId?: Prisma.IntNullableFilter<"User"> | number | null
   active?: Prisma.BoolFilter<"User"> | boolean
   dutyStatus?: Prisma.EnumDutyStatusFilter<"User"> | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
-  agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
+  agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   createdAgencies?: Prisma.AgencyListRelationFilter
+  validatedAgencies?: Prisma.AgencyListRelationFilter
   dronesAdded?: Prisma.DroneListRelationFilter
   dronesAssigned?: Prisma.DroneListRelationFilter
   detectionsReviewed?: Prisma.DetectionListRelationFilter
@@ -286,13 +287,14 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
-  agencyId?: Prisma.SortOrder
+  agencyId?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
   dutyStatus?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   agency?: Prisma.AgencyOrderByWithRelationInput
   createdAgencies?: Prisma.AgencyOrderByRelationAggregateInput
+  validatedAgencies?: Prisma.AgencyOrderByRelationAggregateInput
   dronesAdded?: Prisma.DroneOrderByRelationAggregateInput
   dronesAssigned?: Prisma.DroneOrderByRelationAggregateInput
   detectionsReviewed?: Prisma.DetectionOrderByRelationAggregateInput
@@ -312,13 +314,14 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
-  agencyId?: Prisma.IntFilter<"User"> | number
+  agencyId?: Prisma.IntNullableFilter<"User"> | number | null
   active?: Prisma.BoolFilter<"User"> | boolean
   dutyStatus?: Prisma.EnumDutyStatusFilter<"User"> | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
-  agency?: Prisma.XOR<Prisma.AgencyScalarRelationFilter, Prisma.AgencyWhereInput>
+  agency?: Prisma.XOR<Prisma.AgencyNullableScalarRelationFilter, Prisma.AgencyWhereInput> | null
   createdAgencies?: Prisma.AgencyListRelationFilter
+  validatedAgencies?: Prisma.AgencyListRelationFilter
   dronesAdded?: Prisma.DroneListRelationFilter
   dronesAssigned?: Prisma.DroneListRelationFilter
   detectionsReviewed?: Prisma.DetectionListRelationFilter
@@ -335,7 +338,7 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
-  agencyId?: Prisma.SortOrder
+  agencyId?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
   dutyStatus?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -357,7 +360,7 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
   phone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
-  agencyId?: Prisma.IntWithAggregatesFilter<"User"> | number
+  agencyId?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   active?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   dutyStatus?: Prisma.EnumDutyStatusWithAggregatesFilter<"User"> | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -374,8 +377,9 @@ export type UserCreateInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -392,12 +396,13 @@ export type UserUncheckedCreateInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -417,8 +422,9 @@ export type UserUpdateInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -435,12 +441,13 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -457,7 +464,7 @@ export type UserCreateManyInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
@@ -483,7 +490,7 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -493,6 +500,11 @@ export type UserUncheckedUpdateManyInput = {
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
 }
 
 export type UserListRelationFilter = {
@@ -557,14 +569,15 @@ export type UserSumOrderByAggregateInput = {
   agencyId?: Prisma.SortOrder
 }
 
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
-}
-
 export type UserCreateNestedOneWithoutCreatedAgenciesInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgenciesInput, Prisma.UserUncheckedCreateWithoutCreatedAgenciesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedAgenciesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutValidatedAgenciesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutValidatedAgenciesInput, Prisma.UserUncheckedCreateWithoutValidatedAgenciesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutValidatedAgenciesInput
   connect?: Prisma.UserWhereUniqueInput
 }
 
@@ -588,6 +601,16 @@ export type UserUpdateOneRequiredWithoutCreatedAgenciesNestedInput = {
   upsert?: Prisma.UserUpsertWithoutCreatedAgenciesInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedAgenciesInput, Prisma.UserUpdateWithoutCreatedAgenciesInput>, Prisma.UserUncheckedUpdateWithoutCreatedAgenciesInput>
+}
+
+export type UserUpdateOneWithoutValidatedAgenciesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutValidatedAgenciesInput, Prisma.UserUncheckedCreateWithoutValidatedAgenciesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutValidatedAgenciesInput
+  upsert?: Prisma.UserUpsertWithoutValidatedAgenciesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutValidatedAgenciesInput, Prisma.UserUpdateWithoutValidatedAgenciesInput>, Prisma.UserUncheckedUpdateWithoutValidatedAgenciesInput>
 }
 
 export type UserUpdateManyWithoutAgencyNestedInput = {
@@ -746,7 +769,8 @@ export type UserCreateWithoutCreatedAgenciesInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -763,11 +787,12 @@ export type UserUncheckedCreateWithoutCreatedAgenciesInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -782,6 +807,54 @@ export type UserCreateOrConnectWithoutCreatedAgenciesInput = {
   create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgenciesInput, Prisma.UserUncheckedCreateWithoutCreatedAgenciesInput>
 }
 
+export type UserCreateWithoutValidatedAgenciesInput = {
+  email: string
+  passwordHash: string
+  name: string
+  phone?: string | null
+  role: $Enums.UserRole
+  active?: boolean
+  dutyStatus?: $Enums.DutyStatus
+  createdAt?: Date | string
+  lastLogin?: Date | string | null
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
+  detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
+  incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
+  responses?: Prisma.ResponseCreateNestedManyWithoutResponderInput
+  mediaUploaded?: Prisma.MediaCreateNestedManyWithoutUploaderInput
+  alertsReceived?: Prisma.AlertCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutValidatedAgenciesInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  name: string
+  phone?: string | null
+  role: $Enums.UserRole
+  agencyId?: number | null
+  active?: boolean
+  dutyStatus?: $Enums.DutyStatus
+  createdAt?: Date | string
+  lastLogin?: Date | string | null
+  createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
+  dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
+  detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
+  incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
+  responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutResponderInput
+  mediaUploaded?: Prisma.MediaUncheckedCreateNestedManyWithoutUploaderInput
+  alertsReceived?: Prisma.AlertUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutValidatedAgenciesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutValidatedAgenciesInput, Prisma.UserUncheckedCreateWithoutValidatedAgenciesInput>
+}
+
 export type UserCreateWithoutAgencyInput = {
   email: string
   passwordHash: string
@@ -793,6 +866,7 @@ export type UserCreateWithoutAgencyInput = {
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -814,6 +888,7 @@ export type UserUncheckedCreateWithoutAgencyInput = {
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -854,7 +929,8 @@ export type UserUpdateWithoutCreatedAgenciesInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -871,11 +947,66 @@ export type UserUncheckedUpdateWithoutCreatedAgenciesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
+  dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
+  detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
+  incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
+  responses?: Prisma.ResponseUncheckedUpdateManyWithoutResponderNestedInput
+  mediaUploaded?: Prisma.MediaUncheckedUpdateManyWithoutUploaderNestedInput
+  alertsReceived?: Prisma.AlertUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUpsertWithoutValidatedAgenciesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutValidatedAgenciesInput, Prisma.UserUncheckedUpdateWithoutValidatedAgenciesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutValidatedAgenciesInput, Prisma.UserUncheckedCreateWithoutValidatedAgenciesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutValidatedAgenciesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutValidatedAgenciesInput, Prisma.UserUncheckedUpdateWithoutValidatedAgenciesInput>
+}
+
+export type UserUpdateWithoutValidatedAgenciesInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
+  createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
+  dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
+  detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
+  incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
+  responses?: Prisma.ResponseUpdateManyWithoutResponderNestedInput
+  mediaUploaded?: Prisma.MediaUpdateManyWithoutUploaderNestedInput
+  alertsReceived?: Prisma.AlertUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutValidatedAgenciesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -911,7 +1042,7 @@ export type UserScalarWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
-  agencyId?: Prisma.IntFilter<"User"> | number
+  agencyId?: Prisma.IntNullableFilter<"User"> | number | null
   active?: Prisma.BoolFilter<"User"> | boolean
   dutyStatus?: Prisma.EnumDutyStatusFilter<"User"> | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -928,8 +1059,9 @@ export type UserCreateWithoutDronesAddedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
@@ -945,12 +1077,13 @@ export type UserUncheckedCreateWithoutDronesAddedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
@@ -974,8 +1107,9 @@ export type UserCreateWithoutDronesAssignedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
@@ -991,12 +1125,13 @@ export type UserUncheckedCreateWithoutDronesAssignedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
@@ -1031,8 +1166,9 @@ export type UserUpdateWithoutDronesAddedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
@@ -1048,12 +1184,13 @@ export type UserUncheckedUpdateWithoutDronesAddedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
@@ -1083,8 +1220,9 @@ export type UserUpdateWithoutDronesAssignedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
@@ -1100,12 +1238,13 @@ export type UserUncheckedUpdateWithoutDronesAssignedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
@@ -1124,8 +1263,9 @@ export type UserCreateWithoutDetectionsReviewedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   incidentsReported?: Prisma.IncidentCreateNestedManyWithoutReporterInput
@@ -1141,12 +1281,13 @@ export type UserUncheckedCreateWithoutDetectionsReviewedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   incidentsReported?: Prisma.IncidentUncheckedCreateNestedManyWithoutReporterInput
@@ -1181,8 +1322,9 @@ export type UserUpdateWithoutDetectionsReviewedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   incidentsReported?: Prisma.IncidentUpdateManyWithoutReporterNestedInput
@@ -1198,12 +1340,13 @@ export type UserUncheckedUpdateWithoutDetectionsReviewedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   incidentsReported?: Prisma.IncidentUncheckedUpdateManyWithoutReporterNestedInput
@@ -1222,8 +1365,9 @@ export type UserCreateWithoutIncidentsReportedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -1239,12 +1383,13 @@ export type UserUncheckedCreateWithoutIncidentsReportedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -1279,8 +1424,9 @@ export type UserUpdateWithoutIncidentsReportedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -1296,12 +1442,13 @@ export type UserUncheckedUpdateWithoutIncidentsReportedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -1320,8 +1467,9 @@ export type UserCreateWithoutResponsesInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -1337,12 +1485,13 @@ export type UserUncheckedCreateWithoutResponsesInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -1377,8 +1526,9 @@ export type UserUpdateWithoutResponsesInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -1394,12 +1544,13 @@ export type UserUncheckedUpdateWithoutResponsesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -1418,8 +1569,9 @@ export type UserCreateWithoutAlertsReceivedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -1435,12 +1587,13 @@ export type UserUncheckedCreateWithoutAlertsReceivedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -1475,8 +1628,9 @@ export type UserUpdateWithoutAlertsReceivedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -1492,12 +1646,13 @@ export type UserUncheckedUpdateWithoutAlertsReceivedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -1516,8 +1671,9 @@ export type UserCreateWithoutMediaUploadedInput = {
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
-  agency: Prisma.AgencyCreateNestedOneWithoutUsersInput
+  agency?: Prisma.AgencyCreateNestedOneWithoutUsersInput
   createdAgencies?: Prisma.AgencyCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionCreateNestedManyWithoutReviewerInput
@@ -1533,12 +1689,13 @@ export type UserUncheckedCreateWithoutMediaUploadedInput = {
   name: string
   phone?: string | null
   role: $Enums.UserRole
-  agencyId: number
+  agencyId?: number | null
   active?: boolean
   dutyStatus?: $Enums.DutyStatus
   createdAt?: Date | string
   lastLogin?: Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutCreatorInput
+  validatedAgencies?: Prisma.AgencyUncheckedCreateNestedManyWithoutValidatorInput
   dronesAdded?: Prisma.DroneUncheckedCreateNestedManyWithoutOperatorInput
   dronesAssigned?: Prisma.DroneUncheckedCreateNestedManyWithoutAssignedOperatorInput
   detectionsReviewed?: Prisma.DetectionUncheckedCreateNestedManyWithoutReviewerInput
@@ -1573,8 +1730,9 @@ export type UserUpdateWithoutMediaUploadedInput = {
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agency?: Prisma.AgencyUpdateOneRequiredWithoutUsersNestedInput
+  agency?: Prisma.AgencyUpdateOneWithoutUsersNestedInput
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -1590,12 +1748,13 @@ export type UserUncheckedUpdateWithoutMediaUploadedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  agencyId?: Prisma.IntFieldUpdateOperationsInput | number
+  agencyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dutyStatus?: Prisma.EnumDutyStatusFieldUpdateOperationsInput | $Enums.DutyStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -1628,6 +1787,7 @@ export type UserUpdateWithoutAgencyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUpdateManyWithoutReviewerNestedInput
@@ -1649,6 +1809,7 @@ export type UserUncheckedUpdateWithoutAgencyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutCreatorNestedInput
+  validatedAgencies?: Prisma.AgencyUncheckedUpdateManyWithoutValidatorNestedInput
   dronesAdded?: Prisma.DroneUncheckedUpdateManyWithoutOperatorNestedInput
   dronesAssigned?: Prisma.DroneUncheckedUpdateManyWithoutAssignedOperatorNestedInput
   detectionsReviewed?: Prisma.DetectionUncheckedUpdateManyWithoutReviewerNestedInput
@@ -1678,6 +1839,7 @@ export type UserUncheckedUpdateManyWithoutAgencyInput = {
 
 export type UserCountOutputType = {
   createdAgencies: number
+  validatedAgencies: number
   dronesAdded: number
   dronesAssigned: number
   detectionsReviewed: number
@@ -1689,6 +1851,7 @@ export type UserCountOutputType = {
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   createdAgencies?: boolean | UserCountOutputTypeCountCreatedAgenciesArgs
+  validatedAgencies?: boolean | UserCountOutputTypeCountValidatedAgenciesArgs
   dronesAdded?: boolean | UserCountOutputTypeCountDronesAddedArgs
   dronesAssigned?: boolean | UserCountOutputTypeCountDronesAssignedArgs
   detectionsReviewed?: boolean | UserCountOutputTypeCountDetectionsReviewedArgs
@@ -1712,6 +1875,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountCreatedAgenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgencyWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountValidatedAgenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AgencyWhereInput
 }
 
@@ -1777,8 +1947,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   dutyStatus?: boolean
   createdAt?: boolean
   lastLogin?: boolean
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
   createdAgencies?: boolean | Prisma.User$createdAgenciesArgs<ExtArgs>
+  validatedAgencies?: boolean | Prisma.User$validatedAgenciesArgs<ExtArgs>
   dronesAdded?: boolean | Prisma.User$dronesAddedArgs<ExtArgs>
   dronesAssigned?: boolean | Prisma.User$dronesAssignedArgs<ExtArgs>
   detectionsReviewed?: boolean | Prisma.User$detectionsReviewedArgs<ExtArgs>
@@ -1801,7 +1972,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   dutyStatus?: boolean
   createdAt?: boolean
   lastLogin?: boolean
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1816,7 +1987,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   dutyStatus?: boolean
   createdAt?: boolean
   lastLogin?: boolean
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -1835,8 +2006,9 @@ export type UserSelectScalar = {
 
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "phone" | "role" | "agencyId" | "active" | "dutyStatus" | "createdAt" | "lastLogin", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
   createdAgencies?: boolean | Prisma.User$createdAgenciesArgs<ExtArgs>
+  validatedAgencies?: boolean | Prisma.User$validatedAgenciesArgs<ExtArgs>
   dronesAdded?: boolean | Prisma.User$dronesAddedArgs<ExtArgs>
   dronesAssigned?: boolean | Prisma.User$dronesAssignedArgs<ExtArgs>
   detectionsReviewed?: boolean | Prisma.User$detectionsReviewedArgs<ExtArgs>
@@ -1847,17 +2019,18 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
 }
 export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  agency?: boolean | Prisma.AgencyDefaultArgs<ExtArgs>
+  agency?: boolean | Prisma.User$agencyArgs<ExtArgs>
 }
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
-    agency: Prisma.$AgencyPayload<ExtArgs>
+    agency: Prisma.$AgencyPayload<ExtArgs> | null
     createdAgencies: Prisma.$AgencyPayload<ExtArgs>[]
+    validatedAgencies: Prisma.$AgencyPayload<ExtArgs>[]
     dronesAdded: Prisma.$DronePayload<ExtArgs>[]
     dronesAssigned: Prisma.$DronePayload<ExtArgs>[]
     detectionsReviewed: Prisma.$DetectionPayload<ExtArgs>[]
@@ -1873,7 +2046,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     phone: string | null
     role: $Enums.UserRole
-    agencyId: number
+    agencyId: number | null
     active: boolean
     dutyStatus: $Enums.DutyStatus
     createdAt: Date
@@ -2272,8 +2445,9 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  agency<T extends Prisma.AgencyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgencyDefaultArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  agency<T extends Prisma.User$agencyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agencyArgs<ExtArgs>>): Prisma.Prisma__AgencyClient<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdAgencies<T extends Prisma.User$createdAgenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  validatedAgencies<T extends Prisma.User$validatedAgenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$validatedAgenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dronesAdded<T extends Prisma.User$dronesAddedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dronesAddedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DronePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dronesAssigned<T extends Prisma.User$dronesAssignedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dronesAssignedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DronePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   detectionsReviewed<T extends Prisma.User$detectionsReviewedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$detectionsReviewedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DetectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2722,9 +2896,52 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
 }
 
 /**
+ * User.agency
+ */
+export type User$agencyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Agency
+   */
+  select?: Prisma.AgencySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Agency
+   */
+  omit?: Prisma.AgencyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgencyInclude<ExtArgs> | null
+  where?: Prisma.AgencyWhereInput
+}
+
+/**
  * User.createdAgencies
  */
 export type User$createdAgenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Agency
+   */
+  select?: Prisma.AgencySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Agency
+   */
+  omit?: Prisma.AgencyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgencyInclude<ExtArgs> | null
+  where?: Prisma.AgencyWhereInput
+  orderBy?: Prisma.AgencyOrderByWithRelationInput | Prisma.AgencyOrderByWithRelationInput[]
+  cursor?: Prisma.AgencyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgencyScalarFieldEnum | Prisma.AgencyScalarFieldEnum[]
+}
+
+/**
+ * User.validatedAgencies
+ */
+export type User$validatedAgenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Agency
    */

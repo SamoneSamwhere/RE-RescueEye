@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
-import { mockUsers } from '../data/mockUsers'
 import { Field, Input, Button } from '../components/ui'
 import { AuthPageShell, Reveal } from '../components/landing'
 import {
@@ -167,11 +166,6 @@ export function AuthPage() {
     }
   }
 
-  function fillDemoAccount(demoEmail: string, demoPassword: string) {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setLoginError(null)
-  }
 
   function handleDocumentChange(id: DocumentId, file: File | null, docError: string | null) {
     setDocuments((prev) => ({ ...prev, [id]: file }))
@@ -255,19 +249,19 @@ export function AuthPage() {
                 inert when the sign-up slot is active on desktop: the sliding overlay only covers it visually
                 (it's pointer-events-none so its own CTA button stays clickable), so without inert its fields would
                 still be reachable by click/tab underneath. */}
-            <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
-              <div className="max-w-md">
+            <div className="flex w-full flex-col items-center justify-center px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
+              <div className="w-full max-w-md">
                 <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
 
-              <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
+              <div className="mt-4 w-full max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
                 <p className="text-xs font-medium text-accent">Secure responder access</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">
                   Your agency administrator provides your account and role permissions.
                 </p>
               </div>
 
-              <form className="mt-5 flex max-w-md flex-col gap-3" onSubmit={handleLoginSubmit}>
+              <form className="mt-5 flex w-full max-w-md flex-col gap-3" onSubmit={handleLoginSubmit}>
                 <Field
                   label="Email"
                   htmlFor="email"
@@ -308,32 +302,11 @@ export function AuthPage() {
                   </p>
                 ) : null}
 
-                <Button type="submit" className="mt-1 self-center px-8">
+                <Button type="submit" className="mt-1 w-full">
                   Sign in
                 </Button>
               </form>
 
-              <div className="mt-4 rounded-md border border-border bg-surface-secondary px-3 py-3">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-                  Demo accounts (mock auth)
-                </p>
-                <ul className="flex max-h-32 flex-col gap-1 overflow-y-auto">
-                  {mockUsers.map((user) => (
-                    <li key={user.id}>
-                      <button
-                        type="button"
-                        onClick={() => fillDemoAccount(user.email, user.password)}
-                        className="group flex w-full items-center justify-between gap-3 rounded-sm px-1 py-1 text-left text-xs text-foreground-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                      >
-                        <span className="truncate font-mono">{user.email}</span>
-                        <span className="shrink-0 uppercase tracking-wide text-foreground-muted group-hover:text-foreground-secondary">
-                          {user.role.replace('_', ' ')}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
 
             {/* Sign up slot — desktop only; agency registration is not part of the mobile field-responder app.

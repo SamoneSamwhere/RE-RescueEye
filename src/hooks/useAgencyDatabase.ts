@@ -1,5 +1,16 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, handleDatabaseError } from '../lib/supabase'
+
+export interface AgencyRecord {
+  id: number
+  name: string
+  registrationStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'RESUBMISSION_REQUIRED'
+  subscriptionStatus: 'ACTIVE' | 'EXPIRED' | 'SUSPENDED'
+  createdBy: number
+  createdAt: string
+  validatedBy?: number
+  validatedAt?: string
+}
 
 interface CreateAgencyInput {
   agencyName: string
@@ -19,6 +30,74 @@ export function useAgencyDatabase() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Get all agencies (optionally filtered by status)
+   */
+  const getAgencies = async (filters?: {
+    registrationStatus?: string
+  }): Promise<AgencyRecord[]> => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      let query = supabase.from('agency').select('*')
+
+      if (filters?.registrationStatus) {
+        query = query.eq('registrationStatus', filters.registrationStatus)
+      }
+
+      const { data, error: dbError } = await query.order('createdAt', { ascending: false })
+
+      if (dbError) throw dbError
+      return data || []
+    } catch (err) {
+      const errorMsg = handleDatabaseError(err)
+      setError(errorMsg)
+      console.error('Error fetching agencies:', err)
+      return []
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * Get pending agencies for System Admin review
+   */
+  const getPendingAgencies = async (): Promise<AgencyRecord[]> => {
+    return getAgencies({ registrationStatus: 'PENDING' })
+  }
+
+  /**
+   * Get agency by ID
+   */
+  const getAgencyById = async (agencyId: number): Promise<AgencyRecord | null> => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const { data, error: dbError } = await supabase
+        .from('agency')
+        .select('*')
+        .eq('id', agencyId)
+        .single()
+
+      if (dbError) {
+        if (dbError.code === 'PGRST116') return null
+        throw dbError
+      }
+
+      return data
+    } catch (err) {
+      const errorMsg = handleDatabaseError(err)
+      setError(errorMsg)
+      console.error('Error fetching agency:', err)
+      return null
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * Create agency registration (with Agency Admin user)
+   */
   const createAgency = async (input: CreateAgencyInput) => {
     setIsLoading(true)
     setError(null)
@@ -31,14 +110,14 @@ export function useAgencyDatabase() {
         .from('user')
         .insert([
           {
-            email: input.adminEmail,
+            email: input.adminEmail.toLowerCase(),
             passwordHash: passwordHash,
             name: input.adminFullName,
             phone: input.adminPhone,
             role: 'AGENCY_ADMIN',
             agencyId: null, // Will be set after agency creation
             active: false, // Inactive until approved
-            createdAt: new Date().toISOString(),
+            dutyStatus: 'OFF_DUTY',
           },
         ])
         .select()
@@ -56,7 +135,6 @@ export function useAgencyDatabase() {
             registrationStatus: 'PENDING',
             subscriptionStatus: 'ACTIVE',
             createdBy: userData.id,
-            createdAt: new Date().toISOString(),
           },
         ])
         .select()
@@ -84,7 +162,74 @@ export function useAgencyDatabase() {
     }
   }
 
-  return { createAgency, isLoading, error }
+  /**
+   * Approve agency (System Admin action)
+   */
+  const approveAgency = async (agencyId: number, validatedByUserId: number): Promise<boolean> => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const { error: dbError } = await supabase
+        .from('agency')
+        .update({
+          registrationStatus: 'APPROVED',
+          subscriptionStatus: 'ACTIVE',
+          validatedBy: validatedByUserId,
+          validatedAt: new Date().toISOString(),
+        })
+        .eq('id', agencyId)
+
+      if (dbError) throw dbError
+
+      // Also activate the Agency Admin user
+      const agency = await getAgencyById(agencyId)
+      if (agency) {
+        await supabase.from('user').update({ active: true }).eq('id', agency.createdBy)
+      }
+
+      return true
+    } catch (err) {
+      const errorMsg = handleDatabaseError(err)
+      setError(errorMsg)
+      console.error('Error approving agency:', err)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * Reject agency (System Admin action)
+   */
+  const rejectAgency = async (agencyId: number, validatedByUserId: number): Promise<boolean> => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const { error: dbError } = await supabase
+        .from('agency')
+        .update({
+          registrationStatus: 'REJECTED',
+          subscriptionStatus: 'SUSPENDED',
+          validatedBy: validatedByUserId,
+          validatedAt: new Date().toISOString(),
+        })
+        .eq('id', agencyId)
+
+      if (dbError) throw dbError
+      return true
+    } catch (err) {
+      const errorMsg = handleDatabaseError(err)
+      setError(errorMsg)
+      console.error('Error rejecting agency:', err)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return { createAgency, getAgencies, getPendingAgencies, getAgencyById, approveAgency, rejectAgency, isLoading, error }
 }
 
 // Simple password hashing for demo (in production, use proper bcrypt)

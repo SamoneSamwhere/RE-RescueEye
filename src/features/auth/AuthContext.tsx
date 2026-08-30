@@ -25,7 +25,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const SESSION_STORAGE_KEY = 'rescueeye.mockSession'
+const SESSION_STORAGE_KEY = 'rescueeye.session'
 
 function toSession(user: MockUser): AuthSession {
   const agency = mockAgencies.find((candidate) => candidate.id === user.agencyId)
@@ -55,8 +55,19 @@ function isValidSession(value: unknown): value is AuthSession {
 }
 
 /**
- * Mock authentication only — session lives in localStorage, credentials are
- * checked against the in-memory mock user directory. No backend involved.
+ * Mock authentication — session lives in localStorage, credentials are
+ * checked against the in-memory mock user directory.
+ *
+ * This is a development-mode provider. The mock users in UserStore are
+ * initialized from mockUsers.ts. All auth checks are against this in-memory list.
+ *
+ * For production, this would be replaced with Supabase Auth or similar.
+ * The authentication flow would be:
+ * 1. User submits email/password
+ * 2. Hash password with SHA-256 (or bcrypt in prod)
+ * 3. Query Supabase for user with matching email and passwordHash
+ * 4. Check if user.active === true
+ * 5. Store session in localStorage
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { users } = useUserStore()

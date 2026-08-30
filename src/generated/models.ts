@@ -8,7 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/PlatformAdmin.js'
 export type * from './models/Agency.js'
 export type * from './models/User.js'
 export type * from './models/Drone.js'
