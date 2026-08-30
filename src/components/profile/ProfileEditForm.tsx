@@ -11,10 +11,17 @@ interface ProfileEditFormProps {
   onSuccess?: () => void
 }
 
+function splitName(fullName: string): { firstName: string; lastName: string } {
+  const [firstName, ...rest] = fullName.trim().split(/\s+/)
+  return { firstName: firstName || '', lastName: rest.join(' ') }
+}
+
 export function ProfileEditForm({ user, onSuccess }: ProfileEditFormProps) {
   const { updateUser } = useUserStore()
+  const { firstName: initialFirstName, lastName: initialLastName } = splitName(user.name)
   const [formData, setFormData] = useState({
-    name: user.name,
+    firstName: initialFirstName,
+    lastName: initialLastName,
     email: user.email,
     phone: user.phone || '',
   })
@@ -35,15 +42,15 @@ export function ProfileEditForm({ user, onSuccess }: ProfileEditFormProps) {
     setSuccess(false)
 
     try {
-      if (!formData.name.trim()) {
-        throw new Error('Name is required')
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        throw new Error('First and last name are required')
       }
       if (!formData.email.trim()) {
         throw new Error('Email is required')
       }
 
       updateUser(user.id, {
-        name: formData.name.trim(),
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
       })
@@ -67,16 +74,29 @@ export function ProfileEditForm({ user, onSuccess }: ProfileEditFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Full Name" htmlFor="name">
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            disabled={isSaving}
-            required
-          />
-        </Field>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="First Name" htmlFor="firstName">
+            <Input
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              disabled={isSaving}
+              required
+            />
+          </Field>
+
+          <Field label="Last Name" htmlFor="lastName">
+            <Input
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              disabled={isSaving}
+              required
+            />
+          </Field>
+        </div>
 
         <Field label="Email Address" htmlFor="email">
           <Input
@@ -116,7 +136,13 @@ export function ProfileEditForm({ user, onSuccess }: ProfileEditFormProps) {
 
         <Button
           type="submit"
-          disabled={isSaving || (formData.name === user.name && formData.email === user.email && formData.phone === (user.phone || ''))}
+          disabled={
+            isSaving ||
+            (formData.firstName === initialFirstName &&
+              formData.lastName === initialLastName &&
+              formData.email === user.email &&
+              formData.phone === (user.phone || ''))
+          }
           className="w-full"
         >
           {isSaving ? 'Saving...' : 'Save Changes'}

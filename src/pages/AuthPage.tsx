@@ -50,7 +50,8 @@ function validateAgencyStep(values: AgencyInfoValues): string | null {
 
 function validateAdminStep(values: AdminInfoValues): string | null {
   if (
-    !values.fullName.trim() ||
+    !values.firstName.trim() ||
+    !values.lastName.trim() ||
     !values.position.trim() ||
     !values.email.trim() ||
     !values.phone.trim() ||
@@ -112,7 +113,8 @@ export function AuthPage() {
     agencyWebsite: '',
   })
   const [admin, setAdmin] = useState<AdminInfoValues>({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     position: '',
     email: '',
     phone: '',
@@ -210,7 +212,8 @@ export function AuthPage() {
       agencyPhone: agency.agencyPhone,
       agencyEmail: agency.agencyEmail,
       agencyWebsite: agency.agencyWebsite,
-      adminFullName: admin.fullName,
+      adminFirstName: admin.firstName,
+      adminLastName: admin.lastName,
       adminPosition: admin.position,
       adminEmail: admin.email,
       adminPhone: admin.phone,
@@ -232,7 +235,7 @@ export function AuthPage() {
       contactEmail: agency.agencyEmail,
       website: agency.agencyWebsite || undefined,
       agencyAdmin: {
-        fullName: admin.fullName,
+        fullName: `${admin.firstName} ${admin.lastName}`.trim(),
         position: admin.position,
         email: admin.email,
         phone: admin.phone,

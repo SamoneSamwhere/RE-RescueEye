@@ -18,16 +18,28 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Full Name" htmlFor="admin-name">
+        <Field label="First Name" htmlFor="admin-first-name">
           <Input
-            id="admin-name"
-            autoComplete="name"
-            value={values.fullName}
-            onChange={(event) => onChange({ fullName: event.target.value })}
+            id="admin-first-name"
+            autoComplete="given-name"
+            value={values.firstName}
+            onChange={(event) => onChange({ firstName: event.target.value })}
             required
           />
         </Field>
 
+        <Field label="Last Name" htmlFor="admin-last-name">
+          <Input
+            id="admin-last-name"
+            autoComplete="family-name"
+            value={values.lastName}
+            onChange={(event) => onChange({ lastName: event.target.value })}
+            required
+          />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Position / Designation" htmlFor="admin-position">
           <Input
             id="admin-position"
@@ -37,9 +49,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
             required
           />
         </Field>
-      </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Email Address" htmlFor="admin-email">
           <Input
             id="admin-email"

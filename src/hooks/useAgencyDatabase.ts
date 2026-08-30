@@ -8,7 +8,8 @@ interface CreateAgencyInput {
   agencyPhone: string
   agencyEmail: string
   agencyWebsite?: string
-  adminFullName: string
+  adminFirstName: string
+  adminLastName: string
   adminPosition: string
   adminEmail: string
   adminPhone: string
@@ -33,7 +34,8 @@ export function useAgencyDatabase() {
           {
             email: input.adminEmail,
             passwordHash: passwordHash,
-            name: input.adminFullName,
+            firstName: input.adminFirstName,
+            lastName: input.adminLastName,
             phone: input.adminPhone,
             role: 'AGENCY_ADMIN',
             agencyId: null, // Will be set after agency creation
