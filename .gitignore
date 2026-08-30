@@ -32,3 +32,18 @@ dist-ssr
 *.sw?
 
 /src/generated/prisma
+
+# ── Python API service (api/) ─────────────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Model weights (large binaries — share separately, not via git)
+*.pt
+*.onnx
+
+# Uploaded / demo drone footage
+api/data/uploads/
+api/data/media/

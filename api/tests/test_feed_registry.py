@@ -1,0 +1,180 @@
+"""
+Tests for the multi-feed registry.
+
+The behaviour that matters: feeds are independent (adding one must not disturb
+another — the single-feed build *replaced* the running source), the cap is
+enforced rather than silently evicting, and removal frees a slot.
+"""
+import pytest
+from fastapi.testclient import TestClient
+
+from main import app
+from services import feed_registry as registry
+
+SOURCE = "d:/RescueEye/api/data/demo_feed8_trim.mp4"
+
+
+@pytest.fixture
+def client():
+    # Start from an empty registry so tests don't inherit the feed opened at
+    # application startup.
+    registry.shutdown_all()
+    with TestClient(app) as c:
+        yield c
+    registry.shutdown_all()
+
+
+@pytest.fixture
+def empty_registry():
+    registry.shutdown_all()
+    yield
+    registry.shutdown_all()
+
+
+class TestRegistry:
+    def test_add_returns_distinct_ids(self, empty_registry):
+        a = registry.add_feed(source="", label="A")
+        b = registry.add_feed(source="", label="B")
+        assert a.id != b.id
+        assert registry.count() == 2
+
+    def test_feeds_are_independent(self, empty_registry):
+        """Adding a feed must not stop or replace an existing one."""
+        a = registry.add_feed(source="", label="A")
+        registry.add_feed(source="", label="B")
+        assert registry.get_feed(a.id).label == "A"
+        assert a.stop_event.is_set() is False
+
+    def test_cap_is_enforced(self, empty_registry):
+        for i in range(registry.MAX_FEEDS):
+            registry.add_feed(source="", label=f"F{i}")
+        with pytest.raises(registry.FeedLimitReached):
+            registry.add_feed(source="", label="one too many")
+        assert registry.count() == registry.MAX_FEEDS
+
+    def test_remove_frees_a_slot(self, empty_registry):
+        made = [registry.add_feed(source="", label=f"F{i}") for i in range(registry.MAX_FEEDS)]
+        registry.remove_feed(made[0].id)
+        assert registry.count() == registry.MAX_FEEDS - 1
+        registry.add_feed(source="", label="replacement")
+        assert registry.count() == registry.MAX_FEEDS
+
+    def test_remove_unknown_raises(self, empty_registry):
+        with pytest.raises(registry.FeedNotFound):
+            registry.remove_feed("nope")
+
+    def test_primary_is_the_oldest(self, empty_registry):
+        first = registry.add_feed(source="", label="first")
+        registry.add_feed(source="", label="second")
+        assert registry.primary_feed().id == first.id
+
+    def test_detect_interval_widens_with_feed_count(self, empty_registry):
+        """Every feed detects, so cadence stretches to hold total load steady."""
+        registry.add_feed(source="", label="one")
+        one = registry.detect_interval_ms()
+        registry.add_feed(source="", label="two")
+        two = registry.detect_interval_ms()
+        assert two > one
+        # And is capped so it never becomes uselessly slow.
+        for i in range(registry.MAX_FEEDS - 2):
+            registry.add_feed(source="", label=f"more{i}")
+        assert registry.detect_interval_ms() <= registry.MAX_DETECT_INTERVAL_MS
+
+
+class TestFeedEndpoints:
+    def test_list_reports_capacity_and_cadence(self, client):
+        res = client.get("/stream/feeds")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["max"] == registry.MAX_FEEDS
+        assert "suggestedDetectIntervalMs" in body
+
+    def test_add_live_feed(self, client):
+        res = client.post("/stream/feeds", json={"source": SOURCE, "label": "Cam A"})
+        assert res.status_code == 201
+        assert res.json()["label"] == "Cam A"
+        assert res.json()["kind"] == "live"
+
+    def test_add_requires_a_source(self, client):
+        assert client.post("/stream/feeds", json={}).status_code == 400
+
+    def test_fifth_feed_is_refused_with_a_clear_message(self, client):
+        for i in range(registry.MAX_FEEDS):
+            client.post("/stream/feeds", json={"source": SOURCE, "label": f"F{i}"})
+        res = client.post("/stream/feeds", json={"source": SOURCE, "label": "fifth"})
+        assert res.status_code == 409
+        assert "Maximum" in res.json()["detail"]
+        # Nothing was evicted to make room.
+        assert client.get("/stream/feeds").json()["count"] == registry.MAX_FEEDS
+
+    def test_delete_frees_a_slot(self, client):
+        added = client.post("/stream/feeds", json={"source": SOURCE}).json()
+        res = client.delete(f"/stream/feeds/{added['id']}")
+        assert res.status_code == 200
+        assert res.json()["removed"] == added["id"]
+
+    def test_delete_unknown_is_404(self, client):
+        assert client.delete("/stream/feeds/ghost").status_code == 404
+
+    def test_mjpeg_for_unknown_feed_is_404(self, client):
+        assert client.get("/stream/feeds/ghost/mjpeg").status_code == 404
+
+    def test_snapshot_for_unknown_feed_is_404(self, client):
+        assert client.get("/stream/feeds/ghost/snapshot").status_code == 404
+
+
+class TestLegacyEndpoints:
+    """The mobile app's STREAM_URL and existing docs point at these."""
+
+    def test_status_still_reports_the_primary_feed(self, client):
+        client.post("/stream/feeds", json={"source": SOURCE})
+        body = client.get("/stream/status").json()
+        assert "active" in body and "source" in body
+        assert body["maxFeeds"] == registry.MAX_FEEDS
+
+    def test_health_exposes_feed_count(self, client):
+        body = client.get("/health").json()
+        assert "feed_count" in body
+        assert body["max_feeds"] == registry.MAX_FEEDS
+
+
+def test_ffmpeg_cmd_caps_frame_width():
+    """4K frames cost ~3x more to process per detection pass for no accuracy gain."""
+    cmd = registry._build_ffmpeg_cmd("clip.mp4", 8.0)
+    vf = cmd[cmd.index("-vf") + 1]
+    assert "fps=8.0" in vf
+    assert f"scale='min({registry.FEED_MAX_WIDTH},iw)':-1" in vf
+
+
+def test_ffmpeg_cmd_keeps_network_source_flags_with_the_scale_filter():
+    cmd = registry._build_ffmpeg_cmd("rtsp://cam/1", 4.0)
+    assert "-rtsp_transport" in cmd
+    assert "-re" not in cmd            # never pace a live source
+    assert "scale='min(" in cmd[cmd.index("-vf") + 1]
+
+
+def test_ffmpeg_actually_accepts_the_generated_filter():
+    """
+    Regression: the filter string was once built with scale=...:-2, which some
+    FFmpeg builds reject ("Size values less than -1 are not acceptable"). The
+    string-level assertions above still passed while every feed produced zero
+    frames, so this runs the real binary against a synthetic source.
+    """
+    import shutil
+    import subprocess
+
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg not on PATH")
+
+    vf = registry._build_ffmpeg_cmd("x", 8.0)[registry._build_ffmpeg_cmd("x", 8.0).index("-vf") + 1]
+    proc = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-f", "lavfi",
+         "-i", "testsrc=size=3840x2160:rate=8", "-vf", vf, "-frames:v", "1",
+         "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1"],
+        capture_output=True, timeout=60,
+    )
+    assert proc.stdout, f"ffmpeg produced no frame: {proc.stderr.decode('utf8', 'ignore')[:300]}"
+
+    from PIL import Image
+    import io
+    assert Image.open(io.BytesIO(proc.stdout)).size[0] == registry.FEED_MAX_WIDTH
