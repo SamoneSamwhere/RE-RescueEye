@@ -39,6 +39,7 @@ export function useAgencyDatabase() {
     setIsLoading(true)
     setError(null)
     try {
+      console.log('Fetching agencies from Supabase...')
       let query = supabase.from('agency').select('*')
 
       if (filters?.registrationStatus) {
@@ -47,7 +48,11 @@ export function useAgencyDatabase() {
 
       const { data, error: dbError } = await query.order('createdAt', { ascending: false })
 
-      if (dbError) throw dbError
+      if (dbError) {
+        console.error('Supabase error:', dbError)
+        throw dbError
+      }
+      console.log('Agencies fetched successfully:', data)
       return data || []
     } catch (err) {
       const errorMsg = handleDatabaseError(err)

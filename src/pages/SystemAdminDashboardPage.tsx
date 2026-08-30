@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, ShieldCheck, ShieldAlert, Power, ArrowRight } from 'lucide-react'
 import { PageHeader } from '../components/layout'
@@ -5,8 +6,10 @@ import { Card, Badge } from '../components/ui'
 import { Reveal } from '../components/landing/Reveal'
 import { StatTile } from '../components/dashboard'
 import { useSystemAdminData } from '../features/system-admin'
+import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
 import { ROUTES } from '../routes/paths'
 import { formatDateTime } from '../lib/formatDateTime'
+import type { Agency } from '../types/agency'
 
 const ACTIONS = [
   {
@@ -24,7 +27,44 @@ const ACTIONS = [
 ]
 
 export function SystemAdminDashboardPage() {
-  const { agencies } = useSystemAdminData()
+  const { getAgencies } = useAgencyDatabase()
+  const [agencies, setAgencies] = useState<Agency[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadAgencies = async () => {
+      setIsLoading(true)
+      try {
+        const dbAgencies = await getAgencies()
+        // Convert database records to Agency type with string IDs
+        const convertedAgencies: Agency[] = dbAgencies.map((dbAgency) => ({
+          id: String(dbAgency.id),
+          name: dbAgency.name,
+          agencyType: 'Unknown',
+          address: '',
+          contactEmail: '',
+          agencyAdmin: {
+            fullName: 'Unknown',
+            position: 'Unknown',
+            email: '',
+            phone: '',
+          },
+          documents: [],
+          registrationStatus: dbAgency.registrationStatus,
+          accountStatus: dbAgency.subscriptionStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+          registeredAt: dbAgency.createdAt,
+          reviewedByUserId: dbAgency.validatedBy ? String(dbAgency.validatedBy) : undefined,
+          reviewedAt: dbAgency.validatedAt,
+        }))
+        setAgencies(convertedAgencies)
+      } catch (error) {
+        console.error('Failed to load agencies:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadAgencies()
+  }, [getAgencies])
 
   const pendingCount = agencies.filter((a) => a.registrationStatus === 'PENDING').length
   const approvedCount = agencies.filter((a) => a.registrationStatus === 'APPROVED').length
