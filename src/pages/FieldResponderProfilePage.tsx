@@ -4,7 +4,7 @@ import { MobileShell } from '../components/layout'
 import { Card, Badge, Button } from '../components/ui'
 import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS } from '../features/field-responder'
-import { mockUsers } from '../data/mockUsers'
+import { useCurrentProfileUser } from '../hooks/useCurrentProfileUser'
 import { formatDateTime } from '../lib/formatDateTime'
 import { notificationsFor } from '../lib/notifications'
 import { useNotificationStore } from '../state/NotificationStore'
@@ -26,7 +26,7 @@ export function FieldResponderProfilePage() {
   const navigate = useNavigate()
   const { session, logout } = useAuth()
   const { notifications: allNotifications } = useNotificationStore()
-  const currentUser = session ? mockUsers.find((u) => u.id === session.id) : undefined
+  const { currentUser } = useCurrentProfileUser()
 
   const notifications = session ? notificationsFor(allNotifications, session.id) : []
 

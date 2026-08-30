@@ -24,7 +24,7 @@ const STEP_LABELS = ['Personnel', 'Role', 'Account', 'Review']
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validatePersonnelStep(values: PersonnelInfoValues): string | null {
-  if (!values.fullName.trim() || !values.email.trim() || !values.phone.trim()) {
+  if (!values.firstName.trim() || !values.lastName.trim() || !values.email.trim() || !values.phone.trim()) {
     return 'Please fill in all personnel fields.'
   }
   if (!EMAIL_PATTERN.test(values.email)) {
@@ -51,7 +51,7 @@ function validateAccountStep(values: AccountValues): string | null {
   return null
 }
 
-const EMPTY_PERSONNEL: PersonnelInfoValues = { fullName: '', email: '', phone: '' }
+const EMPTY_PERSONNEL: PersonnelInfoValues = { firstName: '', lastName: '', email: '', phone: '' }
 const EMPTY_ACCOUNT: AccountValues = { password: '', confirmPassword: '' }
 
 export function AgencyAdminUserCreationPage() {
@@ -106,8 +106,9 @@ export function AgencyAdminUserCreationPage() {
     // Brief simulated latency so the loading state is actually visible — this is a mock backend with no real network call.
     await new Promise((resolve) => setTimeout(resolve, 600))
 
-    const result = createUser({
-      name: personnel.fullName,
+    const result = await createUser({
+      firstName: personnel.firstName,
+      lastName: personnel.lastName,
       email: personnel.email,
       phone: personnel.phone,
       password: account.password,
@@ -119,7 +120,7 @@ export function AgencyAdminUserCreationPage() {
       setStepError(result.error)
       return
     }
-    setCreatedUser({ id: result.userId, name: personnel.fullName.trim(), role })
+    setCreatedUser({ id: result.userId, name: `${personnel.firstName} ${personnel.lastName}`.trim(), role })
   }
 
   function handleViewUser() {
@@ -185,7 +186,7 @@ export function AgencyAdminUserCreationPage() {
                     ) : null}
                     {currentStep === 3 && role ? (
                       <ReviewStep
-                        fullName={personnel.fullName}
+                        fullName={`${personnel.firstName} ${personnel.lastName}`.trim()}
                         email={personnel.email}
                         phone={personnel.phone}
                         role={role}

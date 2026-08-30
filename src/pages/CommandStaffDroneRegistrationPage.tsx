@@ -81,16 +81,14 @@ export function CommandStaffDroneRegistrationPage() {
     setStepError(null)
     setIsSubmitting(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 600))
+    const result = await registerDrone(formData)
+    setIsSubmitting(false)
 
-    try {
-      registerDrone(formData)
-      setRegisteredDrone({ id: formData.serialNumber, name: formData.name })
-    } catch (error) {
-      setStepError('Failed to register drone. Please try again.')
-    } finally {
-      setIsSubmitting(false)
+    if (!result.ok) {
+      setStepError(result.error || 'Failed to register drone. Please try again.')
+      return
     }
+    setRegisteredDrone({ id: formData.serialNumber, name: formData.name })
   }
 
   function handleBackToDrones() {

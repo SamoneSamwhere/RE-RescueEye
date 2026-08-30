@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { MobileShell } from '../components/layout'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth'
-import { useUserStore } from '../state/UserStore'
+import { useCurrentProfileUser } from '../hooks/useCurrentProfileUser'
 import { ProfileEditForm, ChangePasswordForm } from '../components/profile'
 import { FIELD_RESPONDER_NAV_ITEMS } from '../features/field-responder'
 import { notificationsFor } from '../lib/notifications'
@@ -13,10 +13,9 @@ import { ROUTES } from '../routes/paths'
 export function FieldResponderSettingsPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { users } = useUserStore()
+  const { currentUser, isRealAccount } = useCurrentProfileUser()
   const { notifications: allNotifications } = useNotificationStore()
 
-  const currentUser = session ? users.find((u) => u.id === session.id) : undefined
   const notifications = session ? notificationsFor(allNotifications, session.id) : []
 
   if (!session || !currentUser) return null
@@ -44,8 +43,8 @@ export function FieldResponderSettingsPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <ProfileEditForm user={currentUser} onSuccess={handleSuccess} />
-            <ChangePasswordForm user={currentUser} onSuccess={handleSuccess} />
+            <ProfileEditForm user={currentUser} isRealAccount={isRealAccount} onSuccess={handleSuccess} />
+            <ChangePasswordForm user={currentUser} isRealAccount={isRealAccount} onSuccess={handleSuccess} />
           </div>
         </div>
       </div>

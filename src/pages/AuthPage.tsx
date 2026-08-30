@@ -49,7 +49,8 @@ function validateAgencyStep(values: AgencyInfoValues): string | null {
 
 function validateAdminStep(values: AdminInfoValues): string | null {
   if (
-    !values.fullName.trim() ||
+    !values.firstName.trim() ||
+    !values.lastName.trim() ||
     !values.position.trim() ||
     !values.email.trim() ||
     !values.phone.trim() ||
@@ -100,6 +101,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   const [currentStep, setCurrentStep] = useState(0)
   const [agency, setAgency] = useState<AgencyInfoValues>({
@@ -111,7 +113,8 @@ export function AuthPage() {
     agencyWebsite: '',
   })
   const [admin, setAdmin] = useState<AdminInfoValues>({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     position: '',
     email: '',
     phone: '',
@@ -158,14 +161,16 @@ export function AuthPage() {
     setSearchParams(params, { replace: true })
   }
 
-  function handleLoginSubmit(event: FormEvent) {
+  async function handleLoginSubmit(event: FormEvent) {
     event.preventDefault()
-    const result = login(email, password)
+    setLoginError(null)
+    setIsLoggingIn(true)
+    const result = await login(email, password)
+    setIsLoggingIn(false)
     if (!result.ok) {
       setLoginError(result.error)
     }
   }
-
 
   function handleDocumentChange(id: DocumentId, file: File | null, docError: string | null) {
     setDocuments((prev) => ({ ...prev, [id]: file }))
@@ -204,7 +209,8 @@ export function AuthPage() {
       agencyPhone: agency.agencyPhone,
       agencyEmail: agency.agencyEmail,
       agencyWebsite: agency.agencyWebsite,
-      adminFullName: admin.fullName,
+      adminFirstName: admin.firstName,
+      adminLastName: admin.lastName,
       adminPosition: admin.position,
       adminEmail: admin.email,
       adminPhone: admin.phone,
@@ -226,7 +232,7 @@ export function AuthPage() {
       contactEmail: agency.agencyEmail,
       website: agency.agencyWebsite || undefined,
       agencyAdmin: {
-        fullName: admin.fullName,
+        fullName: `${admin.firstName} ${admin.lastName}`.trim(),
         position: admin.position,
         email: admin.email,
         phone: admin.phone,
@@ -249,19 +255,19 @@ export function AuthPage() {
                 inert when the sign-up slot is active on desktop: the sliding overlay only covers it visually
                 (it's pointer-events-none so its own CTA button stays clickable), so without inert its fields would
                 still be reachable by click/tab underneath. */}
-            <div className="flex w-full flex-col items-center justify-center px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
-              <div className="w-full max-w-md">
+            <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
+              <div className="max-w-md">
                 <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
 
-              <div className="mt-4 w-full max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
+              <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
                 <p className="text-xs font-medium text-accent">Secure responder access</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">
                   Your agency administrator provides your account and role permissions.
                 </p>
               </div>
 
-              <form className="mt-5 flex w-full max-w-md flex-col gap-3" onSubmit={handleLoginSubmit}>
+              <form className="mt-5 flex max-w-md flex-col gap-3" onSubmit={handleLoginSubmit}>
                 <Field
                   label="Email"
                   htmlFor="email"
@@ -302,11 +308,10 @@ export function AuthPage() {
                   </p>
                 ) : null}
 
-                <Button type="submit" className="mt-1 w-full">
-                  Sign in
+                <Button type="submit" className="mt-1 self-center px-8" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'Signing in…' : 'Sign in'}
                 </Button>
               </form>
-
             </div>
 
             {/* Sign up slot — desktop only; agency registration is not part of the mobile field-responder app.

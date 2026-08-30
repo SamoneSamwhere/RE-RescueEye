@@ -1,20 +1,20 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { mockIncidents } from '../../data/mockIncidents'
 import type { MockUser } from '../../data/mockUsers'
-import { now } from '../../lib/now'
-import { generateId } from '../../lib/id'
 import type { UserAccountStatus, UserRole } from '../../types/user'
 import type { IncidentPriority } from '../../types/incident'
 import type { MissionStatus } from '../../types/mission'
 import { useAuth } from '../auth'
 import { useMissionStore } from '../../state/MissionStore'
-import { useUserStore } from '../../state/UserStore'
+import { useStaffDatabase } from '../../hooks/useStaffDatabase'
+import type { DbStaffUser } from '../../hooks/useStaffDatabase'
 
 export type CreatableUserRole = Extract<UserRole, 'COMMAND_STAFF' | 'FIELD_RESPONDER'>
 
 export interface CreateUserInput {
-  name: string
+  firstName: string
+  lastName: string
   email: string
   phone?: string
   password: string
@@ -42,34 +42,60 @@ export interface IncidentHistoryItem {
 interface AgencyAdminDataContextValue {
   agencyUsers: MockUser[]
   incidentHistory: IncidentHistoryItem[]
-  createUser: (input: CreateUserInput) => CreateUserResult
-  setUserStatus: (userId: string, status: UserAccountStatus) => void
+  isLoading: boolean
+  createUser: (input: CreateUserInput) => Promise<CreateUserResult>
+  setUserStatus: (userId: string, status: UserAccountStatus) => Promise<void>
 }
 
 const AgencyAdminDataContext = createContext<AgencyAdminDataContextValue | undefined>(undefined)
 
+function mapDbStaffToMockUser(dbUser: DbStaffUser): MockUser {
+  return {
+    id: String(dbUser.id),
+    name: `${dbUser.firstName || ''} ${dbUser.lastName || ''}`.trim(),
+    email: dbUser.email,
+    phone: dbUser.phone || undefined,
+    role: dbUser.role,
+    agencyId: String(dbUser.agencyId),
+    accountStatus: dbUser.active ? 'ACTIVE' : 'INACTIVE',
+    createdAt: dbUser.createdAt,
+    // Real accounts authenticate against Supabase's passwordHash, not this field.
+    password: '',
+  }
+}
+
 /**
- * Scopes the shared user directory and mission store down to this agency's
- * Command Staff / Field Responder users, and exposes the Agency Admin
- * actions (create user, set account status). Agency Admins never manage
- * other Agency Admins — those are created by System Admin — so agencyUsers
- * is deliberately restricted to the two creatable roles.
+ * Scopes the real Supabase `user` table down to this agency's Command
+ * Staff / Field Responder users, and exposes the Agency Admin actions
+ * (create user, set account status). Agency Admins never manage other
+ * Agency Admins — those are created by System Admin — so agencyUsers is
+ * deliberately restricted to the two creatable roles.
  */
 export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
-  const { users, addUser, updateUser } = useUserStore()
+  const { getAgencyStaff, createStaffUser, setStaffActive } = useStaffDatabase()
   const { missions } = useMissionStore()
 
   const agencyId = session?.agencyId
+  const [agencyUsers, setAgencyUsers] = useState<MockUser[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const agencyUsers = useMemo(
-    () =>
-      users.filter(
-        (user) =>
-          user.agencyId === agencyId && (user.role === 'COMMAND_STAFF' || user.role === 'FIELD_RESPONDER'),
-      ),
-    [users, agencyId],
-  )
+  const refresh = useCallback(async () => {
+    if (!agencyId) {
+      setAgencyUsers([])
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(true)
+    const staff = await getAgencyStaff(Number(agencyId))
+    setAgencyUsers(staff.map(mapDbStaffToMockUser))
+    setIsLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agencyId])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   const incidentHistory = useMemo<IncidentHistoryItem[]>(() => {
     const responderIds = new Set(agencyUsers.filter((u) => u.role === 'FIELD_RESPONDER').map((u) => u.id))
@@ -90,37 +116,33 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => b.dispatchedAt.localeCompare(a.dispatchedAt))
   }, [missions, agencyUsers])
 
-  function createUser(input: CreateUserInput): CreateUserResult {
+  async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
     if (!session || !agencyId) return { ok: false, error: 'No active session.' }
 
-    const email = input.email.trim().toLowerCase()
-    const duplicate = users.some((user) => user.email.toLowerCase() === email)
-    if (duplicate) {
-      return { ok: false, error: 'A user with this email address already exists.' }
-    }
-
-    const newUser: MockUser = {
-      id: generateId('usr'),
-      name: input.name.trim(),
-      email: input.email.trim(),
-      phone: input.phone?.trim() || undefined,
+    const result = await createStaffUser({
+      agencyId: Number(agencyId),
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone,
       password: input.password,
       role: input.role,
-      agencyId,
-      accountStatus: 'ACTIVE',
-      createdAt: now().toISOString(),
-      createdByUserId: session.id,
-    }
-    addUser(newUser)
-    return { ok: true, userId: newUser.id }
+    })
+
+    if (!result.ok) return result
+    await refresh()
+    return { ok: true, userId: String(result.userId) }
   }
 
-  function setUserStatus(userId: string, status: UserAccountStatus) {
-    updateUser(userId, { accountStatus: status })
+  async function setUserStatus(userId: string, status: UserAccountStatus) {
+    await setStaffActive(Number(userId), status === 'ACTIVE')
+    await refresh()
   }
 
   return (
-    <AgencyAdminDataContext.Provider value={{ agencyUsers, incidentHistory, createUser, setUserStatus }}>
+    <AgencyAdminDataContext.Provider
+      value={{ agencyUsers, incidentHistory, isLoading, createUser, setUserStatus }}
+    >
       {children}
     </AgencyAdminDataContext.Provider>
   )

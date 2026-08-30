@@ -5,14 +5,17 @@ import { Card } from '../ui/Card'
 import { Field } from '../ui/Field'
 import { Input } from '../ui/Input'
 import { useUserStore } from '../../state/UserStore'
+import { useProfileDatabase } from '../../hooks/useProfileDatabase'
 
 interface ChangePasswordFormProps {
   user: MockUser
+  isRealAccount?: boolean
   onSuccess?: () => void
 }
 
-export function ChangePasswordForm({ user, onSuccess }: ChangePasswordFormProps) {
+export function ChangePasswordForm({ user, isRealAccount, onSuccess }: ChangePasswordFormProps) {
   const { updateUser } = useUserStore()
+  const { changePassword } = useProfileDatabase()
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -38,9 +41,6 @@ export function ChangePasswordForm({ user, onSuccess }: ChangePasswordFormProps)
       if (!formData.currentPassword) {
         throw new Error('Current password is required')
       }
-      if (formData.currentPassword !== user.password) {
-        throw new Error('Current password is incorrect')
-      }
       if (!formData.newPassword) {
         throw new Error('New password is required')
       }
@@ -54,9 +54,17 @@ export function ChangePasswordForm({ user, onSuccess }: ChangePasswordFormProps)
         throw new Error('New password must be different from current password')
       }
 
-      updateUser(user.id, {
-        password: formData.newPassword,
-      })
+      if (isRealAccount) {
+        const result = await changePassword(Number(user.id), formData.currentPassword, formData.newPassword)
+        if (!result.ok) throw new Error(result.error)
+      } else {
+        if (formData.currentPassword !== user.password) {
+          throw new Error('Current password is incorrect')
+        }
+        updateUser(user.id, {
+          password: formData.newPassword,
+        })
+      }
 
       setFormData({
         currentPassword: '',
