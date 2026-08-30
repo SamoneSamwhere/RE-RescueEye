@@ -5,17 +5,9 @@ export interface MockUser extends User {
   password: string
 }
 
+// The mock System Admin account (admin@rescueeye.io) was removed so that email
+// resolves to the real Supabase-backed System Admin account instead.
 export const mockUsers: MockUser[] = [
-  {
-    id: 'usr-system-admin-1',
-    name: 'Alex Rivera',
-    email: 'admin@rescueeye.io',
-    password: 'password123',
-    role: 'SYSTEM_ADMIN',
-    accountStatus: 'ACTIVE',
-    createdAt: '2025-01-10T09:00:00Z',
-    lastLoginAt: '2026-08-20T13:05:00Z',
-  },
   {
     id: 'usr-agency-admin-1',
     name: 'Jordan Blake',
