@@ -184,6 +184,8 @@ export function useDroneDatabase() {
             status: 'IDLE',
             agencyId: droneData.agencyId,
             addedBy: droneData.addedBy,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           },
         ])
         .select()
@@ -216,7 +218,7 @@ export function useDroneDatabase() {
     try {
       const { data, error: dbError } = await supabase
         .from('drone')
-        .update(updates)
+        .update({ ...updates, updatedAt: new Date().toISOString() })
         .eq('id', droneId)
         .select()
         .single()
