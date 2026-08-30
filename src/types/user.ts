@@ -6,10 +6,12 @@ export type UserRole = 'SYSTEM_ADMIN' | 'AGENCY_ADMIN' | 'COMMAND_STAFF' | 'FIEL
 export type UserAccountStatus = AccountStatus
 
 /**
- * A platform user. System Admins have no agency; every other role belongs
- * to exactly one agency and is created by that agency's Agency Admin
- * (Command Staff / Field Responder) or by System Admin (Agency Admin, via
- * agency approval).
+ * A platform user.
+ *
+ * SYSTEM_ADMIN: Platform administrator, no agency affiliation. Can review and approve agency registrations.
+ * AGENCY_ADMIN: Administrator for a specific agency. Created by System Admin during agency approval. Has agencyId.
+ * COMMAND_STAFF: Command/operational staff for an agency. Created by Agency Admin. Has agencyId.
+ * FIELD_RESPONDER: Field responder/operator for an agency. Created by Agency Admin. Has agencyId.
  */
 export interface User {
   id: string
@@ -17,7 +19,7 @@ export interface User {
   email: string
   phone?: string
   role: UserRole
-  agencyId?: string
+  agencyId?: string  // Only populated for AGENCY_ADMIN, COMMAND_STAFF, FIELD_RESPONDER. Null for SYSTEM_ADMIN.
   accountStatus: UserAccountStatus
   createdAt: string
   createdByUserId?: string

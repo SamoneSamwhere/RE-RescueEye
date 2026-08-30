@@ -249,7 +249,7 @@ export type AgencyWhereInput = {
   validatedBy?: Prisma.IntNullableFilter<"Agency"> | number | null
   validatedAt?: Prisma.DateTimeNullableFilter<"Agency"> | Date | string | null
   creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  validator?: Prisma.XOR<Prisma.PlatformAdminNullableScalarRelationFilter, Prisma.PlatformAdminWhereInput> | null
+  validator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   users?: Prisma.UserListRelationFilter
   drones?: Prisma.DroneListRelationFilter
   incidents?: Prisma.IncidentListRelationFilter
@@ -265,7 +265,7 @@ export type AgencyOrderByWithRelationInput = {
   validatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   validatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   creator?: Prisma.UserOrderByWithRelationInput
-  validator?: Prisma.PlatformAdminOrderByWithRelationInput
+  validator?: Prisma.UserOrderByWithRelationInput
   users?: Prisma.UserOrderByRelationAggregateInput
   drones?: Prisma.DroneOrderByRelationAggregateInput
   incidents?: Prisma.IncidentOrderByRelationAggregateInput
@@ -284,7 +284,7 @@ export type AgencyWhereUniqueInput = Prisma.AtLeast<{
   validatedBy?: Prisma.IntNullableFilter<"Agency"> | number | null
   validatedAt?: Prisma.DateTimeNullableFilter<"Agency"> | Date | string | null
   creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  validator?: Prisma.XOR<Prisma.PlatformAdminNullableScalarRelationFilter, Prisma.PlatformAdminWhereInput> | null
+  validator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   users?: Prisma.UserListRelationFilter
   drones?: Prisma.DroneListRelationFilter
   incidents?: Prisma.IncidentListRelationFilter
@@ -327,7 +327,7 @@ export type AgencyCreateInput = {
   createdAt?: Date | string
   validatedAt?: Date | string | null
   creator: Prisma.UserCreateNestedOneWithoutCreatedAgenciesInput
-  validator?: Prisma.PlatformAdminCreateNestedOneWithoutValidatedAgenciesInput
+  validator?: Prisma.UserCreateNestedOneWithoutValidatedAgenciesInput
   users?: Prisma.UserCreateNestedManyWithoutAgencyInput
   drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
   incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
@@ -354,7 +354,7 @@ export type AgencyUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedAgenciesNestedInput
-  validator?: Prisma.PlatformAdminUpdateOneWithoutValidatedAgenciesNestedInput
+  validator?: Prisma.UserUpdateOneWithoutValidatedAgenciesNestedInput
   users?: Prisma.UserUpdateManyWithoutAgencyNestedInput
   drones?: Prisma.DroneUpdateManyWithoutAgencyNestedInput
   incidents?: Prisma.IncidentUpdateManyWithoutAgencyNestedInput
@@ -404,16 +404,6 @@ export type AgencyUncheckedUpdateManyInput = {
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
-export type AgencyListRelationFilter = {
-  every?: Prisma.AgencyWhereInput
-  some?: Prisma.AgencyWhereInput
-  none?: Prisma.AgencyWhereInput
-}
-
-export type AgencyOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type AgencyCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -459,51 +449,28 @@ export type AgencySumOrderByAggregateInput = {
   validatedBy?: Prisma.SortOrder
 }
 
+export type AgencyNullableScalarRelationFilter = {
+  is?: Prisma.AgencyWhereInput | null
+  isNot?: Prisma.AgencyWhereInput | null
+}
+
+export type AgencyListRelationFilter = {
+  every?: Prisma.AgencyWhereInput
+  some?: Prisma.AgencyWhereInput
+  none?: Prisma.AgencyWhereInput
+}
+
+export type AgencyOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
 export type AgencyScalarRelationFilter = {
   is?: Prisma.AgencyWhereInput
   isNot?: Prisma.AgencyWhereInput
 }
 
-export type AgencyCreateNestedManyWithoutValidatorInput = {
-  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
-  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
-  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
-  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-}
-
-export type AgencyUncheckedCreateNestedManyWithoutValidatorInput = {
-  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
-  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
-  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
-  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-}
-
-export type AgencyUpdateManyWithoutValidatorNestedInput = {
-  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
-  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
-  upsert?: Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput[]
-  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
-  set?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  disconnect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  delete?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  update?: Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput[]
-  updateMany?: Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput | Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput[]
-  deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
-}
-
-export type AgencyUncheckedUpdateManyWithoutValidatorNestedInput = {
-  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
-  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
-  upsert?: Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput[]
-  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
-  set?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  disconnect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  delete?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
-  update?: Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput[]
-  updateMany?: Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput | Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput[]
-  deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
+export type StringFieldUpdateOperationsInput = {
+  set?: string
 }
 
 export type EnumRegistrationStatusFieldUpdateOperationsInput = {
@@ -512,6 +479,22 @@ export type EnumRegistrationStatusFieldUpdateOperationsInput = {
 
 export type EnumSubscriptionStatusFieldUpdateOperationsInput = {
   set?: $Enums.SubscriptionStatus
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type NullableIntFieldUpdateOperationsInput = {
@@ -535,6 +518,13 @@ export type AgencyCreateNestedManyWithoutCreatorInput = {
   connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
 }
 
+export type AgencyCreateNestedManyWithoutValidatorInput = {
+  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
+  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
+  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
+  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+}
+
 export type AgencyUncheckedCreateNestedManyWithoutCreatorInput = {
   create?: Prisma.XOR<Prisma.AgencyCreateWithoutCreatorInput, Prisma.AgencyUncheckedCreateWithoutCreatorInput> | Prisma.AgencyCreateWithoutCreatorInput[] | Prisma.AgencyUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutCreatorInput | Prisma.AgencyCreateOrConnectWithoutCreatorInput[]
@@ -542,10 +532,19 @@ export type AgencyUncheckedCreateNestedManyWithoutCreatorInput = {
   connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
 }
 
-export type AgencyUpdateOneRequiredWithoutUsersNestedInput = {
+export type AgencyUncheckedCreateNestedManyWithoutValidatorInput = {
+  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
+  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
+  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
+  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+}
+
+export type AgencyUpdateOneWithoutUsersNestedInput = {
   create?: Prisma.XOR<Prisma.AgencyCreateWithoutUsersInput, Prisma.AgencyUncheckedCreateWithoutUsersInput>
   connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutUsersInput
   upsert?: Prisma.AgencyUpsertWithoutUsersInput
+  disconnect?: Prisma.AgencyWhereInput | boolean
+  delete?: Prisma.AgencyWhereInput | boolean
   connect?: Prisma.AgencyWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.AgencyUpdateToOneWithWhereWithoutUsersInput, Prisma.AgencyUpdateWithoutUsersInput>, Prisma.AgencyUncheckedUpdateWithoutUsersInput>
 }
@@ -564,6 +563,20 @@ export type AgencyUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
 }
 
+export type AgencyUpdateManyWithoutValidatorNestedInput = {
+  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
+  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
+  upsert?: Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput[]
+  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
+  set?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  disconnect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  delete?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  update?: Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput[]
+  updateMany?: Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput | Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput[]
+  deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
+}
+
 export type AgencyUncheckedUpdateManyWithoutCreatorNestedInput = {
   create?: Prisma.XOR<Prisma.AgencyCreateWithoutCreatorInput, Prisma.AgencyUncheckedCreateWithoutCreatorInput> | Prisma.AgencyCreateWithoutCreatorInput[] | Prisma.AgencyUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutCreatorInput | Prisma.AgencyCreateOrConnectWithoutCreatorInput[]
@@ -575,6 +588,20 @@ export type AgencyUncheckedUpdateManyWithoutCreatorNestedInput = {
   connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
   update?: Prisma.AgencyUpdateWithWhereUniqueWithoutCreatorInput | Prisma.AgencyUpdateWithWhereUniqueWithoutCreatorInput[]
   updateMany?: Prisma.AgencyUpdateManyWithWhereWithoutCreatorInput | Prisma.AgencyUpdateManyWithWhereWithoutCreatorInput[]
+  deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
+}
+
+export type AgencyUncheckedUpdateManyWithoutValidatorNestedInput = {
+  create?: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput> | Prisma.AgencyCreateWithoutValidatorInput[] | Prisma.AgencyUncheckedCreateWithoutValidatorInput[]
+  connectOrCreate?: Prisma.AgencyCreateOrConnectWithoutValidatorInput | Prisma.AgencyCreateOrConnectWithoutValidatorInput[]
+  upsert?: Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpsertWithWhereUniqueWithoutValidatorInput[]
+  createMany?: Prisma.AgencyCreateManyValidatorInputEnvelope
+  set?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  disconnect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  delete?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  connect?: Prisma.AgencyWhereUniqueInput | Prisma.AgencyWhereUniqueInput[]
+  update?: Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput | Prisma.AgencyUpdateWithWhereUniqueWithoutValidatorInput[]
+  updateMany?: Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput | Prisma.AgencyUpdateManyWithWhereWithoutValidatorInput[]
   deleteMany?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
 }
 
@@ -604,6 +631,71 @@ export type AgencyUpdateOneRequiredWithoutIncidentsNestedInput = {
   upsert?: Prisma.AgencyUpsertWithoutIncidentsInput
   connect?: Prisma.AgencyWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.AgencyUpdateToOneWithWhereWithoutIncidentsInput, Prisma.AgencyUpdateWithoutIncidentsInput>, Prisma.AgencyUncheckedUpdateWithoutIncidentsInput>
+}
+
+export type AgencyCreateWithoutUsersInput = {
+  name: string
+  registrationStatus?: $Enums.RegistrationStatus
+  subscriptionStatus?: $Enums.SubscriptionStatus
+  createdAt?: Date | string
+  validatedAt?: Date | string | null
+  creator: Prisma.UserCreateNestedOneWithoutCreatedAgenciesInput
+  validator?: Prisma.UserCreateNestedOneWithoutValidatedAgenciesInput
+  drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
+  incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
+}
+
+export type AgencyUncheckedCreateWithoutUsersInput = {
+  id?: number
+  name: string
+  registrationStatus?: $Enums.RegistrationStatus
+  subscriptionStatus?: $Enums.SubscriptionStatus
+  createdBy: number
+  createdAt?: Date | string
+  validatedBy?: number | null
+  validatedAt?: Date | string | null
+  drones?: Prisma.DroneUncheckedCreateNestedManyWithoutAgencyInput
+  incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutAgencyInput
+}
+
+export type AgencyCreateOrConnectWithoutUsersInput = {
+  where: Prisma.AgencyWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgencyCreateWithoutUsersInput, Prisma.AgencyUncheckedCreateWithoutUsersInput>
+}
+
+export type AgencyCreateWithoutCreatorInput = {
+  name: string
+  registrationStatus?: $Enums.RegistrationStatus
+  subscriptionStatus?: $Enums.SubscriptionStatus
+  createdAt?: Date | string
+  validatedAt?: Date | string | null
+  validator?: Prisma.UserCreateNestedOneWithoutValidatedAgenciesInput
+  users?: Prisma.UserCreateNestedManyWithoutAgencyInput
+  drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
+  incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
+}
+
+export type AgencyUncheckedCreateWithoutCreatorInput = {
+  id?: number
+  name: string
+  registrationStatus?: $Enums.RegistrationStatus
+  subscriptionStatus?: $Enums.SubscriptionStatus
+  createdAt?: Date | string
+  validatedBy?: number | null
+  validatedAt?: Date | string | null
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutAgencyInput
+  drones?: Prisma.DroneUncheckedCreateNestedManyWithoutAgencyInput
+  incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutAgencyInput
+}
+
+export type AgencyCreateOrConnectWithoutCreatorInput = {
+  where: Prisma.AgencyWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgencyCreateWithoutCreatorInput, Prisma.AgencyUncheckedCreateWithoutCreatorInput>
+}
+
+export type AgencyCreateManyCreatorInputEnvelope = {
+  data: Prisma.AgencyCreateManyCreatorInput | Prisma.AgencyCreateManyCreatorInput[]
+  skipDuplicates?: boolean
 }
 
 export type AgencyCreateWithoutValidatorInput = {
@@ -641,101 +733,6 @@ export type AgencyCreateManyValidatorInputEnvelope = {
   skipDuplicates?: boolean
 }
 
-export type AgencyUpsertWithWhereUniqueWithoutValidatorInput = {
-  where: Prisma.AgencyWhereUniqueInput
-  update: Prisma.XOR<Prisma.AgencyUpdateWithoutValidatorInput, Prisma.AgencyUncheckedUpdateWithoutValidatorInput>
-  create: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput>
-}
-
-export type AgencyUpdateWithWhereUniqueWithoutValidatorInput = {
-  where: Prisma.AgencyWhereUniqueInput
-  data: Prisma.XOR<Prisma.AgencyUpdateWithoutValidatorInput, Prisma.AgencyUncheckedUpdateWithoutValidatorInput>
-}
-
-export type AgencyUpdateManyWithWhereWithoutValidatorInput = {
-  where: Prisma.AgencyScalarWhereInput
-  data: Prisma.XOR<Prisma.AgencyUpdateManyMutationInput, Prisma.AgencyUncheckedUpdateManyWithoutValidatorInput>
-}
-
-export type AgencyScalarWhereInput = {
-  AND?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
-  OR?: Prisma.AgencyScalarWhereInput[]
-  NOT?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
-  id?: Prisma.IntFilter<"Agency"> | number
-  name?: Prisma.StringFilter<"Agency"> | string
-  registrationStatus?: Prisma.EnumRegistrationStatusFilter<"Agency"> | $Enums.RegistrationStatus
-  subscriptionStatus?: Prisma.EnumSubscriptionStatusFilter<"Agency"> | $Enums.SubscriptionStatus
-  createdBy?: Prisma.IntFilter<"Agency"> | number
-  createdAt?: Prisma.DateTimeFilter<"Agency"> | Date | string
-  validatedBy?: Prisma.IntNullableFilter<"Agency"> | number | null
-  validatedAt?: Prisma.DateTimeNullableFilter<"Agency"> | Date | string | null
-}
-
-export type AgencyCreateWithoutUsersInput = {
-  name: string
-  registrationStatus?: $Enums.RegistrationStatus
-  subscriptionStatus?: $Enums.SubscriptionStatus
-  createdAt?: Date | string
-  validatedAt?: Date | string | null
-  creator: Prisma.UserCreateNestedOneWithoutCreatedAgenciesInput
-  validator?: Prisma.PlatformAdminCreateNestedOneWithoutValidatedAgenciesInput
-  drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
-  incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
-}
-
-export type AgencyUncheckedCreateWithoutUsersInput = {
-  id?: number
-  name: string
-  registrationStatus?: $Enums.RegistrationStatus
-  subscriptionStatus?: $Enums.SubscriptionStatus
-  createdBy: number
-  createdAt?: Date | string
-  validatedBy?: number | null
-  validatedAt?: Date | string | null
-  drones?: Prisma.DroneUncheckedCreateNestedManyWithoutAgencyInput
-  incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutAgencyInput
-}
-
-export type AgencyCreateOrConnectWithoutUsersInput = {
-  where: Prisma.AgencyWhereUniqueInput
-  create: Prisma.XOR<Prisma.AgencyCreateWithoutUsersInput, Prisma.AgencyUncheckedCreateWithoutUsersInput>
-}
-
-export type AgencyCreateWithoutCreatorInput = {
-  name: string
-  registrationStatus?: $Enums.RegistrationStatus
-  subscriptionStatus?: $Enums.SubscriptionStatus
-  createdAt?: Date | string
-  validatedAt?: Date | string | null
-  validator?: Prisma.PlatformAdminCreateNestedOneWithoutValidatedAgenciesInput
-  users?: Prisma.UserCreateNestedManyWithoutAgencyInput
-  drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
-  incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
-}
-
-export type AgencyUncheckedCreateWithoutCreatorInput = {
-  id?: number
-  name: string
-  registrationStatus?: $Enums.RegistrationStatus
-  subscriptionStatus?: $Enums.SubscriptionStatus
-  createdAt?: Date | string
-  validatedBy?: number | null
-  validatedAt?: Date | string | null
-  users?: Prisma.UserUncheckedCreateNestedManyWithoutAgencyInput
-  drones?: Prisma.DroneUncheckedCreateNestedManyWithoutAgencyInput
-  incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutAgencyInput
-}
-
-export type AgencyCreateOrConnectWithoutCreatorInput = {
-  where: Prisma.AgencyWhereUniqueInput
-  create: Prisma.XOR<Prisma.AgencyCreateWithoutCreatorInput, Prisma.AgencyUncheckedCreateWithoutCreatorInput>
-}
-
-export type AgencyCreateManyCreatorInputEnvelope = {
-  data: Prisma.AgencyCreateManyCreatorInput | Prisma.AgencyCreateManyCreatorInput[]
-  skipDuplicates?: boolean
-}
-
 export type AgencyUpsertWithoutUsersInput = {
   update: Prisma.XOR<Prisma.AgencyUpdateWithoutUsersInput, Prisma.AgencyUncheckedUpdateWithoutUsersInput>
   create: Prisma.XOR<Prisma.AgencyCreateWithoutUsersInput, Prisma.AgencyUncheckedCreateWithoutUsersInput>
@@ -754,7 +751,7 @@ export type AgencyUpdateWithoutUsersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedAgenciesNestedInput
-  validator?: Prisma.PlatformAdminUpdateOneWithoutValidatedAgenciesNestedInput
+  validator?: Prisma.UserUpdateOneWithoutValidatedAgenciesNestedInput
   drones?: Prisma.DroneUpdateManyWithoutAgencyNestedInput
   incidents?: Prisma.IncidentUpdateManyWithoutAgencyNestedInput
 }
@@ -788,6 +785,36 @@ export type AgencyUpdateManyWithWhereWithoutCreatorInput = {
   data: Prisma.XOR<Prisma.AgencyUpdateManyMutationInput, Prisma.AgencyUncheckedUpdateManyWithoutCreatorInput>
 }
 
+export type AgencyScalarWhereInput = {
+  AND?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
+  OR?: Prisma.AgencyScalarWhereInput[]
+  NOT?: Prisma.AgencyScalarWhereInput | Prisma.AgencyScalarWhereInput[]
+  id?: Prisma.IntFilter<"Agency"> | number
+  name?: Prisma.StringFilter<"Agency"> | string
+  registrationStatus?: Prisma.EnumRegistrationStatusFilter<"Agency"> | $Enums.RegistrationStatus
+  subscriptionStatus?: Prisma.EnumSubscriptionStatusFilter<"Agency"> | $Enums.SubscriptionStatus
+  createdBy?: Prisma.IntFilter<"Agency"> | number
+  createdAt?: Prisma.DateTimeFilter<"Agency"> | Date | string
+  validatedBy?: Prisma.IntNullableFilter<"Agency"> | number | null
+  validatedAt?: Prisma.DateTimeNullableFilter<"Agency"> | Date | string | null
+}
+
+export type AgencyUpsertWithWhereUniqueWithoutValidatorInput = {
+  where: Prisma.AgencyWhereUniqueInput
+  update: Prisma.XOR<Prisma.AgencyUpdateWithoutValidatorInput, Prisma.AgencyUncheckedUpdateWithoutValidatorInput>
+  create: Prisma.XOR<Prisma.AgencyCreateWithoutValidatorInput, Prisma.AgencyUncheckedCreateWithoutValidatorInput>
+}
+
+export type AgencyUpdateWithWhereUniqueWithoutValidatorInput = {
+  where: Prisma.AgencyWhereUniqueInput
+  data: Prisma.XOR<Prisma.AgencyUpdateWithoutValidatorInput, Prisma.AgencyUncheckedUpdateWithoutValidatorInput>
+}
+
+export type AgencyUpdateManyWithWhereWithoutValidatorInput = {
+  where: Prisma.AgencyScalarWhereInput
+  data: Prisma.XOR<Prisma.AgencyUpdateManyMutationInput, Prisma.AgencyUncheckedUpdateManyWithoutValidatorInput>
+}
+
 export type AgencyCreateWithoutDronesInput = {
   name: string
   registrationStatus?: $Enums.RegistrationStatus
@@ -795,7 +822,7 @@ export type AgencyCreateWithoutDronesInput = {
   createdAt?: Date | string
   validatedAt?: Date | string | null
   creator: Prisma.UserCreateNestedOneWithoutCreatedAgenciesInput
-  validator?: Prisma.PlatformAdminCreateNestedOneWithoutValidatedAgenciesInput
+  validator?: Prisma.UserCreateNestedOneWithoutValidatedAgenciesInput
   users?: Prisma.UserCreateNestedManyWithoutAgencyInput
   incidents?: Prisma.IncidentCreateNestedManyWithoutAgencyInput
 }
@@ -836,7 +863,7 @@ export type AgencyUpdateWithoutDronesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedAgenciesNestedInput
-  validator?: Prisma.PlatformAdminUpdateOneWithoutValidatedAgenciesNestedInput
+  validator?: Prisma.UserUpdateOneWithoutValidatedAgenciesNestedInput
   users?: Prisma.UserUpdateManyWithoutAgencyNestedInput
   incidents?: Prisma.IncidentUpdateManyWithoutAgencyNestedInput
 }
@@ -861,7 +888,7 @@ export type AgencyCreateWithoutIncidentsInput = {
   createdAt?: Date | string
   validatedAt?: Date | string | null
   creator: Prisma.UserCreateNestedOneWithoutCreatedAgenciesInput
-  validator?: Prisma.PlatformAdminCreateNestedOneWithoutValidatedAgenciesInput
+  validator?: Prisma.UserCreateNestedOneWithoutValidatedAgenciesInput
   users?: Prisma.UserCreateNestedManyWithoutAgencyInput
   drones?: Prisma.DroneCreateNestedManyWithoutAgencyInput
 }
@@ -902,7 +929,7 @@ export type AgencyUpdateWithoutIncidentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedAgenciesNestedInput
-  validator?: Prisma.PlatformAdminUpdateOneWithoutValidatedAgenciesNestedInput
+  validator?: Prisma.UserUpdateOneWithoutValidatedAgenciesNestedInput
   users?: Prisma.UserUpdateManyWithoutAgencyNestedInput
   drones?: Prisma.DroneUpdateManyWithoutAgencyNestedInput
 }
@@ -920,6 +947,16 @@ export type AgencyUncheckedUpdateWithoutIncidentsInput = {
   drones?: Prisma.DroneUncheckedUpdateManyWithoutAgencyNestedInput
 }
 
+export type AgencyCreateManyCreatorInput = {
+  id?: number
+  name: string
+  registrationStatus?: $Enums.RegistrationStatus
+  subscriptionStatus?: $Enums.SubscriptionStatus
+  createdAt?: Date | string
+  validatedBy?: number | null
+  validatedAt?: Date | string | null
+}
+
 export type AgencyCreateManyValidatorInput = {
   id?: number
   name: string
@@ -928,6 +965,41 @@ export type AgencyCreateManyValidatorInput = {
   createdBy: number
   createdAt?: Date | string
   validatedAt?: Date | string | null
+}
+
+export type AgencyUpdateWithoutCreatorInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
+  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  validator?: Prisma.UserUpdateOneWithoutValidatedAgenciesNestedInput
+  users?: Prisma.UserUpdateManyWithoutAgencyNestedInput
+  drones?: Prisma.DroneUpdateManyWithoutAgencyNestedInput
+  incidents?: Prisma.IncidentUpdateManyWithoutAgencyNestedInput
+}
+
+export type AgencyUncheckedUpdateWithoutCreatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
+  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  validatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  users?: Prisma.UserUncheckedUpdateManyWithoutAgencyNestedInput
+  drones?: Prisma.DroneUncheckedUpdateManyWithoutAgencyNestedInput
+  incidents?: Prisma.IncidentUncheckedUpdateManyWithoutAgencyNestedInput
+}
+
+export type AgencyUncheckedUpdateManyWithoutCreatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
+  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  validatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgencyUpdateWithoutValidatorInput = {
@@ -962,51 +1034,6 @@ export type AgencyUncheckedUpdateManyWithoutValidatorInput = {
   subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
   createdBy?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-}
-
-export type AgencyCreateManyCreatorInput = {
-  id?: number
-  name: string
-  registrationStatus?: $Enums.RegistrationStatus
-  subscriptionStatus?: $Enums.SubscriptionStatus
-  createdAt?: Date | string
-  validatedBy?: number | null
-  validatedAt?: Date | string | null
-}
-
-export type AgencyUpdateWithoutCreatorInput = {
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  validator?: Prisma.PlatformAdminUpdateOneWithoutValidatedAgenciesNestedInput
-  users?: Prisma.UserUpdateManyWithoutAgencyNestedInput
-  drones?: Prisma.DroneUpdateManyWithoutAgencyNestedInput
-  incidents?: Prisma.IncidentUpdateManyWithoutAgencyNestedInput
-}
-
-export type AgencyUncheckedUpdateWithoutCreatorInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  validatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  users?: Prisma.UserUncheckedUpdateManyWithoutAgencyNestedInput
-  drones?: Prisma.DroneUncheckedUpdateManyWithoutAgencyNestedInput
-  incidents?: Prisma.IncidentUncheckedUpdateManyWithoutAgencyNestedInput
-}
-
-export type AgencyUncheckedUpdateManyWithoutCreatorInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  subscriptionStatus?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  validatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   validatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -1135,7 +1162,7 @@ export type $AgencyPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   name: "Agency"
   objects: {
     creator: Prisma.$UserPayload<ExtArgs>
-    validator: Prisma.$PlatformAdminPayload<ExtArgs> | null
+    validator: Prisma.$UserPayload<ExtArgs> | null
     users: Prisma.$UserPayload<ExtArgs>[]
     drones: Prisma.$DronePayload<ExtArgs>[]
     incidents: Prisma.$IncidentPayload<ExtArgs>[]
@@ -1544,7 +1571,7 @@ readonly fields: AgencyFieldRefs;
 export interface Prisma__AgencyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   creator<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  validator<T extends Prisma.Agency$validatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agency$validatorArgs<ExtArgs>>): Prisma.Prisma__PlatformAdminClient<runtime.Types.Result.GetResult<Prisma.$PlatformAdminPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  validator<T extends Prisma.Agency$validatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agency$validatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   users<T extends Prisma.Agency$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agency$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   drones<T extends Prisma.Agency$dronesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agency$dronesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DronePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidents<T extends Prisma.Agency$incidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agency$incidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1990,18 +2017,18 @@ export type AgencyDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
  */
 export type Agency$validatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the PlatformAdmin
+   * Select specific fields to fetch from the User
    */
-  select?: Prisma.PlatformAdminSelect<ExtArgs> | null
+  select?: Prisma.UserSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the PlatformAdmin
+   * Omit specific fields from the User
    */
-  omit?: Prisma.PlatformAdminOmit<ExtArgs> | null
+  omit?: Prisma.UserOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.PlatformAdminInclude<ExtArgs> | null
-  where?: Prisma.PlatformAdminWhereInput
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

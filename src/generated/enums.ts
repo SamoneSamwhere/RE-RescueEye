@@ -12,7 +12,8 @@
 export const RegistrationStatus = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  RESUBMISSION_REQUIRED: 'RESUBMISSION_REQUIRED'
 } as const
 
 export type RegistrationStatus = (typeof RegistrationStatus)[keyof typeof RegistrationStatus]
@@ -28,6 +29,7 @@ export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof Subscr
 
 
 export const UserRole = {
+  SYSTEM_ADMIN: 'SYSTEM_ADMIN',
   AGENCY_ADMIN: 'AGENCY_ADMIN',
   COMMAND_STAFF: 'COMMAND_STAFF',
   FIELD_RESPONDER: 'FIELD_RESPONDER'

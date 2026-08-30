@@ -24,15 +24,15 @@ model Agency {
   validatedAt        DateTime?
 
   creator            User      @relation("AgencyCreator", fields: [createdBy], references: [id], onDelete: Restrict)
-  validator          PlatformAdmin? @relation(fields: [validatedBy], references: [id], onDelete: SetNull)
-  users              User[]
+  validator          User?     @relation("AgencyValidator", fields: [validatedBy], references: [id], onDelete: SetNull)
+  users              User[]    @relation("AgencyUsers")
   drones             Drone[]
   incidents          Incident[]
 
   @@map("agency")
 }
 
-// User accounts (Agency Admin, Command Staff, Field Responder)
+// User accounts (System Admin, Agency Admin, Command Staff, Field Responder)
 model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique @db.VarChar(120)
@@ -40,14 +40,15 @@ model User {
   name         String    @db.VarChar(100)
   phone        String?   @db.VarChar(20)
   role         UserRole
-  agencyId     Int
+  agencyId     Int?      // Only for Agency Admin, Command Staff, Field Responder (System Admin has null)
   active       Boolean   @default(true)
   dutyStatus   DutyStatus @default(AVAILABLE)
   createdAt    DateTime  @default(now())
   lastLogin    DateTime?
 
-  agency              Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency              Agency?   @relation("AgencyUsers", fields: [agencyId], references: [id], onDelete: Cascade)
   createdAgencies     Agency[]  @relation("AgencyCreator")
+  validatedAgencies   Agency[]  @relation("AgencyValidator")
   dronesAdded         Drone[]   @relation("DroneOperator")
   dronesAssigned      Drone[]   @relation("DroneAssignedOperator")
   detectionsReviewed  Detection[]
@@ -57,6 +58,7 @@ model User {
   alertsReceived      Alert[]
 
   @@index([agencyId])
+  @@index([role])
   @@map("user")
 }
 
@@ -233,6 +235,7 @@ enum RegistrationStatus {
   PENDING
   APPROVED
   REJECTED
+  RESUBMISSION_REQUIRED
 }
 
 enum SubscriptionStatus {
@@ -242,6 +245,7 @@ enum SubscriptionStatus {
 }
 
 enum UserRole {
+  SYSTEM_ADMIN
   AGENCY_ADMIN
   COMMAND_STAFF
   FIELD_RESPONDER
