@@ -1,4 +1,4 @@
-# RescueEye
+# RescueEye :D
 
 RescueEye is a web dashboard for drone-based search-and-rescue operations. It turns
 AI-flagged detections from drone footage into confirmed incidents, dispatches the
