@@ -1,6 +1,6 @@
 import type { IncidentPriority } from '../../types/incident'
 import { Panel } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 interface IncidentPrioritySummaryProps {
   counts: Record<IncidentPriority, number>

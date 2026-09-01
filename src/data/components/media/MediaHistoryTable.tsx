@@ -1,6 +1,6 @@
 import { Archive, Radio, Upload } from 'lucide-react'
 import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import type { MediaHistoryItem } from './types'
 
 interface MediaHistoryTableProps {

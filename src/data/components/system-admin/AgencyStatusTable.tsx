@@ -1,6 +1,6 @@
 import { Building2 } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import type { Agency, AgencyAccountStatus } from '../../types/agency'
 
 interface AgencyStatusTableProps {

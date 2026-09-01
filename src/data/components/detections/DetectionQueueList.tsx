@@ -1,8 +1,8 @@
 import { ScanSearch } from 'lucide-react'
 import { Panel, Button, DetectionStatusBadge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { cn } from '../../lib/cn'
-import { DETECTION_CATEGORY_LABEL } from '../../lib/labels'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { cn } from '../../../lib/cn'
+import { DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
 import type { DetectionValidationStatus } from '../../types/detection'
 import type { EnrichedDetection } from './types'
 

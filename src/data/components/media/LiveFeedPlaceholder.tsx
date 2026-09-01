@@ -1,6 +1,6 @@
 import { Video } from 'lucide-react'
 import { Panel, Button } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 interface LiveFeedPlaceholderProps {
   droneName: string

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { Card, Input } from '../ui'
-import { INCIDENT_STATUS_LABEL, DETECTION_CATEGORY_LABEL } from '../../lib/labels'
+import { INCIDENT_STATUS_LABEL, DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
 import type { IncidentPriority, IncidentStatus } from '../../types/incident'
 import type { DetectionCategory } from '../../types/detection'
 

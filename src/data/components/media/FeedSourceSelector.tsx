@@ -1,6 +1,6 @@
 import { Radio, Upload } from 'lucide-react'
 import { Panel } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 import type { MediaSourceType } from '../../types/media'
 
 interface FeedSourceSelectorProps {

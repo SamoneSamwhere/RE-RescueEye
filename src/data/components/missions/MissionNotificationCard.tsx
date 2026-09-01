@@ -1,7 +1,7 @@
 import { AlertTriangle, MapPin, Check, X } from 'lucide-react'
 import { Card, Button, PriorityBadge } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
 import type { PendingMissionSummary } from './types'
 
 interface MissionNotificationCardProps {

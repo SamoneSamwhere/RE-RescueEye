@@ -1,6 +1,6 @@
 import { Sparkles, Video, Image as ImageIcon } from 'lucide-react'
-import { cn } from '../../lib/cn'
-import { DETECTION_CATEGORY_LABEL } from '../../lib/labels'
+import { cn } from '../../../lib/cn'
+import { DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
 import type { BoundingBox, DetectionCategory } from '../../types/detection'
 
 interface DetectionMediaPreviewProps {

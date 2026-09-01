@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState } from '../ui'
-import { USER_ROLE_LABEL } from '../../lib/labels'
-import { cn } from '../../lib/cn'
+import { USER_ROLE_LABEL } from '../../../lib/labels'
+import { cn } from '../../../lib/cn'
 import type { User, UserAccountStatus } from '../../types/user'
 
 /** Only the fields this table actually displays — deliberately excludes the mock `password` field on the full user record. */

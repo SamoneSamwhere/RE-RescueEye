@@ -5,7 +5,7 @@ import { UserMenu } from './UserMenu'
 import { NotificationArea } from './NotificationArea'
 import { ThemeToggle } from '../landing/ThemeToggle'
 import { useTheme } from '../../features/theme'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 interface TopbarProps {
   user: AppUserSummary

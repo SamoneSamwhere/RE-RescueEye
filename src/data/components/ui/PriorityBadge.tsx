@@ -1,5 +1,5 @@
 import type { IncidentPriority } from '../../types/incident'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 interface PriorityBadgeProps {
   priority: IncidentPriority

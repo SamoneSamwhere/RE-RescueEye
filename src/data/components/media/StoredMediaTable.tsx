@@ -12,7 +12,7 @@ import {
   EmptyState,
   LoadingState,
 } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import { mediaThumbnailUrl } from '../../features/media'
 import type { StoredMedia } from '../../types/media'
 

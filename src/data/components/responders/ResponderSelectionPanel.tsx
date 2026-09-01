@@ -1,6 +1,6 @@
 import { CheckCircle2, MapPin, Users } from 'lucide-react'
 import { Panel, Badge, MissionStatusBadge, StatusIndicator, Button, EmptyState } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 import type { ResponderCandidate } from './types'
 
 interface ResponderSelectionPanelProps {

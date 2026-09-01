@@ -1,6 +1,6 @@
 import { AlertTriangle, Eye, FileText } from 'lucide-react'
 import { Badge } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import type { AgencyDocument } from '../../types/agency'
 
 interface AgencyDocumentCardProps {

@@ -1,6 +1,6 @@
 import { Navigation } from 'lucide-react'
 import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, MissionStatusBadge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import type { MissionListItem } from './types'
 
 interface ActiveMissionsPanelProps {

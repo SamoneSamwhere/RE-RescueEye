@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, Badge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, INCIDENT_STATUS_LABEL } from '../../lib/labels'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, INCIDENT_STATUS_LABEL } from '../../../lib/labels'
 import { commandStaffIncidentDetailPath } from '../../routes/paths'
 import type { EnrichedIncident } from './types'
 

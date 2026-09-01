@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 import type { NavItem } from '../../types/nav'
 import { useTheme } from '../../features/theme'
 

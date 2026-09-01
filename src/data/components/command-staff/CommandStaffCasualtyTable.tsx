@@ -1,6 +1,6 @@
 import { AlertCircle, History } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 
 interface CasualtyRecord {
   detectionId: string

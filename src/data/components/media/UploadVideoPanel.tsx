@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { AlertCircle, CheckCircle2, FileVideo, UploadCloud, X } from 'lucide-react'
 import { Panel, Button } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 /** Mirrors ALLOWED_VIDEO_EXTS in api/services/media_store.py — keep the two in step. */
 const ACCEPTED_EXTS = ['.mp4', '.mov', '.avi', '.mkv', '.ts', '.webm', '.m4v']

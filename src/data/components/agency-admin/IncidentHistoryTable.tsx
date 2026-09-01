@@ -1,6 +1,6 @@
 import { History } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, MissionStatusBadge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { formatDateTime } from '../../../lib/formatDateTime'
 import type { IncidentHistoryItem } from '../../features/agency-admin'
 
 interface IncidentHistoryTableProps {

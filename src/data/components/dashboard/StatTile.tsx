@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import { Card } from '../ui'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 type StatTileTone = 'neutral' | 'warning' | 'danger' | 'info' | 'success'
 

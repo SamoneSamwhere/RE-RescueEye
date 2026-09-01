@@ -1,7 +1,7 @@
 import { ShieldCheck } from 'lucide-react'
 import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, Badge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, INCIDENT_STATUS_LABEL } from '../../lib/labels'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, INCIDENT_STATUS_LABEL } from '../../../lib/labels'
 import type { IncidentListItem } from './types'
 
 interface ConfirmedIncidentsPanelProps {

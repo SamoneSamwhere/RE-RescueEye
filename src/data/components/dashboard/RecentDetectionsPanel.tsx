@@ -1,7 +1,7 @@
 import { Radar } from 'lucide-react'
 import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, DetectionStatusBadge, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL } from '../../lib/labels'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
 import type { DetectionListItem } from './types'
 
 interface RecentDetectionsPanelProps {

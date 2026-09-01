@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '../../types/notification'
-import { NOTIFICATION_TYPE_ICON } from '../../lib/notificationIcons'
-import { cn } from '../../lib/cn'
+import { NOTIFICATION_TYPE_ICON } from '../../../lib/notificationIcons'
+import { cn } from '../../../lib/cn'
 import { useTheme } from '../../features/theme'
 
 interface NotificationAreaProps {

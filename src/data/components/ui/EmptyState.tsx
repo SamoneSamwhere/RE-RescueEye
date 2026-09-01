@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react'
 import { Inbox } from 'lucide-react'
-import { cn } from '../../lib/cn'
+import { cn } from '../../../lib/cn'
 
 interface EmptyStateProps {
   icon?: ComponentType<{ className?: string }>

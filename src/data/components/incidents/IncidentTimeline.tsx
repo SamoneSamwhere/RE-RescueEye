@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
-import { cn } from '../../lib/cn'
-import { formatDateTime } from '../../lib/formatDateTime'
+import { cn } from '../../../lib/cn'
+import { formatDateTime } from '../../../lib/formatDateTime'
 
 export interface IncidentTimelineEvent {
   icon: LucideIcon

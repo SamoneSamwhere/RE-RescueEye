@@ -1,8 +1,8 @@
 import { Bell } from 'lucide-react'
 import { Panel, EmptyState } from '../ui'
-import { formatDateTime } from '../../lib/formatDateTime'
-import { NOTIFICATION_TYPE_ICON } from '../../lib/notificationIcons'
-import { cn } from '../../lib/cn'
+import { formatDateTime } from '../../../lib/formatDateTime'
+import { NOTIFICATION_TYPE_ICON } from '../../../lib/notificationIcons'
+import { cn } from '../../../lib/cn'
 import type { Notification } from '../../types/notification'
 
 interface RecentNotificationsPanelProps {
