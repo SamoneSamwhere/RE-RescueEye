@@ -5,7 +5,7 @@ import { Card } from '../ui/Card'
 import { Field } from '../ui/Field'
 import { Input } from '../ui/Input'
 import { useUserStore } from '../../state/UserStore'
-import { useProfileDatabase } from '../../hooks/useProfileDatabase'
+import { useProfileDatabase } from '../../../hooks/useProfileDatabase'
 
 interface ChangePasswordFormProps {
   user: MockUser

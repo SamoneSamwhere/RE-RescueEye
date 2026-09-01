@@ -13,7 +13,7 @@ import type { Transition, Variant } from 'motion/react'
 import { createPortal } from 'react-dom'
 import { XIcon } from 'lucide-react'
 import { cn } from '../../../lib/cn'
-import { useClickOutside } from '../../hooks/useClickOutside'
+import { useClickOutside } from '../../../hooks/useClickOutside'
 
 export interface MorphingDialogContextType {
   isOpen: boolean

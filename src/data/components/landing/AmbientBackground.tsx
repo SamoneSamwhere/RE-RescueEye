@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useCursorParallax } from '../../hooks/useCursorParallax'
+import { useCursorParallax } from '../../../hooks/useCursorParallax'
 
 /**
  * A much quieter sibling of HeroBackground for the light/theme-adaptive

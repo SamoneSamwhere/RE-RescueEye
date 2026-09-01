@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useCursorParallax } from '../../hooks/useCursorParallax'
+import { useCursorParallax } from '../../../hooks/useCursorParallax'
 
 /**
  * Decorative hero backdrop: a radial glow, two drifting blobs, a faint grid,

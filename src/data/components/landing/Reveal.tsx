@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode } from 'react'
 import { cn } from '../../../lib/cn'
-import { useInView } from '../../hooks/useInView'
+import { useInView } from '../../../hooks/useInView'
 
 interface RevealProps {
   children: ReactNode

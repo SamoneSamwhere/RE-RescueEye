@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useCursorParallax } from '../../hooks/useCursorParallax'
+import { useCursorParallax } from '../../../hooks/useCursorParallax'
 
 /** Quiet landing-inspired atmosphere for operational screens. */
 export function DashboardBackdrop() {
