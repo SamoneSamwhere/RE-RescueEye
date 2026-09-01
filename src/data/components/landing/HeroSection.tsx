@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, PlayCircle } from 'lucide-react'
-import { ROUTES } from '../../routes/paths'
+import { ROUTES } from '../../../routes/paths'
 import { Button } from '../ui'
 import { cn } from '../../../lib/cn'
 import { useInView } from '../../../hooks/useInView'

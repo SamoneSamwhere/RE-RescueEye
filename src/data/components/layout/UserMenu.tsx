@@ -6,7 +6,7 @@ import type { AppUserSummary } from '../../types/user'
 import { cn } from '../../../lib/cn'
 import { useTheme } from '../../features/theme'
 import { useAuth } from '../../features/auth'
-import { ROUTES } from '../../routes/paths'
+import { ROUTES } from '../../../routes/paths'
 
 interface UserMenuProps {
   user: AppUserSummary

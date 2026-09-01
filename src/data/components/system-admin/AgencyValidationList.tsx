@@ -4,7 +4,7 @@ import { Building2, Mail, Phone, Clock, RotateCcw, Search } from 'lucide-react'
 import { Card, Button, Badge, EmptyState } from '../ui'
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { AGENCY_REGISTRATION_STATUS_LABEL, AGENCY_REGISTRATION_STATUS_TONE } from '../../../lib/labels'
-import { systemAdminAgencyValidationDetailPath } from '../../routes/paths'
+import { systemAdminAgencyValidationDetailPath } from '../../../routes/paths'
 import type { Agency } from '../../types/agency'
 
 interface AgencyValidationListProps {

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone } from 'lucide-react'
-import { ROUTES } from '../../routes/paths'
+import { ROUTES } from '../../../routes/paths'
 import logo from '../../assets/logo.png'
 
 const PRODUCT_LINKS = [

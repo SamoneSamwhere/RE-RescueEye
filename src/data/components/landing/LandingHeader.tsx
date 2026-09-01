@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { ROUTES } from '../../routes/paths'
+import { ROUTES } from '../../../routes/paths'
 import { Button } from '../ui'
 import { ThemeToggle } from './ThemeToggle'
 import logo from '../../assets/logo.png'

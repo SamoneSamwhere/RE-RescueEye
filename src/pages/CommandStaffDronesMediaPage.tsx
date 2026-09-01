@@ -5,9 +5,6 @@ import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { DroneList, RegisterDroneModal } from '../data/components/drones'
 import { FeedModal, StoredMediaTable, MediaReviewModal } from '../data/components/media'
-import { DroneList } from '../data/components/drones'
-import { FeedModal, MediaHistoryTable } from '../data/components/media'
-import type { MediaHistoryItem } from '../data/components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import {
@@ -31,8 +28,6 @@ export function CommandStaffDronesMediaPage() {
   const agencyId = session?.agencyId
 
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
-  const { drones, liveDroneIds, mediaAssets, connectDrone, startLiveFeed, captureMedia } =
-    useCommandStaffData()
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)
