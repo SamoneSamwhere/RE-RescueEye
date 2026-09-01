@@ -5,7 +5,7 @@ import { Button } from '../ui'
 import { cn } from '../../../lib/cn'
 import { useInView } from '../../../hooks/useInView'
 import { HeroBackground } from './HeroBackground'
-import droneImage from '../../assets/drone.png'
+import droneImage from '../../../assets/drone.png'
 
 export function HeroSection() {
   const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.1 })

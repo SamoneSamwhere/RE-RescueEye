@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useCursorParallax } from '../../../hooks/useCursorParallax'
 import { Reveal } from './Reveal'
-import droneVideo from '../../assets/Drone.webm'
+import droneVideo from '../../../assets/Drone.webm'
 
 export function CtaSection() {
   const containerRef = useRef<HTMLElement>(null)

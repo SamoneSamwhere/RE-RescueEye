@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { HeroBackground } from './HeroBackground'
 import { ThemeToggle } from './ThemeToggle'
-import logo from '../../assets/logo.png'
+import logo from '../../../assets/logo.png'
 
 interface AuthPageShellProps {
   children: ReactNode

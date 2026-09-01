@@ -4,7 +4,7 @@ import { Menu, X } from 'lucide-react'
 import { ROUTES } from '../../../routes/paths'
 import { Button } from '../ui'
 import { ThemeToggle } from './ThemeToggle'
-import logo from '../../assets/logo.png'
+import logo from '../../../assets/logo.png'
 
 const NAV_LINKS = []
 
