@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { AlertCircle, CheckCircle2, Upload, X } from 'lucide-react'
-import { cn } from '../../../lib/cn'
+import { cn } from '../../../../lib/cn'
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 const ACCEPTED_TYPES = ['application/pdf', 'image/png', 'image/jpeg']

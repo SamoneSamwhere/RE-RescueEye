@@ -1,7 +1,7 @@
 import { UserCog } from 'lucide-react'
 import { RoleSelectCard } from '../RoleSelectCard'
 import { ROLE_OPTIONS } from './types'
-import type { CreatableUserRole } from '../../../features/agency-admin'
+import type { CreatableUserRole } from '../../../../features/agency-admin'
 
 interface RoleStepProps {
   selectedRole: CreatableUserRole | null

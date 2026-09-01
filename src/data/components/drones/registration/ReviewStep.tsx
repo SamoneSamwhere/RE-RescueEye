@@ -1,5 +1,5 @@
 import { Card } from '../../ui'
-import type { User } from '../../../types/user'
+import type { User } from '../../../../types/user'
 import type { DroneRegistrationData } from './types'
 
 function formatDate(date: Date): string {

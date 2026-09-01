@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import { ShieldCheck, UsersRound } from 'lucide-react'
-import type { CreatableUserRole } from '../../../features/agency-admin'
+import type { CreatableUserRole } from '../../../../features/agency-admin'
 
 export interface PersonnelInfoValues {
   firstName: string

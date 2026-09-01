@@ -1,7 +1,7 @@
 import { Building2, ClipboardCheck, Mail, Phone, ShieldCheck, UserRound } from 'lucide-react'
 import { DetailField } from '../../ui'
 import { ROLE_OPTIONS } from './types'
-import type { CreatableUserRole } from '../../../features/agency-admin'
+import type { CreatableUserRole } from '../../../../features/agency-admin'
 
 interface ReviewStepProps {
   fullName: string

@@ -1,4 +1,4 @@
-import type { DroneType, DroneOperationalStatus } from '../../../types/drone'
+import type { DroneType, DroneOperationalStatus } from '../../../../types/drone'
 
 export interface DroneRegistrationData {
   name: string
