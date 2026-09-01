@@ -21,7 +21,7 @@ export function CommandStaffLiveMonitoringPage() {
   const feeds = feedsQuery.data?.feeds ?? []
   // The API suggests a cadence based on how many panels are open, so four
   // feeds don't all hammer /detect at the single-feed rate.
-  const intervalMs = feedsQuery.data?.suggestedDetectIntervalMs ?? 1500
+  const intervalMs = feedsQuery.data?.suggestedDetectIntervalMs ?? 350
 
   /** Records the moment as an in-app media asset, as the mock flow always did. */
   function handleSaveToHistory(feed: Feed) {

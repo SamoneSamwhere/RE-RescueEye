@@ -37,7 +37,7 @@ export function LiveFeedPanel({
   detectEnabled,
   onClose,
   onSaveToHistory,
-  intervalMs = 1500,
+  intervalMs = 350,
 }: LiveFeedPanelProps) {
   const detection = useFeedDetection(feed.id, detectEnabled, intervalMs)
   const [attempt, setAttempt] = useState(0)
@@ -148,6 +148,11 @@ export function LiveFeedPanel({
                       height: `${(box.bbox.h / frameHeight) * 100}%`,
                       border: `2px solid ${color}`,
                       boxShadow: `0 0 0 1px rgba(0,0,0,.45)`,
+                      // Detections arrive in discrete steps; easing between
+                      // them reads as tracking rather than teleporting. Keyed
+                      // on the SORT track id, so the same subject keeps the
+                      // same DOM node for the transition to animate.
+                      transition: 'left 200ms linear, top 200ms linear, width 200ms linear, height 200ms linear',
                     }}
                   >
                     <span

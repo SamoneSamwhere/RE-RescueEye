@@ -225,7 +225,8 @@ async def detect_on_feed(feed_id: str):
     # at module load would make stream.py depend on it for every endpoint here.
     from routers.detect import detect_objects
     import base64
-    result = await detect_objects({"frame": base64.b64encode(jpeg).decode()})
+    result = await detect_objects({"frame": base64.b64encode(jpeg).decode(),
+                                   "annotate": False})
 
     # Boxes are in the analysed frame's pixel space, and the caller never sees
     # that frame — it renders the MJPEG stream at whatever size it likes. Ship

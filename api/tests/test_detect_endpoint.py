@@ -55,3 +55,20 @@ def test_detect_tracker_assigns_same_track_id_across_consecutive_calls(client, b
     first = client.post("/detect", json={"frame": bright_frame_b64}).json()
     second = client.post("/detect", json={"frame": bright_frame_b64}).json()
     assert first["detections"][0]["track_id"] == second["detections"][0]["track_id"]
+
+
+def test_detect_skips_the_annotated_frame_when_asked(client, dark_frame_b64):
+    """
+    Live Monitoring draws its own overlay, so the annotated JPEG is ~60ms of
+    thermal colouring and JPEG encoding it throws away. Opting out is what
+    allows the detection cadence to keep the box on the casualty.
+    """
+    body = client.post("/detect", json={"frame": dark_frame_b64, "annotate": False}).json()
+    assert body["annotated_frame"] is None
+    assert body["detections"]              # detection itself is unaffected
+
+
+def test_detect_still_annotates_by_default(client, dark_frame_b64):
+    body = client.post("/detect", json={"frame": dark_frame_b64}).json()
+    assert body["annotated_frame"] is not None
+    assert body["annotated_frame"].startswith("data:image/jpeg;base64,")

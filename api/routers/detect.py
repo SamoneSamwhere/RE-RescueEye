@@ -578,6 +578,12 @@ async def detect_objects(payload: dict = Body(...)):
 
     # ── Dual-technology mode selection ────────────────────────────────────────
     brightness = _measure_brightness(frame)
+    # Callers that draw their own overlay (Live Monitoring renders the MJPEG
+    # stream with positioned boxes) don't need the annotated JPEG, and building
+    # it costs ~60ms a frame — thermal colouring of the full frame plus a JPEG
+    # encode. Opting out is what lets the detection loop run at a cadence that
+    # keeps the box on the casualty.
+    want_annotation = bool(payload.get("annotate", True))
     force_mode = payload.get("force_mode")  # "visual" | "thermal" | null
     if force_mode in ("visual", "thermal"):
         mode = force_mode
@@ -589,7 +595,7 @@ async def detect_objects(payload: dict = Body(...)):
         # the original RGB (the colouring is display-only). The class stays
         # "casualty" — thermal vs visual is reported in `mode`, so it does not
         # need a second name for the same subject.
-        display_frame            = _apply_thermal(frame)
+        display_frame            = _apply_thermal(frame) if want_annotation else frame
         detections, inference_ms = _run_victim(frame)
     else:
         display_frame            = frame
@@ -643,10 +649,11 @@ async def detect_objects(payload: dict = Body(...)):
 
     add_detections(annotated, inference_ms)
 
-    annotated_frame = _annotate_frame(display_frame, annotated) if annotated else None
+    annotated_frame = (_annotate_frame(display_frame, annotated)
+                       if annotated and want_annotation else None)
 
     # In thermal mode always return the thermal frame so the UI can show it
-    if mode == "thermal" and annotated_frame is None:
+    if want_annotation and mode == "thermal" and annotated_frame is None:
         buf = io.BytesIO()
         Image.fromarray(display_frame).save(buf, format="JPEG", quality=55)
         annotated_frame = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()

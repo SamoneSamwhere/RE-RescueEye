@@ -178,3 +178,12 @@ def test_ffmpeg_actually_accepts_the_generated_filter():
     from PIL import Image
     import io
     assert Image.open(io.BytesIO(proc.stdout)).size[0] == registry.FEED_MAX_WIDTH
+
+
+def test_detect_interval_scales_with_feed_count_and_is_capped():
+    base, cap = registry.BASE_DETECT_INTERVAL_MS, registry.MAX_DETECT_INTERVAL_MS
+    assert base < cap
+    # The cadence is a floor for a back-to-back client loop, so it has to stay
+    # near a single pass (~190ms) or the overlay visibly trails the video.
+    assert base <= 500, "base cadence too slow — the box will lag the casualty"
+    assert registry.detect_interval_ms() <= cap

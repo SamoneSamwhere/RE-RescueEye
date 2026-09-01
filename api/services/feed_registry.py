@@ -29,8 +29,8 @@ MAX_FEEDS = 4
 # Detection runs on every feed, so the per-feed cadence is stretched as feeds
 # are added to keep total inference load roughly constant. The browser reads
 # `suggestedDetectIntervalMs` from the feed list rather than hardcoding it.
-BASE_DETECT_INTERVAL_MS = 2500
-MAX_DETECT_INTERVAL_MS = 6000
+BASE_DETECT_INTERVAL_MS = 350
+MAX_DETECT_INTERVAL_MS = 1500
 
 
 def _is_network_source(source: str) -> bool:
@@ -118,6 +118,12 @@ def detect_interval_ms() -> int:
     """
     Per-feed detection cadence. Every feed detects, so the interval widens with
     feed count to spread inference load rather than multiplying it.
+
+    The base was 2500ms when a pass cost ~630ms and the overlay visibly lagged
+    the video. A pass is now ~190ms, so the gap between updates — not inference
+    — was what made the box trail the casualty. Clients run their cycles back to
+    back, so this is a floor rather than a fixed period: it can never queue
+    requests faster than the model clears them.
     """
     n = max(len(_registry), 1)
     return min(BASE_DETECT_INTERVAL_MS * n // 1, MAX_DETECT_INTERVAL_MS)
