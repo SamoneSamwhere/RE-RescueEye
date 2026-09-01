@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: rescueeye-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: DRONE_FEED_PATH
+        value: /data/demo_feed.mp4
+      - key: VICTIM_MODEL_PATH
+        value: /models/victim_best.pt
+      - key: DAMAGE_MODEL_PATH
+        value: /models/damage_best.pt
+      - key: LATENCY_WARN_MS
+        value: "3000"
+      - key: CONFIDENCE_THRESHOLD
+        value: "0.40"
+      - key: INCIDENT_CONF_MIN
+        value: "0.75"
+      - key: NODE_SERVER_URL
+        value: https://rescueeye-server.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://rescueeye.vercel.app

@@ -25,6 +25,7 @@ model Agency {
 
   creator            User      @relation("AgencyCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   validator          User?     @relation("AgencyValidator", fields: [validatedBy], references: [id], onDelete: SetNull)
+  users              User[]
   users              User[]    @relation("AgencyUsers")
   drones             Drone[]
   incidents          Incident[]
@@ -33,6 +34,8 @@ model Agency {
 }
 
 // User accounts (System Admin, Agency Admin, Command Staff, Field Responder)
+// SYSTEM_ADMIN accounts are platform-level and have no agencyId; every other
+// role belongs to exactly one agency. Enforced at the application layer.
 model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique @db.VarChar(120)
@@ -40,12 +43,17 @@ model User {
   name         String    @db.VarChar(100)
   phone        String?   @db.VarChar(20)
   role         UserRole
+  agencyId     Int?
   agencyId     Int?      // Only for Agency Admin, Command Staff, Field Responder (System Admin has null)
   active       Boolean   @default(true)
   dutyStatus   DutyStatus @default(AVAILABLE)
   createdAt    DateTime  @default(now())
   lastLogin    DateTime?
 
+  agency              Agency?   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  createdAgencies     Agency[]  @relation("AgencyCreator")
+  validatedAgencies   Agency[]  @relation("AgencyValidator")
+  dronesAdded         Drone[]
   agency              Agency?   @relation("AgencyUsers", fields: [agencyId], references: [id], onDelete: Cascade)
   createdAgencies     Agency[]  @relation("AgencyCreator")
   validatedAgencies   Agency[]  @relation("AgencyValidator")
@@ -56,6 +64,7 @@ model User {
   responses           Response[]
   mediaUploaded       Media[]
   alertsReceived      Alert[]
+  auditEntries        AuditHistory[]
 
   @@index([agencyId])
   @@index([role])
@@ -222,8 +231,9 @@ model AuditHistory {
   oldValue        String?   @db.VarChar(500)
   newValue        String?   @db.VarChar(500)
   changedBy       Int
-  changedByType   ActorType
   changedAt       DateTime  @default(now())
+
+  actor           User      @relation(fields: [changedBy], references: [id], onDelete: Restrict)
 
   @@index([entityType, entityId])
   @@index([changedBy])
@@ -339,9 +349,4 @@ enum EntityType {
   ALERT
   DETECTION
   AGENCY
-}
-
-enum ActorType {
-  USER
-  ADMIN
 }

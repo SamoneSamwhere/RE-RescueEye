@@ -1,7 +1,7 @@
 import { Radio } from 'lucide-react'
 import { Modal, StatusIndicator, Panel, Button } from '../ui'
 import { FeedSourceSelector } from './FeedSourceSelector'
-import { UploadVideoPlaceholder } from './UploadVideoPlaceholder'
+import { UploadVideoPanel } from './UploadVideoPanel'
 import type { MediaSourceType } from '../../types/media'
 
 interface FeedModalProps {
@@ -12,7 +12,12 @@ interface FeedModalProps {
   feedSource: MediaSourceType | null
   onSelectFeedSource: (source: MediaSourceType) => void
   onStartLiveFeed: () => void
-  onUploadVideo: (fileName: string) => void
+  /** Receives the actual File so it can be sent to the media library. */
+  onUploadVideo: (file: File) => void
+  uploading: boolean
+  uploadProgress: number
+  uploadError: string | null
+  onCancelUpload?: () => void
 }
 
 /**
@@ -31,6 +36,10 @@ export function FeedModal({
   onSelectFeedSource,
   onStartLiveFeed,
   onUploadVideo,
+  uploading,
+  uploadProgress,
+  uploadError,
+  onCancelUpload,
 }: FeedModalProps) {
   return (
     <Modal
@@ -58,7 +67,14 @@ export function FeedModal({
         ) : null}
 
         {feedSource === 'UPLOADED_VIDEO' ? (
-          <UploadVideoPlaceholder droneName={droneName} onUpload={onUploadVideo} />
+          <UploadVideoPanel
+            droneName={droneName}
+            uploading={uploading}
+            progress={uploadProgress}
+            error={uploadError}
+            onUpload={onUploadVideo}
+            onCancel={onCancelUpload}
+          />
         ) : null}
       </div>
     </Modal>

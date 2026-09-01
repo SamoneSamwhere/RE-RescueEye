@@ -1,30 +1,67 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
+import { DroneList, RegisterDroneModal } from '../components/drones'
+import { FeedModal, StoredMediaTable, MediaReviewModal } from '../components/media'
 import { DroneList } from '../components/drones'
 import { FeedModal, MediaHistoryTable } from '../components/media'
 import type { MediaHistoryItem } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
-import { mockUsers } from '../data/mockUsers'
+import {
+  useMediaLibrary,
+  useUploadMedia,
+  useCaptureFrame,
+  useDeleteMedia,
+} from '../features/media'
+import { useMonitorMedia } from '../features/media/useFeeds'
 import { ROUTES } from '../routes/paths'
-import type { MediaSourceType } from '../types/media'
+import type { MediaSourceType, StoredMedia } from '../types/media'
 
 const CONNECT_DELAY_MS = 800
 
 export function CommandStaffDronesMediaPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
+  const { drones, liveDroneIds, registerDrone, connectDrone, startLiveFeed, captureMedia } =
+    useCommandStaffData()
+
+  const agencyId = session?.agencyId
+
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
   const { drones, liveDroneIds, mediaAssets, connectDrone, startLiveFeed, captureMedia } =
     useCommandStaffData()
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)
   const [detectionCreated, setDetectionCreated] = useState(false)
+  const [uploadedName, setUploadedName] = useState<string | null>(null)
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
 
+  const library = useMediaLibrary(agencyId)
+  const upload = useUploadMedia()
+  const captureFrame = useCaptureFrame()
+  const deleteMedia = useDeleteMedia()
+  const monitorMedia = useMonitorMedia()
+
+  // Memoised so the `reviewing` lookup below has a stable dependency; a bare
+  // `?? []` would allocate a new array on every render.
+  const storedMedia = useMemo(() => library.data?.items ?? [], [library.data])
   const selectedDrone = drones.find((d) => d.id === selectedDroneId) ?? null
+
+  // Re-read from the freshly fetched list rather than holding the object, so
+  // the modal shows a newly captured frame as soon as the query is invalidated.
+  const reviewing = useMemo(
+    () => storedMedia.find((m) => m.id === reviewingId) ?? null,
+    [storedMedia, reviewingId],
+  )
+
+  const droneNameById = useCallback(
+    (droneId: string | null) => (droneId ? drones.find((d) => d.id === droneId)?.name : undefined),
+    [drones],
+  )
 
   function handleConnect(droneId: string) {
     setConnectingDroneId(droneId)
@@ -38,6 +75,8 @@ export function CommandStaffDronesMediaPage() {
     setSelectedDroneId(droneId)
     setFeedSource(null)
     setDetectionCreated(false)
+    setUploadedName(null)
+    upload.reset()
   }
 
   function handleCloseFeedModal() {
@@ -53,31 +92,63 @@ export function CommandStaffDronesMediaPage() {
     navigate(ROUTES.commandStaffLiveMonitoring)
   }
 
-  /** Uploaded video -> mock AI Detection, ready for Detection Review. */
-  function handleUploadVideo(fileName: string) {
+  /**
+   * Real upload: the file is stored by the API's media library first, and only
+   * once that succeeds is the in-app Detection created. Doing it in that order
+   * means a failed upload never leaves a detection pointing at footage that was
+   * never stored.
+   */
+  function handleUploadVideo(file: File) {
     if (!selectedDrone) return
-    captureMedia('UPLOADED_VIDEO', selectedDrone.id, fileName)
-    setDetectionCreated(true)
-    handleCloseFeedModal()
+    upload.mutate(
+      {
+        file,
+        agencyId,
+        droneId: selectedDrone.id,
+        uploadedBy: session?.id,
+        uploadedByName: session?.name,
+      },
+      {
+        onSuccess: (stored) => {
+          captureMedia('UPLOADED_VIDEO', selectedDrone.id, stored.original_name)
+          setUploadedName(stored.original_name)
+          setDetectionCreated(true)
+          handleCloseFeedModal()
+          // Open it as a feed straight away and hand off to Live Monitoring —
+          // an uploaded clip is only useful once the AI is running on it.
+          monitorMedia.mutate(stored.id, {
+            onSuccess: () => navigate(ROUTES.commandStaffLiveMonitoring),
+          })
+        },
+      },
+    )
   }
 
-  const mediaHistoryItems: MediaHistoryItem[] = useMemo(() => {
-    return [...mediaAssets]
-      .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))
-      .map((asset) => {
-        const drone = asset.droneId ? drones.find((d) => d.id === asset.droneId) : undefined
-        const uploader = asset.uploadedByUserId ? mockUsers.find((u) => u.id === asset.uploadedByUserId) : undefined
-        return {
-          id: asset.id,
-          sourceType: asset.sourceType,
-          droneName: drone?.name,
-          uploadedByName: uploader?.name,
-          capturedAt: asset.capturedAt,
-        }
-      })
-  }, [mediaAssets, drones])
+  function handleMonitor(media: StoredMedia) {
+    monitorMedia.mutate(media.id, {
+      onSuccess: () => navigate(ROUTES.commandStaffLiveMonitoring),
+    })
+  }
+
+  function handleCaptureFrame(tSec: number) {
+    if (!reviewing) return
+    captureFrame.mutate({ mediaId: reviewing.id, tSec })
+  }
+
+  function handleDeleteMedia(mediaId: string) {
+    deleteMedia.mutate(mediaId, { onSuccess: () => setReviewingId(null) })
+  }
 
   if (!session) return null
+
+  const uploadError = upload.error instanceof Error ? upload.error.message : null
+  const libraryError = library.error instanceof Error ? library.error.message : null
+  const reviewError =
+    captureFrame.error instanceof Error
+      ? captureFrame.error.message
+      : deleteMedia.error instanceof Error
+        ? deleteMedia.error.message
+        : null
 
   return (
     <>
@@ -99,6 +170,19 @@ export function CommandStaffDronesMediaPage() {
           />
         </Reveal>
 
+        {monitorMedia.error instanceof Error ? (
+          <p className="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+            {monitorMedia.error.message}
+          </p>
+        ) : null}
+
+        {uploadedName ? (
+          <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
+            <CheckCircle2 className="size-4 shrink-0" />
+            <span className="truncate">{uploadedName} was uploaded and stored for later review.</span>
+          </div>
+        ) : null}
+
         {detectionCreated ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-accent-border bg-accent-subtle px-3 py-2 text-sm text-foreground">
             <span className="flex items-center gap-2">
@@ -116,7 +200,16 @@ export function CommandStaffDronesMediaPage() {
         ) : null}
 
         <Reveal delayMs={100}>
-          <MediaHistoryTable items={mediaHistoryItems} />
+          <StoredMediaTable
+            items={storedMedia}
+            loading={library.isLoading}
+            error={libraryError}
+            droneNameById={droneNameById}
+            onReview={(media: StoredMedia) => setReviewingId(media.id)}
+            onMonitor={handleMonitor}
+            monitoringId={monitorMedia.isPending ? (monitorMedia.variables ?? null) : null}
+            onRetry={() => void library.refetch()}
+          />
         </Reveal>
       </div>
 
@@ -130,8 +223,23 @@ export function CommandStaffDronesMediaPage() {
           onSelectFeedSource={setFeedSource}
           onStartLiveFeed={handleStartLiveFeed}
           onUploadVideo={handleUploadVideo}
+          uploading={upload.isPending}
+          uploadProgress={upload.progress}
+          uploadError={uploadError}
+          onCancelUpload={upload.abort ?? undefined}
         />
       ) : null}
+
+      <MediaReviewModal
+        media={reviewing}
+        open={!!reviewing}
+        onClose={() => setReviewingId(null)}
+        onCaptureFrame={handleCaptureFrame}
+        onDelete={handleDeleteMedia}
+        capturing={captureFrame.isPending}
+        deleting={deleteMedia.isPending}
+        error={reviewError}
+      />
     </>
   )
 }
