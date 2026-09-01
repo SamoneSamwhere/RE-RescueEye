@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { mockUsers } from '../../data/mockUsers'
 import { now } from '../../lib/now'
@@ -19,6 +19,8 @@ import { useDetectionStore } from '../../state/DetectionStore'
 import { useMediaAssetStore } from '../../state/MediaAssetStore'
 import { useNotificationStore } from '../../state/NotificationStore'
 import { useDroneStore } from '../../state/DroneStore'
+import { useDroneDatabase } from '../../hooks/useDroneDatabase'
+import type { DroneRecord } from '../../hooks/useDroneDatabase'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
 const DEFAULT_AREA_CENTER: GeoPoint = { lat: 37.775, lng: -122.42 }
@@ -37,8 +39,20 @@ interface CommandStaffDataContextValue {
   dispatchIncident: (incidentId: string, responderUserId: string) => Mission | null
   closeIncident: (incidentId: string) => void
   captureMedia: (sourceType: MediaSourceType, droneId: string | undefined, fileName?: string) => Detection
-  registerDrone: (input: { name: string; serialNumber: string }) => void
-  connectDrone: (droneId: string) => void
+  registerDrone: (input: {
+    name: string
+    manufacturer: string
+    model: string
+    droneType: string
+    serialNumber: string
+    registrationNumber?: string
+    dateAcquired: string
+    operationalStatus: string
+    assignedOperatorId?: string
+    lastInspectionDate?: string
+    notes?: string
+  }) => Promise<{ ok: boolean; error?: string }>
+  connectDrone: (droneId: string) => Promise<void>
   startLiveFeed: (droneId: string) => void
   stopLiveFeed: (droneId: string) => void
 }
@@ -64,14 +78,8 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   const { detections: allDetections, addDetection, updateDetection } = useDetectionStore()
   const { mediaAssets: allMediaAssets, addMediaAsset } = useMediaAssetStore()
   const { notifications: allNotifications, addNotification } = useNotificationStore()
-  const {
-    drones: allDrones,
-    liveDroneIds: allLiveDroneIds,
-    addDrone,
-    updateDrone,
-    startLiveFeed,
-    stopLiveFeed,
-  } = useDroneStore()
+  const { liveDroneIds: allLiveDroneIds, startLiveFeed, stopLiveFeed } = useDroneStore()
+  const { getDronesByAgency, createDrone, updateDrone: updateDbDrone } = useDroneDatabase()
 
   const mediaAssets = useMemo(
     () => allMediaAssets.filter((m) => m.agencyId === agencyId),
@@ -102,7 +110,22 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       }),
     [allNotifications, agencyId],
   )
-  const drones = useMemo(() => allDrones.filter((d) => d.agencyId === agencyId), [allDrones, agencyId])
+  const [drones, setDrones] = useState<Drone[]>([])
+
+  const refreshDrones = useCallback(async () => {
+    if (!agencyId) {
+      setDrones([])
+      return
+    }
+    const records = await getDronesByAgency(Number(agencyId))
+    setDrones(records.map(mapDroneRecordToDrone))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agencyId])
+
+  useEffect(() => {
+    refreshDrones()
+  }, [refreshDrones])
+
   const liveDroneIds = useMemo(
     () => allLiveDroneIds.filter((droneId) => drones.some((d) => d.id === droneId)),
     [allLiveDroneIds, drones],
@@ -274,20 +297,54 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     updateIncident(incidentId, { status: 'CLOSED', closedByUserId: session.id, closedAt: now().toISOString() })
   }
 
-  function registerDrone(input: { name: string; serialNumber: string }) {
-    if (!agencyId) return
-    addDrone({
-      id: generateId('drone'),
-      agencyId,
-      name: input.name,
+  async function registerDrone(input: {
+    name: string
+    manufacturer: string
+    model: string
+    droneType: string
+    serialNumber: string
+    registrationNumber?: string
+    dateAcquired: string
+    operationalStatus: string
+    assignedOperatorId?: string
+    lastInspectionDate?: string
+    notes?: string
+  }): Promise<{ ok: boolean; error?: string }> {
+    if (!agencyId || !session) return { ok: false, error: 'No active session.' }
+    if (session.id.startsWith('usr-')) {
+      // Demo/mock accounts have no matching Supabase user row to attribute the drone to.
+      return { ok: false, error: 'Drone registration requires a real account — demo accounts cannot register drones.' }
+    }
+
+    const assignedOperatorId =
+      input.assignedOperatorId && !input.assignedOperatorId.startsWith('usr-')
+        ? Number(input.assignedOperatorId)
+        : undefined
+
+    const result = await createDrone({
+      callsign: input.name,
+      manufacturer: input.manufacturer,
+      model: input.model,
+      droneType: input.droneType as DroneRecord['droneType'],
       serialNumber: input.serialNumber,
-      connectionStatus: 'DISCONNECTED',
-      registeredAt: now().toISOString(),
+      registrationNumber: input.registrationNumber,
+      operationalStatus: input.operationalStatus as DroneRecord['operationalStatus'],
+      dateAcquired: input.dateAcquired,
+      lastInspectionDate: input.lastInspectionDate,
+      notes: input.notes,
+      assignedOperatorId,
+      agencyId: Number(agencyId),
+      addedBy: Number(session.id),
     })
+
+    if (!result) return { ok: false, error: 'Failed to register drone. Please try again.' }
+    await refreshDrones()
+    return { ok: true }
   }
 
-  function connectDrone(droneId: string) {
-    updateDrone(droneId, { connectionStatus: 'CONNECTED', lastConnectedAt: now().toISOString() })
+  async function connectDrone(droneId: string) {
+    await updateDbDrone(Number(droneId), { status: 'ACTIVE', lastFeedAt: new Date().toISOString() })
+    await refreshDrones()
   }
 
   return (
@@ -315,6 +372,27 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       {children}
     </CommandStaffDataContext.Provider>
   )
+}
+
+function mapDroneRecordToDrone(record: DroneRecord): Drone {
+  return {
+    id: String(record.id),
+    agencyId: String(record.agencyId),
+    name: record.callsign,
+    model: record.model,
+    manufacturer: record.manufacturer,
+    droneType: record.droneType,
+    serialNumber: record.serialNumber,
+    registrationNumber: record.registrationNumber || undefined,
+    assignedOperatorId: record.assignedOperatorId ? String(record.assignedOperatorId) : undefined,
+    dateAcquired: record.dateAcquired,
+    operationalStatus: record.operationalStatus,
+    lastInspectionDate: record.lastInspectionDate || undefined,
+    notes: record.notes || undefined,
+    connectionStatus: record.status === 'ACTIVE' ? 'CONNECTED' : 'DISCONNECTED',
+    registeredAt: record.createdAt,
+    lastConnectedAt: record.lastFeedAt || undefined,
+  }
 }
 
 function newAssetSuffix(): string {

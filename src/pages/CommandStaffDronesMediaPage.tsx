@@ -5,6 +5,9 @@ import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import { DroneList, RegisterDroneModal } from '../components/drones'
 import { FeedModal, StoredMediaTable, MediaReviewModal } from '../components/media'
+import { DroneList } from '../components/drones'
+import { FeedModal, MediaHistoryTable } from '../components/media'
+import type { MediaHistoryItem } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import {
@@ -28,6 +31,8 @@ export function CommandStaffDronesMediaPage() {
   const agencyId = session?.agencyId
 
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
+  const { drones, liveDroneIds, mediaAssets, connectDrone, startLiveFeed, captureMedia } =
+    useCommandStaffData()
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)
@@ -161,7 +166,7 @@ export function CommandStaffDronesMediaPage() {
             onConnect={handleConnect}
             onSelectFeedSource={handleSelectFeedSource}
             onViewLive={() => navigate(ROUTES.commandStaffLiveMonitoring)}
-            onRegisterClick={() => setRegisterModalOpen(true)}
+            onRegisterClick={() => navigate(ROUTES.commandStaffDroneRegistration)}
           />
         </Reveal>
 
@@ -207,13 +212,6 @@ export function CommandStaffDronesMediaPage() {
           />
         </Reveal>
       </div>
-
-      <RegisterDroneModal
-        open={registerModalOpen}
-        onClose={() => setRegisterModalOpen(false)}
-        onRegister={registerDrone}
-        existingSerialNumbers={drones.map((d) => d.serialNumber)}
-      />
 
       {selectedDrone ? (
         <FeedModal

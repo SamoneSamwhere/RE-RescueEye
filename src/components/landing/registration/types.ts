@@ -8,7 +8,8 @@ export interface AgencyInfoValues {
 }
 
 export interface AdminInfoValues {
-  fullName: string
+  firstName: string
+  lastName: string
   position: string
   email: string
   phone: string

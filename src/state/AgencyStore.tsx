@@ -5,6 +5,7 @@ import type { Agency } from '../types/agency'
 
 interface AgencyStoreContextValue {
   agencies: Agency[]
+  addAgency: (agency: Agency) => void
   updateAgency: (agencyId: string, patch: Partial<Agency>) => void
 }
 
@@ -14,12 +15,16 @@ const AgencyStoreContext = createContext<AgencyStoreContextValue | undefined>(un
 export function AgencyStoreProvider({ children }: { children: ReactNode }) {
   const [agencies, setAgencies] = useState<Agency[]>(mockAgencies)
 
+  function addAgency(agency: Agency) {
+    setAgencies((prev) => [...prev, agency])
+  }
+
   function updateAgency(agencyId: string, patch: Partial<Agency>) {
     setAgencies((prev) => prev.map((agency) => (agency.id === agencyId ? { ...agency, ...patch } : agency)))
   }
 
   return (
-    <AgencyStoreContext.Provider value={{ agencies, updateAgency }}>{children}</AgencyStoreContext.Provider>
+    <AgencyStoreContext.Provider value={{ agencies, addAgency, updateAgency }}>{children}</AgencyStoreContext.Provider>
   )
 }
 

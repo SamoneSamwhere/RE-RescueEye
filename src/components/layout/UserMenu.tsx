@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, LogOut, User as UserIcon } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, User as UserIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { USER_ROLE_LABEL } from '../../lib/labels'
 import type { AppUserSummary } from '../../types/user'
 import { cn } from '../../lib/cn'
 import { useTheme } from '../../features/theme'
+import { useAuth } from '../../features/auth'
+import { ROUTES } from '../../routes/paths'
 
 interface UserMenuProps {
   user: AppUserSummary
@@ -11,10 +14,27 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, onLogout }: UserMenuProps) {
+  const navigate = useNavigate()
+  const { session } = useAuth()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const getSettingsRoute = () => {
+    switch (session?.role) {
+      case 'SYSTEM_ADMIN':
+        return ROUTES.systemAdminSettings
+      case 'AGENCY_ADMIN':
+        return ROUTES.agencyAdminSettings
+      case 'COMMAND_STAFF':
+        return ROUTES.commandStaffSettings
+      case 'FIELD_RESPONDER':
+        return ROUTES.fieldResponderSettings
+      default:
+        return null
+    }
+  }
 
   useEffect(() => {
     if (!open) return
@@ -84,6 +104,20 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
           </div>
           {user.agencyName ? (
             <p className="px-2 py-1.5 text-xs text-foreground-muted">{user.agencyName}</p>
+          ) : null}
+          {getSettingsRoute() ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                navigate(getSettingsRoute()!)
+              }}
+              className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm text-foreground-secondary hover:bg-surface-secondary hover:text-foreground"
+            >
+              <Settings className="size-4" />
+              Settings
+            </button>
           ) : null}
           <button
             type="button"

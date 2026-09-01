@@ -397,7 +397,6 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  PlatformAdmin: 'PlatformAdmin',
   Agency: 'Agency',
   User: 'User',
   Drone: 'Drone',
@@ -422,84 +421,10 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "platformAdmin" | "agency" | "user" | "drone" | "detection" | "incident" | "response" | "alert" | "media" | "auditHistory"
+    modelProps: "agency" | "user" | "drone" | "detection" | "incident" | "response" | "alert" | "media" | "auditHistory"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
-    PlatformAdmin: {
-      payload: Prisma.$PlatformAdminPayload<ExtArgs>
-      fields: Prisma.PlatformAdminFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.PlatformAdminFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.PlatformAdminFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        findFirst: {
-          args: Prisma.PlatformAdminFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.PlatformAdminFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        findMany: {
-          args: Prisma.PlatformAdminFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>[]
-        }
-        create: {
-          args: Prisma.PlatformAdminCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        createMany: {
-          args: Prisma.PlatformAdminCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.PlatformAdminCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>[]
-        }
-        delete: {
-          args: Prisma.PlatformAdminDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        update: {
-          args: Prisma.PlatformAdminUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        deleteMany: {
-          args: Prisma.PlatformAdminDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.PlatformAdminUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.PlatformAdminUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>[]
-        }
-        upsert: {
-          args: Prisma.PlatformAdminUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformAdminPayload>
-        }
-        aggregate: {
-          args: Prisma.PlatformAdminAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregatePlatformAdmin>
-        }
-        groupBy: {
-          args: Prisma.PlatformAdminGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PlatformAdminGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.PlatformAdminCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PlatformAdminCountAggregateOutputType> | number
-        }
-      }
-    }
     Agency: {
       payload: Prisma.$AgencyPayload<ExtArgs>
       fields: Prisma.AgencyFieldRefs
@@ -1205,18 +1130,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const PlatformAdminScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  passwordHash: 'passwordHash',
-  name: 'name',
-  createdAt: 'createdAt',
-  lastLogin: 'lastLogin'
-} as const
-
-export type PlatformAdminScalarFieldEnum = (typeof PlatformAdminScalarFieldEnum)[keyof typeof PlatformAdminScalarFieldEnum]
-
-
 export const AgencyScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1251,8 +1164,18 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const DroneScalarFieldEnum = {
   id: 'id',
   callsign: 'callsign',
+  manufacturer: 'manufacturer',
+  model: 'model',
+  droneType: 'droneType',
+  serialNumber: 'serialNumber',
+  registrationNumber: 'registrationNumber',
   status: 'status',
+  operationalStatus: 'operationalStatus',
   addedBy: 'addedBy',
+  assignedOperatorId: 'assignedOperatorId',
+  dateAcquired: 'dateAcquired',
+  lastInspectionDate: 'lastInspectionDate',
+  notes: 'notes',
   lastLat: 'lastLat',
   lastLng: 'lastLng',
   lastFeedAt: 'lastFeedAt',
@@ -1419,20 +1342,6 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
- * Reference to a field of type 'DateTime'
- */
-export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
-    
-
-
-/**
- * Reference to a field of type 'DateTime[]'
- */
-export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-/**
  * Reference to a field of type 'RegistrationStatus'
  */
 export type EnumRegistrationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RegistrationStatus'>
@@ -1457,6 +1366,20 @@ export type EnumSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputTyp
  * Reference to a field of type 'SubscriptionStatus[]'
  */
 export type ListEnumSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime[]'
+ */
+export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
     
 
 
@@ -1496,6 +1419,20 @@ export type ListEnumDutyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 
 
 /**
+ * Reference to a field of type 'DroneType'
+ */
+export type EnumDroneTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneType'>
+    
+
+
+/**
+ * Reference to a field of type 'DroneType[]'
+ */
+export type ListEnumDroneTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneType[]'>
+    
+
+
+/**
  * Reference to a field of type 'DroneStatus'
  */
 export type EnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneStatus'>
@@ -1506,6 +1443,20 @@ export type EnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'DroneStatus[]'
  */
 export type ListEnumDroneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DroneStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'OperationalStatus'
+ */
+export type EnumOperationalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OperationalStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'OperationalStatus[]'
+ */
+export type ListEnumOperationalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OperationalStatus[]'>
     
 
 
@@ -1827,7 +1778,6 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  */
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
-  platformAdmin?: Prisma.PlatformAdminOmit
   agency?: Prisma.AgencyOmit
   user?: Prisma.UserOmit
   drone?: Prisma.DroneOmit

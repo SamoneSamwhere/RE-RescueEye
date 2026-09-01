@@ -5,21 +5,27 @@ import { SystemAdminDashboardPage } from '../pages/SystemAdminDashboardPage'
 import { SystemAdminAgencyValidationPage } from '../pages/SystemAdminAgencyValidationPage'
 import { SystemAdminAgencyValidationDetailPage } from '../pages/SystemAdminAgencyValidationDetailPage'
 import { SystemAdminAgencyStatusPage } from '../pages/SystemAdminAgencyStatusPage'
+import { SystemAdminSettingsPage } from '../pages/SystemAdminSettingsPage'
 import { CommandStaffDashboardPage } from '../pages/CommandStaffDashboardPage'
 import { CommandStaffDronesMediaPage } from '../pages/CommandStaffDronesMediaPage'
 import { CommandStaffLiveMonitoringPage } from '../pages/CommandStaffLiveMonitoringPage'
 import { CommandStaffDetectionReviewPage } from '../pages/CommandStaffDetectionReviewPage'
+import { CommandStaffLogsPage } from '../pages/CommandStaffClassificationLogPage'
 import { CommandStaffIncidentsPage } from '../pages/CommandStaffIncidentsPage'
 import { CommandStaffIncidentDetailPage } from '../pages/CommandStaffIncidentDetailPage'
 import { CommandStaffMapPage } from '../pages/CommandStaffMapPage'
+import { CommandStaffSettingsPage } from '../pages/CommandStaffSettingsPage'
+import { CommandStaffDroneRegistrationPage } from '../pages/CommandStaffDroneRegistrationPage'
 import { FieldResponderHomePage } from '../pages/FieldResponderHomePage'
 import { FieldResponderMapPage } from '../pages/FieldResponderMapPage'
 import { FieldResponderProfilePage } from '../pages/FieldResponderProfilePage'
+import { FieldResponderSettingsPage } from '../pages/FieldResponderSettingsPage'
 import { FieldResponderMissionDetailPage } from '../pages/FieldResponderMissionDetailPage'
 import { AgencyAdminDashboardPage } from '../pages/AgencyAdminDashboardPage'
 import { AgencyAdminUserCreationPage } from '../pages/AgencyAdminUserCreationPage'
 import { AgencyAdminAccountStatusPage } from '../pages/AgencyAdminAccountStatusPage'
 import { AgencyAdminIncidentHistoryPage } from '../pages/AgencyAdminIncidentHistoryPage'
+import { AgencyAdminSettingsPage } from '../pages/AgencyAdminSettingsPage'
 import { ProtectedRoute, RootRedirect } from '../features/auth'
 import { CommandStaffDataProvider } from '../features/command-staff'
 import { FieldResponderDataProvider } from '../features/field-responder'
@@ -58,6 +64,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.systemAdminAgencyValidation, element: <SystemAdminAgencyValidationPage /> },
           { path: ROUTES.systemAdminAgencyValidationDetail, element: <SystemAdminAgencyValidationDetailPage /> },
           { path: ROUTES.systemAdminAgencyStatus, element: <SystemAdminAgencyStatusPage /> },
+          { path: ROUTES.systemAdminSettings, element: <SystemAdminSettingsPage /> },
         ],
       },
       {
@@ -73,6 +80,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.agencyAdminUserCreation, element: <AgencyAdminUserCreationPage /> },
           { path: ROUTES.agencyAdminAccountStatus, element: <AgencyAdminAccountStatusPage /> },
           { path: ROUTES.agencyAdminIncidentHistory, element: <AgencyAdminIncidentHistoryPage /> },
+          { path: ROUTES.agencyAdminSettings, element: <AgencyAdminSettingsPage /> },
         ],
       },
       {
@@ -86,11 +94,14 @@ export const router = createBrowserRouter([
         children: [
           { path: ROUTES.commandStaff, element: <CommandStaffDashboardPage /> },
           { path: ROUTES.commandStaffMedia, element: <CommandStaffDronesMediaPage /> },
+          { path: ROUTES.commandStaffDroneRegistration, element: <CommandStaffDroneRegistrationPage /> },
           { path: ROUTES.commandStaffLiveMonitoring, element: <CommandStaffLiveMonitoringPage /> },
           { path: ROUTES.commandStaffDetections, element: <CommandStaffDetectionReviewPage /> },
+          { path: ROUTES.commandStaffLogs, element: <CommandStaffLogsPage /> },
           { path: ROUTES.commandStaffIncidents, element: <CommandStaffIncidentsPage /> },
           { path: ROUTES.commandStaffIncidentDetail, element: <CommandStaffIncidentDetailPage /> },
           { path: ROUTES.commandStaffMap, element: <CommandStaffMapPage /> },
+          { path: ROUTES.commandStaffSettings, element: <CommandStaffSettingsPage /> },
         ],
       },
       {
@@ -105,6 +116,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.fieldResponder, element: <FieldResponderHomePage /> },
           { path: ROUTES.fieldResponderMap, element: <FieldResponderMapPage /> },
           { path: ROUTES.fieldResponderProfile, element: <FieldResponderProfilePage /> },
+          { path: ROUTES.fieldResponderSettings, element: <FieldResponderSettingsPage /> },
           { path: ROUTES.fieldResponderMissionDetail, element: <FieldResponderMissionDetailPage /> },
         ],
       },

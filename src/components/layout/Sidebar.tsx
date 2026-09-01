@@ -81,7 +81,7 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
     if (pinned) return
     if (closeTimer.current) {
       clearTimeout(closeTimer.current)
-      closeTimer.current = null
+      closeTimer.current = null 
     }
     if (hovered) return
     openTimer.current = setTimeout(() => setHovered(true), OPEN_INTENT_DELAY_MS)

@@ -3,7 +3,8 @@ import { ShieldCheck, UsersRound } from 'lucide-react'
 import type { CreatableUserRole } from '../../../features/agency-admin'
 
 export interface PersonnelInfoValues {
-  fullName: string
+  firstName: string
+  lastName: string
   email: string
   phone: string
 }

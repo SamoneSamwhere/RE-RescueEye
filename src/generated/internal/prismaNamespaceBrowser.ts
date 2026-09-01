@@ -51,7 +51,6 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  PlatformAdmin: 'PlatformAdmin',
   Agency: 'Agency',
   User: 'User',
   Drone: 'Drone',
@@ -77,18 +76,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const PlatformAdminScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  passwordHash: 'passwordHash',
-  name: 'name',
-  createdAt: 'createdAt',
-  lastLogin: 'lastLogin'
-} as const
-
-export type PlatformAdminScalarFieldEnum = (typeof PlatformAdminScalarFieldEnum)[keyof typeof PlatformAdminScalarFieldEnum]
 
 
 export const AgencyScalarFieldEnum = {
@@ -125,8 +112,18 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const DroneScalarFieldEnum = {
   id: 'id',
   callsign: 'callsign',
+  manufacturer: 'manufacturer',
+  model: 'model',
+  droneType: 'droneType',
+  serialNumber: 'serialNumber',
+  registrationNumber: 'registrationNumber',
   status: 'status',
+  operationalStatus: 'operationalStatus',
   addedBy: 'addedBy',
+  assignedOperatorId: 'assignedOperatorId',
+  dateAcquired: 'dateAcquired',
+  lastInspectionDate: 'lastInspectionDate',
+  notes: 'notes',
   lastLat: 'lastLat',
   lastLng: 'lastLng',
   lastFeedAt: 'lastFeedAt',

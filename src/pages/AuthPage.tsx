@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
-import { mockUsers } from '../data/mockUsers'
 import { Field, Input, Button } from '../components/ui'
 import { AuthPageShell, Reveal } from '../components/landing'
 import {
@@ -20,6 +19,10 @@ import type {
   DocumentErrors,
   DocumentId,
 } from '../components/landing/registration'
+import { useAgencyStore } from '../state/AgencyStore'
+import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
+import { generateId } from '../lib/id'
+import { now } from '../lib/now'
 import { cn } from '../lib/cn'
 
 type AuthMode = 'signin' | 'signup'
@@ -46,7 +49,8 @@ function validateAgencyStep(values: AgencyInfoValues): string | null {
 
 function validateAdminStep(values: AdminInfoValues): string | null {
   if (
-    !values.fullName.trim() ||
+    !values.firstName.trim() ||
+    !values.lastName.trim() ||
     !values.position.trim() ||
     !values.email.trim() ||
     !values.phone.trim() ||
@@ -89,12 +93,15 @@ const MOBILE_QUERY = '(max-width: 1023px)'
 
 export function AuthPage() {
   const { login, session } = useAuth()
+  const { addAgency } = useAgencyStore()
+  const { createAgency: createAgencyInDb, isLoading: isCreatingAgency } = useAgencyDatabase()
   const [searchParams, setSearchParams] = useSearchParams()
   const mode: AuthMode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   const [currentStep, setCurrentStep] = useState(0)
   const [agency, setAgency] = useState<AgencyInfoValues>({
@@ -106,7 +113,8 @@ export function AuthPage() {
     agencyWebsite: '',
   })
   const [admin, setAdmin] = useState<AdminInfoValues>({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     position: '',
     email: '',
     phone: '',
@@ -153,18 +161,15 @@ export function AuthPage() {
     setSearchParams(params, { replace: true })
   }
 
-  function handleLoginSubmit(event: FormEvent) {
+  async function handleLoginSubmit(event: FormEvent) {
     event.preventDefault()
-    const result = login(email, password)
+    setLoginError(null)
+    setIsLoggingIn(true)
+    const result = await login(email, password)
+    setIsLoggingIn(false)
     if (!result.ok) {
       setLoginError(result.error)
     }
-  }
-
-  function fillDemoAccount(demoEmail: string, demoPassword: string) {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setLoginError(null)
   }
 
   function handleDocumentChange(id: DocumentId, file: File | null, docError: string | null) {
@@ -187,7 +192,7 @@ export function AuthPage() {
     setCurrentStep((step) => Math.max(0, step - 1))
   }
 
-  function handleSignupSubmit(event: FormEvent) {
+  async function handleSignupSubmit(event: FormEvent) {
     event.preventDefault()
     const stepError = validateDocumentsStep(documents, documentErrors, agreedToTerms)
     if (stepError) {
@@ -195,6 +200,49 @@ export function AuthPage() {
       return
     }
     setSignupError(null)
+
+    // Create agency in Supabase
+    const result = await createAgencyInDb({
+      agencyName: agency.agencyName,
+      agencyType: agency.agencyType,
+      agencyAddress: agency.agencyAddress,
+      agencyPhone: agency.agencyPhone,
+      agencyEmail: agency.agencyEmail,
+      agencyWebsite: agency.agencyWebsite,
+      adminFirstName: admin.firstName,
+      adminLastName: admin.lastName,
+      adminPosition: admin.position,
+      adminEmail: admin.email,
+      adminPhone: admin.phone,
+      adminPassword: admin.password,
+    })
+
+    if (!result.success) {
+      setSignupError(result.error || 'Failed to create agency. Please try again.')
+      return
+    }
+
+    // Also add to local mock store for consistency
+    addAgency({
+      id: `agency-${result.agencyId}`,
+      name: agency.agencyName,
+      agencyType: agency.agencyType,
+      address: agency.agencyAddress,
+      contactPhone: agency.agencyPhone,
+      contactEmail: agency.agencyEmail,
+      website: agency.agencyWebsite || undefined,
+      agencyAdmin: {
+        fullName: `${admin.firstName} ${admin.lastName}`.trim(),
+        position: admin.position,
+        email: admin.email,
+        phone: admin.phone,
+      },
+      documents: [],
+      registrationStatus: 'PENDING',
+      accountStatus: 'INACTIVE',
+      registeredAt: now().toISOString(),
+    })
+
     setSubmitted(true)
   }
 
@@ -209,10 +257,7 @@ export function AuthPage() {
                 still be reachable by click/tab underneath. */}
             <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
               <div className="max-w-md">
-                <h2 className="text-xl font-semibold text-foreground">Sign In</h2>
-                <p className="mt-1 text-sm leading-relaxed text-foreground-secondary">
-                  Access your agency&apos;s live response workspace using your agency-issued credentials.
-                </p>
+                <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
 
               <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
@@ -226,7 +271,6 @@ export function AuthPage() {
                 <Field
                   label="Email"
                   htmlFor="email"
-                  hint="Use the email address provided by your agency administrator."
                 >
                   <Input
                     id="email"
@@ -242,7 +286,6 @@ export function AuthPage() {
                 <Field
                   label="Password"
                   htmlFor="password"
-                  hint="Enter the password associated with your RescueEye account."
                 >
                   <Input
                     id="password"
@@ -265,32 +308,10 @@ export function AuthPage() {
                   </p>
                 ) : null}
 
-                <Button type="submit" className="mt-1 self-center">
-                  Sign in
+                <Button type="submit" className="mt-1 self-center px-8" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'Signing in…' : 'Sign in'}
                 </Button>
               </form>
-
-              <div className="mt-4 rounded-md border border-border bg-surface-secondary px-3 py-3">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-                  Demo accounts (mock auth)
-                </p>
-                <ul className="flex max-h-32 flex-col gap-1 overflow-y-auto">
-                  {mockUsers.map((user) => (
-                    <li key={user.id}>
-                      <button
-                        type="button"
-                        onClick={() => fillDemoAccount(user.email, user.password)}
-                        className="group flex w-full items-center justify-between gap-3 rounded-sm px-1 py-1 text-left text-xs text-foreground-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                      >
-                        <span className="truncate font-mono">{user.email}</span>
-                        <span className="shrink-0 uppercase tracking-wide text-foreground-muted group-hover:text-foreground-secondary">
-                          {user.role.replace('_', ' ')}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
 
             {/* Sign up slot — desktop only; agency registration is not part of the mobile field-responder app.
@@ -314,10 +335,7 @@ export function AuthPage() {
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
-                  <p className="mt-1 max-w-md text-sm leading-relaxed text-foreground-secondary">
-                    Access your agency&apos;s live response workspace using your agency-issued credentials.
-                  </p>
+                  <h2 className="text-center text-2xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
                   <RegistrationStepper steps={STEP_LABELS} currentStep={currentStep} />
 
                   <form className="flex flex-col gap-4" onSubmit={handleSignupSubmit}>
@@ -365,8 +383,8 @@ export function AuthPage() {
                           Continue
                         </Button>
                       ) : (
-                        <Button type="submit">
-                          Submit Registration
+                        <Button type="submit" disabled={isCreatingAgency}>
+                          {isCreatingAgency ? 'Submitting...' : 'Submit Registration'}
                         </Button>
                       )}
                     </div>

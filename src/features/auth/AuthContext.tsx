@@ -4,6 +4,8 @@ import type { UserRole } from '../../types/user'
 import type { MockUser } from '../../data/mockUsers'
 import { mockAgencies } from '../../data/mockAgencies'
 import { useUserStore } from '../../state/UserStore'
+import { supabase } from '../../lib/supabase'
+import { hashPassword } from '../../hooks/useAgencyDatabase'
 
 export interface AuthSession {
   id: string
@@ -19,7 +21,7 @@ type LoginResult = { ok: true } | { ok: false; error: string }
 interface AuthContextValue {
   session: AuthSession | null
   status: 'idle' | 'authenticated' | 'unauthenticated'
-  login: (email: string, password: string) => LoginResult
+  login: (email: string, password: string) => Promise<LoginResult>
   logout: () => void
 }
 
@@ -39,6 +41,44 @@ function toSession(user: MockUser): AuthSession {
   }
 }
 
+/** Checks a real Supabase user (agency admin, staff, responder) — mock accounts never reach here. */
+async function loginWithSupabase(email: string, password: string): Promise<LoginResult> {
+  const { data: dbUser, error: dbError } = await supabase
+    .from('user')
+    .select('id, email, passwordHash, firstName, lastName, role, agencyId, active')
+    .ilike('email', email.trim())
+    .maybeSingle()
+
+  if (dbError || !dbUser) {
+    return { ok: false, error: 'Invalid email or password.' }
+  }
+
+  const passwordHash = await hashPassword(password)
+  if (passwordHash !== dbUser.passwordHash) {
+    return { ok: false, error: 'Invalid email or password.' }
+  }
+  if (!dbUser.active) {
+    return { ok: false, error: 'This account has been deactivated.' }
+  }
+
+  let agencyName: string | undefined
+  if (dbUser.agencyId) {
+    const { data: agencyData } = await supabase.from('agency').select('name').eq('id', dbUser.agencyId).single()
+    agencyName = agencyData?.name
+  }
+
+  const nextSession: AuthSession = {
+    id: String(dbUser.id),
+    name: `${dbUser.firstName || ''} ${dbUser.lastName || ''}`.trim(),
+    email: dbUser.email,
+    role: dbUser.role as UserRole,
+    agencyId: dbUser.agencyId ? String(dbUser.agencyId) : undefined,
+    agencyName,
+  }
+  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession))
+  return { ok: true }
+}
+
 const VALID_ROLES: UserRole[] = ['SYSTEM_ADMIN', 'AGENCY_ADMIN', 'COMMAND_STAFF', 'FIELD_RESPONDER']
 
 /** Guards against trusting a corrupted or stale-schema value pulled from localStorage. */
@@ -55,8 +95,9 @@ function isValidSession(value: unknown): value is AuthSession {
 }
 
 /**
- * Mock authentication only — session lives in localStorage, credentials are
- * checked against the in-memory mock user directory. No backend involved.
+ * Authentication checks the in-memory mock user directory first (the
+ * built-in demo accounts), then falls back to the real Supabase `user`
+ * table for accounts created through the real agency registration flow.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { users } = useUserStore()
@@ -81,23 +122,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('unauthenticated')
   }, [])
 
-  function login(email: string, password: string): LoginResult {
-    const user = users.find(
-      (candidate) => candidate.email.toLowerCase() === email.trim().toLowerCase(),
-    )
+  async function login(email: string, password: string): Promise<LoginResult> {
+    const mockUser = users.find((candidate) => candidate.email.toLowerCase() === email.trim().toLowerCase())
 
-    if (!user || user.password !== password) {
-      return { ok: false, error: 'Invalid email or password.' }
-    }
-    if (user.accountStatus !== 'ACTIVE') {
-      return { ok: false, error: 'This account has been deactivated.' }
+    if (mockUser) {
+      if (mockUser.password !== password) {
+        return { ok: false, error: 'Invalid email or password.' }
+      }
+      if (mockUser.accountStatus !== 'ACTIVE') {
+        return { ok: false, error: 'This account has been deactivated.' }
+      }
+      const nextSession = toSession(mockUser)
+      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession))
+      setSession(nextSession)
+      setStatus('authenticated')
+      return { ok: true }
     }
 
-    const nextSession = toSession(user)
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession))
-    setSession(nextSession)
-    setStatus('authenticated')
-    return { ok: true }
+    const result = await loginWithSupabase(email, password)
+    if (result.ok) {
+      const raw = window.localStorage.getItem(SESSION_STORAGE_KEY)
+      if (raw) {
+        setSession(JSON.parse(raw) as AuthSession)
+        setStatus('authenticated')
+      }
+    }
+    return result
   }
 
   function logout() {

@@ -21,16 +21,29 @@ export function PersonnelInfoStep({ values, onChange }: PersonnelInfoStepProps) 
         </div>
       </div>
 
-      <Field label="Full Name" htmlFor="personnel-name">
-        <Input
-          id="personnel-name"
-          autoComplete="name"
-          value={values.fullName}
-          onChange={(event) => onChange({ fullName: event.target.value })}
-          placeholder="e.g. Jamie Ortiz"
-          required
-        />
-      </Field>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="First Name" htmlFor="personnel-first-name">
+          <Input
+            id="personnel-first-name"
+            autoComplete="given-name"
+            value={values.firstName}
+            onChange={(event) => onChange({ firstName: event.target.value })}
+            placeholder="e.g. Jamie"
+            required
+          />
+        </Field>
+
+        <Field label="Last Name" htmlFor="personnel-last-name">
+          <Input
+            id="personnel-last-name"
+            autoComplete="family-name"
+            value={values.lastName}
+            onChange={(event) => onChange({ lastName: event.target.value })}
+            placeholder="e.g. Ortiz"
+            required
+          />
+        </Field>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Email" htmlFor="personnel-email" hint="Used to sign in to RescueEye.">

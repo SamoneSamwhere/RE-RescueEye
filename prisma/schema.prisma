@@ -26,6 +26,7 @@ model Agency {
   creator            User      @relation("AgencyCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   validator          User?     @relation("AgencyValidator", fields: [validatedBy], references: [id], onDelete: SetNull)
   users              User[]
+  users              User[]    @relation("AgencyUsers")
   drones             Drone[]
   incidents          Incident[]
 
@@ -43,6 +44,7 @@ model User {
   phone        String?   @db.VarChar(20)
   role         UserRole
   agencyId     Int?
+  agencyId     Int?      // Only for Agency Admin, Command Staff, Field Responder (System Admin has null)
   active       Boolean   @default(true)
   dutyStatus   DutyStatus @default(AVAILABLE)
   createdAt    DateTime  @default(now())
@@ -52,6 +54,11 @@ model User {
   createdAgencies     Agency[]  @relation("AgencyCreator")
   validatedAgencies   Agency[]  @relation("AgencyValidator")
   dronesAdded         Drone[]
+  agency              Agency?   @relation("AgencyUsers", fields: [agencyId], references: [id], onDelete: Cascade)
+  createdAgencies     Agency[]  @relation("AgencyCreator")
+  validatedAgencies   Agency[]  @relation("AgencyValidator")
+  dronesAdded         Drone[]   @relation("DroneOperator")
+  dronesAssigned      Drone[]   @relation("DroneAssignedOperator")
   detectionsReviewed  Detection[]
   incidentsReported   Incident[]
   responses           Response[]
@@ -66,23 +73,36 @@ model User {
 
 // Drone units capturing video feeds
 model Drone {
-  id          Int       @id @default(autoincrement())
-  callsign    String    @db.VarChar(50)
-  status      DroneStatus
-  addedBy     Int
-  lastLat     Float?
-  lastLng     Float?
-  lastFeedAt  DateTime?
-  agencyId    Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                    Int       @id @default(autoincrement())
+  callsign              String    @db.VarChar(50)
+  manufacturer          String    @db.VarChar(100)
+  model                 String    @db.VarChar(100)
+  droneType             DroneType
+  serialNumber          String    @unique @db.VarChar(100)
+  registrationNumber    String?   @unique @db.VarChar(100)
+  status                DroneStatus
+  operationalStatus     OperationalStatus @default(ACTIVE)
+  addedBy               Int
+  assignedOperatorId    Int?
+  dateAcquired          DateTime
+  lastInspectionDate    DateTime?
+  notes                 String?   @db.VarChar(1000)
+  lastLat               Float?
+  lastLng               Float?
+  lastFeedAt            DateTime?
+  agencyId              Int
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  operator    User      @relation(fields: [addedBy], references: [id], onDelete: Restrict)
-  agency      Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  detections  Detection[]
+  operator              User      @relation("DroneOperator", fields: [addedBy], references: [id], onDelete: Restrict)
+  assignedOperator      User?     @relation("DroneAssignedOperator", fields: [assignedOperatorId], references: [id], onDelete: SetNull)
+  agency                Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  detections            Detection[]
 
   @@index([addedBy])
+  @@index([assignedOperatorId])
   @@index([agencyId])
+  @@index([serialNumber])
   @@map("drone")
 }
 
@@ -225,6 +245,7 @@ enum RegistrationStatus {
   PENDING
   APPROVED
   REJECTED
+  RESUBMISSION_REQUIRED
 }
 
 enum SubscriptionStatus {
@@ -250,6 +271,19 @@ enum DroneStatus {
   ACTIVE
   IDLE
   OFFLINE
+}
+
+enum DroneType {
+  QUADCOPTER
+  FIXED_WING
+  HYBRID
+  OTHER
+}
+
+enum OperationalStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
 }
 
 enum DetectionClass {
