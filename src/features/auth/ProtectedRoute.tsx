@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
 import type { UserRole } from '../../types/user'
 import { ROUTES } from '../../routes/paths'
-import { LoadingState } from '../../components/ui'
+import { LoadingState } from '../../data/components/ui'
 import { useAuth } from './AuthContext'
 
 interface ProtectedRouteProps {

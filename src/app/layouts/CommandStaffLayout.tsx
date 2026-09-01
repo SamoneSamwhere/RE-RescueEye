@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Outlet } from 'react-router-dom'
-import { AppShell } from '../../components/layout'
-import { PageTransition } from '../../components/layout/PageTransition'
+import { AppShell } from '../../data/components/layout'
+import { PageTransition } from '../../data/components/layout/PageTransition'
 import { useAuth } from '../../features/auth'
 import { COMMAND_STAFF_NAV_ITEMS, useCommandStaffData } from '../../features/command-staff'
 

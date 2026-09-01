@@ -2,18 +2,18 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Loader2 } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { RegistrationStepper } from '../components/landing/registration'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { RegistrationStepper } from '../data/components/landing/registration'
 import {
   PersonnelInfoStep,
   RoleStep,
   AccountDetailsStep,
   ReviewStep,
   ROLE_OPTIONS,
-} from '../components/agency-admin/user-creation'
-import type { PersonnelInfoValues, AccountValues } from '../components/agency-admin/user-creation'
-import { Card, Button } from '../components/ui'
+} from '../data/components/agency-admin/user-creation'
+import type { PersonnelInfoValues, AccountValues } from '../data/components/agency-admin/user-creation'
+import { Card, Button } from '../data/components/ui'
 import { useAuth } from '../features/auth'
 import { useAgencyAdminData } from '../features/agency-admin'
 import type { CreatableUserRole } from '../features/agency-admin'

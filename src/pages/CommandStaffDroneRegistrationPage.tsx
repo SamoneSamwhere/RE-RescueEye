@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { RegistrationStepper } from '../components/landing/registration'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { RegistrationStepper } from '../data/components/landing/registration'
 import {
   DroneInfoStep,
   RegistrationDetailsStep,
@@ -11,8 +11,8 @@ import {
   ReviewStep,
   type DroneRegistrationData,
   EMPTY_REGISTRATION_DATA,
-} from '../components/drones/registration'
-import { Card, Button } from '../components/ui'
+} from '../data/components/drones/registration'
+import { Card, Button } from '../data/components/ui'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { useUserStore } from '../state/UserStore'

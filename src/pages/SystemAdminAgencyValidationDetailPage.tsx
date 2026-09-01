@@ -17,12 +17,12 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { Badge, Button, DetailField, EmptyState, Modal, Panel } from '../components/ui'
-import { AgencyDocumentCard, AgencyDocumentViewer } from '../components/system-admin'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { Badge, Button, DetailField, EmptyState, Modal, Panel } from '../data/components/ui'
+import { AgencyDocumentCard, AgencyDocumentViewer } from '../data/components/system-admin'
 import { useSystemAdminData } from '../features/system-admin'
-import { REQUIRED_DOCUMENTS } from '../components/landing/registration/types'
+import { REQUIRED_DOCUMENTS } from '../data/components/landing/registration/types'
 import { formatDateTime } from '../lib/formatDateTime'
 import { AGENCY_REGISTRATION_STATUS_LABEL, AGENCY_REGISTRATION_STATUS_TONE } from '../lib/labels'
 import { ROUTES } from '../routes/paths'

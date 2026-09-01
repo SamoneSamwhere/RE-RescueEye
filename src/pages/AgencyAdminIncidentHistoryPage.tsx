@@ -1,7 +1,7 @@
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { Panel } from '../components/ui'
-import { IncidentHistoryTable } from '../components/agency-admin'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { Panel } from '../data/components/ui'
+import { IncidentHistoryTable } from '../data/components/agency-admin'
 import { useAgencyAdminData } from '../features/agency-admin'
 
 export function AgencyAdminIncidentHistoryPage() {

@@ -1,20 +1,20 @@
 import { useMemo } from 'react'
 import { ScanSearch, Navigation, UserCheck } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
 import {
   StatTile,
   PendingDetectionsPanel,
   ActiveMissionsPanel,
   ResponderStatusPanel,
-} from '../components/dashboard'
+} from '../data/components/dashboard'
 import type {
   DetectionListItem,
   IncidentListItem,
   MissionListItem,
   ResponderStatusItem,
-} from '../components/dashboard'
-import { DamageMapPreview } from '../components/map'
+} from '../data/components/dashboard'
+import { DamageMapPreview } from '../data/components/map'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'

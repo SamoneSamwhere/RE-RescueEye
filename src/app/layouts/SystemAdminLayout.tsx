@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom'
-import { AppShell } from '../../components/layout'
-import { PageTransition } from '../../components/layout/PageTransition'
+import { AppShell } from '../../data/components/layout'
+import { PageTransition } from '../../data/components/layout/PageTransition'
 import { useAuth } from '../../features/auth'
 import { SYSTEM_ADMIN_NAV_ITEMS } from '../../features/system-admin'
 

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { UnauthorizedState, Button } from '../components/ui'
+import { UnauthorizedState, Button } from '../data/components/ui'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
 import { ROUTES } from '../routes/paths'
 

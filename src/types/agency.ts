@@ -1,5 +1,5 @@
 import type { AccountStatus } from './common'
-import type { DocumentId } from '../components/landing/registration/types'
+import type { DocumentId } from '../data/components/landing/registration/types'
 
 /** System Admin reviews a new agency's registration before it can operate. */
 export type AgencyRegistrationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'RESUBMISSION_REQUIRED'
