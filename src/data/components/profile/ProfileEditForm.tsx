@@ -4,7 +4,7 @@ import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { Field } from '../ui/Field'
 import { Input } from '../ui/Input'
-import { useUserStore } from '../../state/UserStore'
+import { useUserStore } from '../../../state/UserStore'
 import { useProfileDatabase } from '../../../hooks/useProfileDatabase'
 
 interface ProfileEditFormProps {

@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { MobileTopBar } from './MobileTopBar'
 import { MobileBottomNav } from './MobileBottomNav'
 import { DashboardBackdrop } from './DashboardBackdrop'
-import type { NavItem } from '../../types/nav'
-import type { AppNotification } from '../../types/notification'
+import type { NavItem } from '../../../types/nav'
+import type { AppNotification } from '../../../types/notification'
 
 interface MobileShellProps {
   navItems: NavItem[]

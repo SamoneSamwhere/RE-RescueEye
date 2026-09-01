@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Download, FileText, Minus, Plus, RotateCcw, 
 import { Button } from '../ui'
 import { cn } from '../../../lib/cn'
 import { formatDateTime } from '../../../lib/formatDateTime'
-import type { AgencyDocument } from '../../types/agency'
+import type { AgencyDocument } from '../../../types/agency'
 
 interface AgencyDocumentViewerProps {
   documents: AgencyDocument[]

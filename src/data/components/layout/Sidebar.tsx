@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, PanelLeftClose, ShieldAlert, X } from 'lucide-react'
-import type { NavItem } from '../../types/nav'
+import type { NavItem } from '../../../types/nav'
 import { cn } from '../../../lib/cn'
-import { useTheme } from '../../features/theme'
+import { useTheme } from '../../../features/theme'
 
 interface SidebarProps {
   navItems: NavItem[]

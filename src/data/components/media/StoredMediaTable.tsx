@@ -13,8 +13,8 @@ import {
   LoadingState,
 } from '../ui'
 import { formatDateTime } from '../../../lib/formatDateTime'
-import { mediaThumbnailUrl } from '../../features/media'
-import type { StoredMedia } from '../../types/media'
+import { mediaThumbnailUrl } from '../../../features/media'
+import type { StoredMedia } from '../../../types/media'
 
 export interface StoredMediaTableProps {
   items: StoredMedia[]

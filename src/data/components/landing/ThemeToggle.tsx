@@ -1,6 +1,6 @@
 import { Moon, Sun } from 'lucide-react'
 import { cn } from '../../../lib/cn'
-import { useTheme } from '../../features/theme'
+import { useTheme } from '../../../features/theme'
 
 interface ThemeToggleProps {
   className?: string

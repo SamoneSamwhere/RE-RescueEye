@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Camera, RefreshCw, Scan, X, Zap } from 'lucide-react'
 import { Panel, Button, Badge } from '../ui'
 import { cn } from '../../../lib/cn'
-import { feedMjpegUrl, useFeedDetection } from '../../features/media/useFeeds'
-import type { Feed } from '../../features/media/useFeeds'
+import { feedMjpegUrl, useFeedDetection } from '../../../features/media/useFeeds'
+import type { Feed } from '../../../features/media/useFeeds'
 
 export interface LiveFeedPanelProps {
   feed: Feed

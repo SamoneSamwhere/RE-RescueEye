@@ -1,5 +1,5 @@
-import type { IncidentPriority } from '../../types/incident'
-import type { DetectionCategory, DamageClassification, DetectionLocation } from '../../types/detection'
+import type { IncidentPriority } from '../../../types/incident'
+import type { DetectionCategory, DamageClassification, DetectionLocation } from '../../../types/detection'
 
 /** Everything the Field Responder needs to decide whether to accept a pending mission. */
 export interface PendingMissionSummary {

@@ -1,7 +1,7 @@
 import { Radio } from 'lucide-react'
 import { Panel, Button, EmptyState } from '../ui'
 import { DroneCard } from './DroneCard'
-import type { Drone } from '../../types/drone'
+import type { Drone } from '../../../types/drone'
 
 interface DroneListProps {
   drones: Drone[]

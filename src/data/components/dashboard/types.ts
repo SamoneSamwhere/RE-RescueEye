@@ -1,6 +1,6 @@
-import type { DetectionCategory, DetectionValidationStatus } from '../../types/detection'
-import type { IncidentPriority, IncidentStatus } from '../../types/incident'
-import type { MissionStatus } from '../../types/mission'
+import type { DetectionCategory, DetectionValidationStatus } from '../../../types/detection'
+import type { IncidentPriority, IncidentStatus } from '../../../types/incident'
+import type { MissionStatus } from '../../../types/mission'
 
 /** Detection enriched with display-ready fields, derived from mock data by the dashboard page. */
 export interface DetectionListItem {

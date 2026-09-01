@@ -4,7 +4,7 @@ import { Panel, Button, DetectionStatusBadge, PriorityBadge, EmptyState, DetailF
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
 import { DetectionMediaPreview } from './DetectionMediaPreview'
-import type { IncidentPriority } from '../../types/incident'
+import type { IncidentPriority } from '../../../types/incident'
 import type { EnrichedDetection } from './types'
 
 interface LinkedIncident {

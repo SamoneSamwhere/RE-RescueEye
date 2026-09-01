@@ -1,7 +1,7 @@
-import type { UserAccountStatus } from '../../types/user'
-import type { MissionStatus } from '../../types/mission'
-import type { IncidentPriority } from '../../types/incident'
-import type { GeoPoint } from '../../types/geo'
+import type { UserAccountStatus } from '../../../types/user'
+import type { MissionStatus } from '../../../types/mission'
+import type { IncidentPriority } from '../../../types/incident'
+import type { GeoPoint } from '../../../types/geo'
 
 /**
  * A Field Responder as a dispatch candidate for one specific incident —

@@ -1,4 +1,4 @@
-import type { DetectionValidationStatus } from '../../types/detection'
+import type { DetectionValidationStatus } from '../../../types/detection'
 import { cn } from '../../../lib/cn'
 
 interface DetectionStatusBadgeProps {

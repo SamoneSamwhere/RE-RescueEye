@@ -3,8 +3,8 @@ import { Panel, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } f
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
 import { DetectionMediaPreview } from '../detections/DetectionMediaPreview'
-import type { Detection } from '../../types/detection'
-import type { Incident } from '../../types/incident'
+import type { Detection } from '../../../types/detection'
+import type { Incident } from '../../../types/incident'
 
 interface LogDetailPanelProps {
   detection: Detection | null

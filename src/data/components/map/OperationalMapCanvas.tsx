@@ -2,8 +2,8 @@ import { ShieldAlert, User, AlertTriangle, Navigation2 } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { computeBounds, projectToPercent } from '../../../lib/mapProjection'
 import type { MapMarker } from './types'
-import type { IncidentPriority } from '../../types/incident'
-import type { MissionStatus } from '../../types/mission'
+import type { IncidentPriority } from '../../../types/incident'
+import type { MissionStatus } from '../../../types/mission'
 
 interface DamageMapCanvasProps {
   markers: MapMarker[]

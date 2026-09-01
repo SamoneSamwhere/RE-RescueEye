@@ -1,10 +1,10 @@
 import { Menu } from 'lucide-react'
-import type { AppUserSummary } from '../../types/user'
-import type { AppNotification } from '../../types/notification'
+import type { AppUserSummary } from '../../../types/user'
+import type { AppNotification } from '../../../types/notification'
 import { UserMenu } from './UserMenu'
 import { NotificationArea } from './NotificationArea'
 import { ThemeToggle } from '../landing/ThemeToggle'
-import { useTheme } from '../../features/theme'
+import { useTheme } from '../../../features/theme'
 import { cn } from '../../../lib/cn'
 
 interface TopbarProps {

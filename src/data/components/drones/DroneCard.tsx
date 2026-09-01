@@ -3,7 +3,7 @@ import { Card, Button, StatusIndicator } from '../ui'
 import { DroneIllustration } from './DroneIllustration'
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { cn } from '../../../lib/cn'
-import type { Drone } from '../../types/drone'
+import type { Drone } from '../../../types/drone'
 
 interface DroneCardProps {
   drone: Drone

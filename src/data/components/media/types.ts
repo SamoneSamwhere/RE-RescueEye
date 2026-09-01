@@ -1,4 +1,4 @@
-import type { MediaSourceType } from '../../types/media'
+import type { MediaSourceType } from '../../../types/media'
 
 /** MediaAsset enriched with display-ready fields, derived by the drone & media page. */
 export interface MediaHistoryItem {

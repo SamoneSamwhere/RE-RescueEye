@@ -1,8 +1,8 @@
-import type { GeoPoint } from '../../types/geo'
-import type { IncidentPriority, IncidentStatus } from '../../types/incident'
-import type { DetectionCategory, DamageClassification, DetectionValidationStatus } from '../../types/detection'
-import type { MissionStatus } from '../../types/mission'
-import type { UserAccountStatus } from '../../types/user'
+import type { GeoPoint } from '../../../types/geo'
+import type { IncidentPriority, IncidentStatus } from '../../../types/incident'
+import type { DetectionCategory, DamageClassification, DetectionValidationStatus } from '../../../types/detection'
+import type { MissionStatus } from '../../../types/mission'
+import type { UserAccountStatus } from '../../../types/user'
 
 export interface IncidentMapMarker {
   kind: 'INCIDENT'

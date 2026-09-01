@@ -1,8 +1,8 @@
 import { Search } from 'lucide-react'
 import { Card, Input } from '../ui'
 import { INCIDENT_STATUS_LABEL, DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
-import type { IncidentPriority, IncidentStatus } from '../../types/incident'
-import type { DetectionCategory } from '../../types/detection'
+import type { IncidentPriority, IncidentStatus } from '../../../types/incident'
+import type { DetectionCategory } from '../../../types/detection'
 
 export type PriorityFilter = IncidentPriority | 'ALL'
 export type StatusFilterValue = IncidentStatus | 'ALL'

@@ -1,11 +1,11 @@
-import type { IncidentPriority, IncidentStatus } from '../../types/incident'
+import type { IncidentPriority, IncidentStatus } from '../../../types/incident'
 import type {
   BoundingBox,
   DamageClassification,
   DetectionCategory,
   DetectionLocation,
   DetectionValidationStatus,
-} from '../../types/detection'
+} from '../../../types/detection'
 
 /** Incident enriched with its linked detection's evidence, for list + detail views. */
 export interface EnrichedIncident {

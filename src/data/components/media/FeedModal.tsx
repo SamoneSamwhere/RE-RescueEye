@@ -2,7 +2,7 @@ import { Radio } from 'lucide-react'
 import { Modal, StatusIndicator, Panel, Button } from '../ui'
 import { FeedSourceSelector } from './FeedSourceSelector'
 import { UploadVideoPanel } from './UploadVideoPanel'
-import type { MediaSourceType } from '../../types/media'
+import type { MediaSourceType } from '../../../types/media'
 
 interface FeedModalProps {
   open: boolean

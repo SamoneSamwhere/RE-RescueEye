@@ -1,4 +1,4 @@
-import type { IncidentPriority } from '../../types/incident'
+import type { IncidentPriority } from '../../../types/incident'
 import { Panel } from '../ui'
 import { cn } from '../../../lib/cn'
 
