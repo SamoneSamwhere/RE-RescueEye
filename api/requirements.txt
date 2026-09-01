@@ -1,0 +1,28 @@
+fastapi==0.111.1
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+python-dotenv==1.0.1
+
+# Image processing
+Pillow==10.4.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+
+# AI / training
+torch
+torchvision
+ultralytics==8.2.56
+
+# Dataset utilities
+scikit-learn
+matplotlib
+seaborn
+pyyaml
+gdown
+requests
+
+# FFmpeg frame extraction
+imageio-ffmpeg==0.5.1
+
+# Async HTTP client (for bridging detections → Node.js incidents)
+httpx==0.27.0

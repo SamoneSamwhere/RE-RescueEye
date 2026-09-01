@@ -1,0 +1,10 @@
+path: D:\RescueEye\api\data\damage
+train: train
+val: val
+test: test
+nc: 4
+names:
+- flood_damage
+- fire_damage
+- structural_damage
+- no_damage
