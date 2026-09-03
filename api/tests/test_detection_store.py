@@ -63,3 +63,71 @@ def test_added_detections_get_lat_lng_within_bounds():
     d = recent[0]
     assert ds.CEBU_LAT[0] <= d["lat"] <= ds.CEBU_LAT[1]
     assert ds.CEBU_LNG[0] <= d["lng"] <= ds.CEBU_LNG[1]
+
+
+# ── Per-detection snapshots ───────────────────────────────────────────────────
+
+def _frame(w=640, h=480):
+    import numpy as np
+    return np.full((h, w, 3), 128, dtype=np.uint8)
+
+
+def test_snapshot_is_cropped_and_retrievable():
+    from PIL import Image
+    import io
+    det = _det()
+    det["bbox"] = {"x": 100, "y": 80, "w": 60, "h": 90}
+    ds.add_detections([det], 10.0, 640, 480, frame=_frame())
+
+    jpeg = ds.get_snapshot(det["id"])
+    assert jpeg is not None
+    img = Image.open(io.BytesIO(jpeg))
+    # padding widens the crop beyond the raw box, and it is capped on the long edge
+    assert img.width > 60 and img.height > 90
+    assert max(img.size) <= ds.SNAPSHOT_MAX_EDGE
+
+
+def test_snapshot_is_optional_when_no_frame_is_passed():
+    det = _det()
+    ds.add_detections([det], 10.0, 640, 480)
+    assert ds.get_snapshot(det["id"]) is None
+    assert ds.get_recent(1)[0]["has_snapshot"] is False
+
+
+def test_recent_reports_whether_a_snapshot_exists():
+    det = _det()
+    ds.add_detections([det], 10.0, 640, 480, frame=_frame())
+    assert ds.get_recent(1)[0]["has_snapshot"] is True
+
+
+def test_snapshot_of_unknown_detection_is_none():
+    assert ds.get_snapshot("nope") is None
+
+
+def test_crop_survives_a_box_outside_the_frame():
+    """A clamped box must not produce a zero-area crop or raise."""
+    det = _det()
+    det["bbox"] = {"x": 600, "y": 460, "w": 200, "h": 200}
+    ds.add_detections([det], 10.0, 640, 480, frame=_frame())
+    assert ds.get_snapshot(det["id"]) is not None
+
+
+def test_snapshot_is_evicted_with_its_detection():
+    """Crops ride the bounded deque, so memory cannot grow without limit."""
+    first = _det(det_id="oldest")
+    ds.add_detections([first], 10.0, 640, 480, frame=_frame())
+    for i in range(ds.MAX_STORED):
+        ds.add_detections([_det(det_id=f"d{i}")], 10.0, 640, 480)
+    assert ds.get_snapshot("oldest") is None
+
+
+def test_track_id_is_kept_so_one_casualty_collapses_to_one_record():
+    det = _det(det_id="t1")
+    det["track_id"] = 7
+    ds.add_detections([det], 10.0, 640, 480)
+    assert ds.get_recent(1)[0]["track_id"] == 7
+
+
+def test_track_id_is_none_when_the_tracker_did_not_supply_one():
+    ds.add_detections([_det()], 10.0, 640, 480)
+    assert ds.get_recent(1)[0]["track_id"] is None

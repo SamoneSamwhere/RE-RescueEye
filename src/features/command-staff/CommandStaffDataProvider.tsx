@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { mockUsers } from '../../data/mockUsers'
 import { now } from '../../lib/now'
@@ -20,6 +20,7 @@ import { useMediaAssetStore } from '../../state/MediaAssetStore'
 import { useNotificationStore } from '../../state/NotificationStore'
 import { useDroneStore } from '../../state/DroneStore'
 import { useDroneDatabase } from '../../hooks/useDroneDatabase'
+import { useLiveDetections } from '../media/useLiveDetections'
 import type { DroneRecord } from '../../hooks/useDroneDatabase'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
@@ -94,6 +95,47 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     [allDetections, mediaAssets, agencyId],
   )
   const incidents = useMemo(() => allIncidents.filter((i) => i.agencyId === agencyId), [allIncidents, agencyId])
+
+  // ── Live detection ingest ───────────────────────────────────────────────────
+  // Detections are scoped to an agency through their media asset, so real API
+  // detections need one to hang off or they'd be filtered out of every screen.
+  // One stable asset per agency represents "the live drone feed"; it is created
+  // on demand so an agency that never opens a feed gets no stray record.
+  const liveFeedAssetId = agencyId ? `media-live-${agencyId}` : undefined
+  const liveFeedAsset = useMemo(
+    () => allMediaAssets.find((asset) => asset.id === liveFeedAssetId),
+    [allMediaAssets, liveFeedAssetId],
+  )
+
+  // The ref, not `liveFeedAsset`, is what makes this safe to run twice.
+  // addMediaAsset does not de-duplicate by id, and StrictMode invokes effects
+  // twice in dev with the same stale state — so guarding only on the derived
+  // asset would insert two records with an identical id.
+  const createdLiveAssetFor = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!agencyId || !liveFeedAssetId) return
+    if (liveFeedAsset || createdLiveAssetFor.current === liveFeedAssetId) return
+    createdLiveAssetFor.current = liveFeedAssetId
+    addMediaAsset({
+      id: liveFeedAssetId,
+      agencyId,
+      sourceType: 'LIVE_FEED',
+      url: 'live://drone-feed',
+      capturedAt: now().toISOString(),
+    })
+  }, [agencyId, liveFeedAssetId, liveFeedAsset, addMediaAsset])
+
+  // Fire-and-forget: the hook pushes into the detection store, which every
+  // screen already reads. Its reachability state isn't surfaced yet — worth
+  // exposing on the context when a screen needs to say "AI feed offline".
+  useLiveDetections({
+    mediaAssetId: liveFeedAsset ? liveFeedAssetId : undefined,
+    existing: allDetections,
+    onDetection: addDetection,
+    onUpdateDetection: updateDetection,
+    enabled: !!agencyId,
+  })
   const missions = useMemo(
     () =>
       allMissions.filter((mission) => {

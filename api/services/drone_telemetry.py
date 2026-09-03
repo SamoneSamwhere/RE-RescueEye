@@ -23,6 +23,7 @@ import time
 from dataclasses import dataclass
 
 from services.detection_store import CEBU_LAT, CEBU_LNG
+from services import telemetry_sources
 
 # Nominal survey speed for a quadcopter on a search pattern (m/s).
 CRUISE_SPEED_MPS = 9.0
@@ -53,6 +54,13 @@ class DroneState:
     heading_rad: float
     speed_mps: float
     updated_at: float
+    # Altitude above ground, when the aircraft reports it. None from the
+    # simulation, which models a track but not a height.
+    altitude_m: float | None = None
+    # Which source produced this: 'simulated', 'push' or 'mavlink'. Reported
+    # to clients so the UI can label a simulated marker honestly instead of
+    # implying a GPS fix the platform does not have.
+    source: str = "simulated"
 
     @property
     def heading_deg(self) -> float:
@@ -125,6 +133,11 @@ def _advance(state: DroneState, now: float) -> None:
     state.updated_at = now
 
 
+def is_simulated() -> bool:
+    """True when no real aircraft has reported recently."""
+    return telemetry_sources.live_fix() is None
+
+
 def current_position() -> tuple[float, float]:
     """
     The drone's position right now. Called once per processed frame so every
@@ -134,8 +147,31 @@ def current_position() -> tuple[float, float]:
     return round(state.lat, 6), round(state.lng, 6)
 
 
-def current_state() -> DroneState:
-    """Full telemetry, for the /drone/telemetry endpoint."""
+def current_state(drone_id: str | None = None) -> DroneState:
+    """
+    Full telemetry, for the /drone/telemetry endpoint.
+
+    A real aircraft wins whenever one has reported recently; the simulated
+    flight model is the fallback, not the default. Staleness is what decides —
+    a link that drops mid-mission degrades to a labelled simulated track rather
+    than freezing every subsequent detection at the last known point.
+    """
+    fix = telemetry_sources.live_fix(drone_id)
+    if fix is not None:
+        return DroneState(
+            drone_id=fix.drone_id,
+            callsign=fix.callsign,
+            lat=fix.lat,
+            lng=fix.lng,
+            # Heading is optional upstream; 0 is a safe placeholder because it
+            # is only used for display until georeferencing needs it.
+            heading_rad=math.radians(fix.heading_deg or 0.0),
+            speed_mps=fix.speed_mps if fix.speed_mps is not None else 0.0,
+            updated_at=fix.received_at,
+            altitude_m=fix.altitude_m,
+            source=fix.source,
+        )
+
     global _state
     with _lock:
         if _state is None:

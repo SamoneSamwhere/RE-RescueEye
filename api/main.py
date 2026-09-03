@@ -13,6 +13,7 @@ from routers import stream, models as models_router, logs as logs_router
 from routers import drone as drone_router
 from routers import media as media_router
 from services import feed_registry
+from services import telemetry_sources
 from services.yolo_model import load_all, model_info, model_status
 
 logging.basicConfig(
@@ -33,6 +34,11 @@ async def lifespan(_app: FastAPI):
                 f"({status['victim_model']['weights']})")
     logger.info(f"[startup] Damage model: {status['damage_model']['version']}  "
                 f"({status['damage_model']['weights']})")
+
+    # Telemetry: a real aircraft is used whenever one reports; the simulated
+    # flight model is only the fallback.
+    mode = telemetry_sources.configure()
+    logger.info(f"[startup] Telemetry source: {mode}")
 
     # Start MJPEG stream producer
     logger.info("[startup] Starting stream producer ...")

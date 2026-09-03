@@ -3,11 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
-import { DroneList, RegisterDroneModal } from '../components/drones'
-import { FeedModal, StoredMediaTable, MediaReviewModal } from '../components/media'
 import { DroneList } from '../components/drones'
-import { FeedModal, MediaHistoryTable } from '../components/media'
-import type { MediaHistoryItem } from '../components/media'
+import { FeedModal, StoredMediaTable, MediaReviewModal } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import {
@@ -25,14 +22,11 @@ const CONNECT_DELAY_MS = 800
 export function CommandStaffDronesMediaPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { drones, liveDroneIds, registerDrone, connectDrone, startLiveFeed, captureMedia } =
+  const { drones, liveDroneIds, connectDrone, startLiveFeed, captureMedia } =
     useCommandStaffData()
 
   const agencyId = session?.agencyId
 
-  const [registerModalOpen, setRegisterModalOpen] = useState(false)
-  const { drones, liveDroneIds, mediaAssets, connectDrone, startLiveFeed, captureMedia } =
-    useCommandStaffData()
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null)
   const [feedSource, setFeedSource] = useState<MediaSourceType | null>(null)

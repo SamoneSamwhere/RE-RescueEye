@@ -1,17 +1,18 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MonitorPlay, Sparkles, ArrowRight, ServerCrash, Zap, ZapOff } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import { Panel, EmptyState, Button, LoadingState } from '../components/ui'
 import { LiveFeedPanel } from '../components/media'
+import { PossibleCasualtyCard } from '../components/detections'
 import { useCommandStaffData } from '../features/command-staff'
 import { useFeeds, useCloseFeed } from '../features/media/useFeeds'
 import type { Feed } from '../features/media/useFeeds'
 import { ROUTES } from '../routes/paths'
 
 export function CommandStaffLiveMonitoringPage() {
-  const { drones, captureMedia } = useCommandStaffData()
+  const { drones, detections, captureMedia, verifyDetection } = useCommandStaffData()
   const [detectionCreated, setDetectionCreated] = useState(false)
   const [detectEnabled, setDetectEnabled] = useState(true)
 
@@ -29,6 +30,18 @@ export function CommandStaffLiveMonitoringPage() {
     captureMedia('LIVE_FEED', drone?.id)
     setDetectionCreated(true)
   }
+
+  // Same card as Detection Review, surfaced here so a casualty spotted on the
+  // feed can be actioned without leaving the screen the operator is watching.
+  // One card, not a list: the tracker gives every sighting of a subject the
+  // same id, so this is one casualty awaiting a decision.
+  const pendingCasualty = useMemo(
+    () =>
+      [...detections]
+        .filter((d) => d.category === 'CASUALTY' && d.validationStatus === 'PENDING' && d.confidence >= 0.6)
+        .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt))[0] ?? null,
+    [detections],
+  )
 
   const loadError = feedsQuery.error instanceof Error ? feedsQuery.error.message : null
 
@@ -54,6 +67,13 @@ export function CommandStaffLiveMonitoringPage() {
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
+        ) : null}
+
+        {pendingCasualty ? (
+          <PossibleCasualtyCard
+            detection={pendingCasualty}
+            onVerify={(id) => verifyDetection(id, 'MEDIUM', '')}
+          />
         ) : null}
 
         {feeds.length > 0 ? (

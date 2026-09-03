@@ -12,10 +12,13 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "@tanstack/react-query": "^5.101.4",
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.33.0",
     "motion": "^13.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {

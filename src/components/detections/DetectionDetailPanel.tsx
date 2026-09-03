@@ -53,6 +53,7 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
           category={detection.category}
           confidence={detection.confidence}
           boundingBox={detection.boundingBox}
+          snapshotUrl={detection.snapshotUrl}
           isLiveFeed={detection.sourceLabel.startsWith('Live Feed')}
         />
 

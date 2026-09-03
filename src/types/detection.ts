@@ -39,6 +39,12 @@ export interface Detection {
   location: DetectionLocation
   detectedAt: string
   validationStatus: DetectionValidationStatus
+  /**
+   * Absolute URL of a JPEG crop of what the model saw. Only present on
+   * detections ingested from the API — mock detections have no real frame
+   * behind them, so the preview falls back to its placeholder.
+   */
+  snapshotUrl?: string
   reviewedByUserId?: string
   reviewedAt?: string
   reviewerNotes?: string

@@ -647,7 +647,9 @@ async def detect_objects(payload: dict = Body(...)):
     for i, d in enumerate(detections):
         annotated.append({**d, "id": f"{frame_id[:8]}-{i}", "timestamp": timestamp, "lat": lat, "lng": lng})
 
-    add_detections(annotated, inference_ms)
+    add_detections(annotated, inference_ms,
+                   frame_width=frame.shape[1], frame_height=frame.shape[0],
+                   frame=frame)
 
     annotated_frame = (_annotate_frame(display_frame, annotated)
                        if annotated and want_annotation else None)

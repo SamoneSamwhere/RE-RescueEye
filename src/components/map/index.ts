@@ -1,4 +1,6 @@
 export { DamageMapPreview } from './OperationalMapPreview'
 export { DamageMapCanvas } from './OperationalMapCanvas'
+export { GeoMapCanvas } from './GeoMapCanvas'
 export { MarkerDetailPanel } from './MarkerDetailPanel'
 export type { MapMarker, IncidentMapMarker, DetectionMapMarker, ResponderMapMarker } from './types'
+export type { GeoMapCanvasProps } from './GeoMapCanvas'
