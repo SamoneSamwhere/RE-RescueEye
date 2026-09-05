@@ -137,55 +137,55 @@ export type ResponseAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   where?: Prisma.ResponseWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Responses to fetch.
    */
   orderBy?: Prisma.ResponseOrderByWithRelationInput | Prisma.ResponseOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the start position
    */
   cursor?: Prisma.ResponseWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Responses from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Responses.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Count returned Responses
   **/
   _count?: true | ResponseCountAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to average
   **/
   _avg?: ResponseAvgAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to sum
   **/
   _sum?: ResponseSumAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the minimum value
   **/
   _min?: ResponseMinAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the maximum value
   **/
@@ -1373,31 +1373,31 @@ export type ResponseFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   where?: Prisma.ResponseWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Responses to fetch.
    */
   orderBy?: Prisma.ResponseOrderByWithRelationInput | Prisma.ResponseOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Responses.
    */
   cursor?: Prisma.ResponseWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Responses from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Responses.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Responses.
    */
@@ -1425,31 +1425,31 @@ export type ResponseFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   where?: Prisma.ResponseWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Responses to fetch.
    */
   orderBy?: Prisma.ResponseOrderByWithRelationInput | Prisma.ResponseOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Responses.
    */
   cursor?: Prisma.ResponseWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Responses from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Responses.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Responses.
    */
@@ -1477,31 +1477,31 @@ export type ResponseFindManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    */
   where?: Prisma.ResponseWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Responses to fetch.
    */
   orderBy?: Prisma.ResponseOrderByWithRelationInput | Prisma.ResponseOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for listing Responses.
    */
   cursor?: Prisma.ResponseWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Responses from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Responses.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Responses.
    */

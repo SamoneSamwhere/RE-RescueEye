@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { Panel } from '../components/ui'
-import { UserStatusTable } from '../components/agency-admin'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { Panel } from '../data/components/ui'
+import { UserStatusTable } from '../data/components/agency-admin'
 import { useAgencyAdminData } from '../features/agency-admin'
 
 export function AgencyAdminAccountStatusPage() {

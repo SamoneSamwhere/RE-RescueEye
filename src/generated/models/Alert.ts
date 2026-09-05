@@ -131,55 +131,55 @@ export type AlertAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   where?: Prisma.AlertWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Alerts to fetch.
    */
   orderBy?: Prisma.AlertOrderByWithRelationInput | Prisma.AlertOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the start position
    */
   cursor?: Prisma.AlertWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Alerts from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Alerts.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Count returned Alerts
   **/
   _count?: true | AlertCountAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to average
   **/
   _avg?: AlertAvgAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to sum
   **/
   _sum?: AlertSumAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the minimum value
   **/
   _min?: AlertMinAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the maximum value
   **/
@@ -1336,31 +1336,31 @@ export type AlertFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   where?: Prisma.AlertWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Alerts to fetch.
    */
   orderBy?: Prisma.AlertOrderByWithRelationInput | Prisma.AlertOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Alerts.
    */
   cursor?: Prisma.AlertWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Alerts from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Alerts.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Alerts.
    */
@@ -1388,31 +1388,31 @@ export type AlertFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   where?: Prisma.AlertWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Alerts to fetch.
    */
   orderBy?: Prisma.AlertOrderByWithRelationInput | Prisma.AlertOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Alerts.
    */
   cursor?: Prisma.AlertWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Alerts from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Alerts.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Alerts.
    */
@@ -1440,31 +1440,31 @@ export type AlertFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   where?: Prisma.AlertWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Alerts to fetch.
    */
   orderBy?: Prisma.AlertOrderByWithRelationInput | Prisma.AlertOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for listing Alerts.
    */
   cursor?: Prisma.AlertWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Alerts from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Alerts.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Alerts.
    */

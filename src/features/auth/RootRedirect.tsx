@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { LoadingState } from '../../components/ui'
+import { LoadingState } from '../../data/components/ui'
 import { LandingPage } from '../../pages/LandingPage'
 import { useAuth } from './AuthContext'
 import { ROLE_HOME_ROUTE } from './roleRoutes'

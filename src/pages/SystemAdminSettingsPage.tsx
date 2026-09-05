@@ -1,10 +1,10 @@
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader } from '../components/layout'
-import { Button } from '../components/ui/Button'
+import { PageHeader } from '../data/components/layout'
+import { Button } from '../data/components/ui/Button'
 import { useAuth } from '../features/auth'
 import { useUserStore } from '../state/UserStore'
-import { ProfileEditForm, ChangePasswordForm } from '../components/profile'
+import { ProfileEditForm, ChangePasswordForm } from '../data/components/profile'
 import { ROUTES } from '../routes/paths'
 
 export function SystemAdminSettingsPage() {

@@ -3,22 +3,22 @@ import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
-import { Field, Input, Button } from '../components/ui'
-import { AuthPageShell, Reveal } from '../components/landing'
+import { Field, Input, Button } from '../data/components/ui'
+import { AuthPageShell, Reveal } from '../data/components/landing'
 import {
   RegistrationStepper,
   AgencyInfoStep,
   AdminInfoStep,
   DocumentsStep,
   REQUIRED_DOCUMENTS,
-} from '../components/landing/registration'
+} from '../data/components/landing/registration'
 import type {
   AgencyInfoValues,
   AdminInfoValues,
   DocumentFiles,
   DocumentErrors,
   DocumentId,
-} from '../components/landing/registration'
+} from '../data/components/landing/registration'
 import { useAgencyStore } from '../state/AgencyStore'
 import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
 import { generateId } from '../lib/id'

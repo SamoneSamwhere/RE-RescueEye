@@ -161,55 +161,55 @@ export type IncidentAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   where?: Prisma.IncidentWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Incidents to fetch.
    */
   orderBy?: Prisma.IncidentOrderByWithRelationInput | Prisma.IncidentOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the start position
    */
   cursor?: Prisma.IncidentWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Incidents from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Incidents.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Count returned Incidents
   **/
   _count?: true | IncidentCountAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to average
   **/
   _avg?: IncidentAvgAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to sum
   **/
   _sum?: IncidentSumAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the minimum value
   **/
   _min?: IncidentMinAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the maximum value
   **/
@@ -2059,31 +2059,31 @@ export type IncidentFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   where?: Prisma.IncidentWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Incidents to fetch.
    */
   orderBy?: Prisma.IncidentOrderByWithRelationInput | Prisma.IncidentOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Incidents.
    */
   cursor?: Prisma.IncidentWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Incidents from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Incidents.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Incidents.
    */
@@ -2111,31 +2111,31 @@ export type IncidentFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   where?: Prisma.IncidentWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Incidents to fetch.
    */
   orderBy?: Prisma.IncidentOrderByWithRelationInput | Prisma.IncidentOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Incidents.
    */
   cursor?: Prisma.IncidentWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Incidents from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Incidents.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Incidents.
    */
@@ -2163,31 +2163,31 @@ export type IncidentFindManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    */
   where?: Prisma.IncidentWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Incidents to fetch.
    */
   orderBy?: Prisma.IncidentOrderByWithRelationInput | Prisma.IncidentOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for listing Incidents.
    */
   cursor?: Prisma.IncidentWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Incidents from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Incidents.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Incidents.
    */

@@ -209,55 +209,55 @@ export type DroneAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   where?: Prisma.DroneWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Drones to fetch.
    */
   orderBy?: Prisma.DroneOrderByWithRelationInput | Prisma.DroneOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the start position
    */
   cursor?: Prisma.DroneWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Drones from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Drones.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Count returned Drones
   **/
   _count?: true | DroneCountAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to average
   **/
   _avg?: DroneAvgAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to sum
   **/
   _sum?: DroneSumAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the minimum value
   **/
   _min?: DroneMinAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the maximum value
   **/
@@ -2204,31 +2204,31 @@ export type DroneFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   where?: Prisma.DroneWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Drones to fetch.
    */
   orderBy?: Prisma.DroneOrderByWithRelationInput | Prisma.DroneOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Drones.
    */
   cursor?: Prisma.DroneWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Drones from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Drones.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Drones.
    */
@@ -2256,31 +2256,31 @@ export type DroneFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   where?: Prisma.DroneWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Drones to fetch.
    */
   orderBy?: Prisma.DroneOrderByWithRelationInput | Prisma.DroneOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for Drones.
    */
   cursor?: Prisma.DroneWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Drones from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Drones.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Drones.
    */
@@ -2308,31 +2308,31 @@ export type DroneFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   where?: Prisma.DroneWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of Drones to fetch.
    */
   orderBy?: Prisma.DroneOrderByWithRelationInput | Prisma.DroneOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for listing Drones.
    */
   cursor?: Prisma.DroneWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` Drones from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` Drones.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of Drones.
    */

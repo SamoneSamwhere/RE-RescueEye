@@ -131,55 +131,55 @@ export type AuditHistoryAggregateArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   where?: Prisma.AuditHistoryWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of AuditHistories to fetch.
    */
   orderBy?: Prisma.AuditHistoryOrderByWithRelationInput | Prisma.AuditHistoryOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the start position
    */
   cursor?: Prisma.AuditHistoryWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` AuditHistories from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` AuditHistories.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Count returned AuditHistories
   **/
   _count?: true | AuditHistoryCountAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to average
   **/
   _avg?: AuditHistoryAvgAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to sum
   **/
   _sum?: AuditHistorySumAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the minimum value
   **/
   _min?: AuditHistoryMinAggregateInputType
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/aggregations Aggregation Docs}
    * 
    * Select which fields to find the maximum value
   **/
@@ -1008,31 +1008,31 @@ export type AuditHistoryFindFirstArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   where?: Prisma.AuditHistoryWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of AuditHistories to fetch.
    */
   orderBy?: Prisma.AuditHistoryOrderByWithRelationInput | Prisma.AuditHistoryOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for AuditHistories.
    */
   cursor?: Prisma.AuditHistoryWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` AuditHistories from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` AuditHistories.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of AuditHistories.
    */
@@ -1056,31 +1056,31 @@ export type AuditHistoryFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Exten
    */
   where?: Prisma.AuditHistoryWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of AuditHistories to fetch.
    */
   orderBy?: Prisma.AuditHistoryOrderByWithRelationInput | Prisma.AuditHistoryOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for searching for AuditHistories.
    */
   cursor?: Prisma.AuditHistoryWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` AuditHistories from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` AuditHistories.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of AuditHistories.
    */
@@ -1104,31 +1104,31 @@ export type AuditHistoryFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    */
   where?: Prisma.AuditHistoryWhereInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/sorting Sorting Docs}
    * 
    * Determine the order of AuditHistories to fetch.
    */
   orderBy?: Prisma.AuditHistoryOrderByWithRelationInput | Prisma.AuditHistoryOrderByWithRelationInput[]
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    * 
    * Sets the position for listing AuditHistories.
    */
   cursor?: Prisma.AuditHistoryWhereUniqueInput
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Take `±n` AuditHistories from the position of the cursor.
    */
   take?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/pagination Pagination Docs}
    * 
    * Skip the first `n` AuditHistories.
    */
   skip?: number
   /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * {@link https://www.prisma.io/docs/concepts/data/components/prisma-client/distinct Distinct Docs}
    * 
    * Filter by unique combinations of AuditHistories.
    */

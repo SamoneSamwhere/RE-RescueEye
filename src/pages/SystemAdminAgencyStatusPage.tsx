@@ -1,7 +1,7 @@
-import { PageHeader } from '../components/layout'
-import { Reveal } from '../components/landing/Reveal'
-import { Panel } from '../components/ui'
-import { AgencyStatusTable } from '../components/system-admin'
+import { PageHeader } from '../data/components/layout'
+import { Reveal } from '../data/components/landing/Reveal'
+import { Panel } from '../data/components/ui'
+import { AgencyStatusTable } from '../data/components/system-admin'
 import { useSystemAdminData } from '../features/system-admin'
 
 export function SystemAdminAgencyStatusPage() {

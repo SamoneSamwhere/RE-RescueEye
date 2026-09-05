@@ -8,10 +8,10 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, Badge } from '../components/ui'
-import { Reveal } from '../components/landing/Reveal'
-import { StatTile } from '../components/dashboard'
+import { PageHeader } from '../data/components/layout'
+import { Card, Badge } from '../data/components/ui'
+import { Reveal } from '../data/components/landing/Reveal'
+import { StatTile } from '../data/components/dashboard'
 import { useAuth } from '../features/auth'
 import { useAgencyAdminData } from '../features/agency-admin'
 import { mockIncidents } from '../data/mockIncidents'

@@ -2,8 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../features/auth'
 import { useUserStore } from '../state/UserStore'
-import { ProfileEditForm, ChangePasswordForm } from '../components/profile'
-import { Button } from '../components/ui/Button'
+import { ProfileEditForm, ChangePasswordForm } from '../data/components/profile'
+import { Button } from '../data/components/ui/Button'
 
 export function SettingsPage() {
   const navigate = useNavigate()
