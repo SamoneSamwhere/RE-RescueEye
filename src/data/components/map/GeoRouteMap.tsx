@@ -61,6 +61,12 @@ export function GeoRouteMap({
   className,
 }: GeoRouteMapProps) {
   const points = origin ? [origin, destination] : [destination]
+  const routeLine: [number, number][] = origin
+    ? [
+        [origin.lat, origin.lng],
+        [destination.lat, destination.lng],
+      ]
+    : []
 
   return (
     <div className={cn('overflow-hidden rounded-md border border-border', className ?? 'h-56')}>
@@ -81,13 +87,18 @@ export function GeoRouteMap({
         <FitRoute points={points} />
 
         {origin ? (
-          <Polyline
-            positions={[
-              [origin.lat, origin.lng],
-              [destination.lat, destination.lng],
-            ]}
-            pathOptions={{ color: '#ffffff', weight: 2, opacity: 0.8, dashArray: '6 6' }}
-          />
+          // Drawn twice: a pale casing under a dark dashed line. A single
+          // stroke in either colour disappears against half the basemap —
+          // white vanishes over pale streets, dark over shadowed terrain —
+          // and this is the one line on the map a responder must be able to
+          // follow.
+          <>
+            <Polyline positions={routeLine} pathOptions={{ color: '#ffffff', weight: 6, opacity: 0.9 }} />
+            <Polyline
+              positions={routeLine}
+              pathOptions={{ color: '#1f2937', weight: 2.5, opacity: 0.95, dashArray: '6 6' }}
+            />
+          </>
         ) : null}
 
         {origin ? (
