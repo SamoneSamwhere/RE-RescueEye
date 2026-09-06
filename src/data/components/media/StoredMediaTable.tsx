@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Archive, Camera, Film, MonitorPlay, Play, RefreshCw, ServerCrash } from 'lucide-react'
 import {
   Panel,
@@ -25,6 +26,8 @@ export interface StoredMediaTableProps {
   onMonitor: (media: StoredMedia) => void
   monitoringId: string | null
   onRetry: () => void
+  /** Rendered in the panel header — the page supplies its own Add Video action. */
+  actions?: ReactNode
 }
 
 function formatBytes(bytes: number): string {
@@ -53,9 +56,10 @@ export function StoredMediaTable({
   onMonitor,
   monitoringId,
   onRetry,
+  actions,
 }: StoredMediaTableProps) {
   return (
-    <Panel title="Media Storage & History">
+    <Panel title="Media Storage & History" actions={actions}>
       {loading ? (
         <LoadingState label="Loading stored media…" />
       ) : error ? (

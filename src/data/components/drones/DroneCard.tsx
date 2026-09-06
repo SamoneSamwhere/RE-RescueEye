@@ -1,9 +1,10 @@
 import { Loader2, Video, MonitorPlay } from 'lucide-react'
-import { Card, Button, StatusIndicator } from '../ui'
+import { Card, Button, StatusIndicator, Badge } from '../ui'
 import { DroneIllustration } from './DroneIllustration'
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { cn } from '../../../lib/cn'
 import type { Drone } from '../../../types/drone'
+import { isDemoDroneId } from '../../../lib/demoDrone'
 
 interface DroneCardProps {
   drone: Drone
@@ -23,6 +24,7 @@ export function DroneCard({
   onViewLive,
 }: DroneCardProps) {
   const isConnected = drone.connectionStatus === 'CONNECTED'
+  const isDemo = isDemoDroneId(drone.id)
 
   return (
     <Card
@@ -33,9 +35,12 @@ export function DroneCard({
     >
       <DroneIllustration active={isConnected} className="h-20 w-full" />
 
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col items-center gap-1">
         <span className="text-sm font-semibold text-foreground">{drone.name}</span>
         <span className="font-mono text-xs text-foreground-muted">{drone.serialNumber}</span>
+        {/* Session-only drones are visually separated from registered airframes:
+            they vanish on reload and are not in the agency registry. */}
+        {isDemo ? <Badge tone="warning">Demo — this session only</Badge> : null}
       </div>
 
       {isConnecting ? (

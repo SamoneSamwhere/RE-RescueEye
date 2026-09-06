@@ -1,4 +1,4 @@
-import { Radio } from 'lucide-react'
+import { Radio, Plus } from 'lucide-react'
 import { Panel, Button, EmptyState } from '../ui'
 import { DroneCard } from './DroneCard'
 import type { Drone } from '../../../types/drone'
@@ -11,6 +11,7 @@ interface DroneListProps {
   onSelectFeedSource: (droneId: string) => void
   onViewLive: () => void
   onRegisterClick: () => void
+  onAddDemoDrone: () => void
 }
 
 export function DroneList({
@@ -21,25 +22,38 @@ export function DroneList({
   onSelectFeedSource,
   onViewLive,
   onRegisterClick,
+  onAddDemoDrone,
 }: DroneListProps) {
   return (
     <Panel
       title="Registered Drones"
       actions={
-        <Button size="sm" onClick={onRegisterClick}>
-          Register Drone
-        </Button>
+        <>
+          <Button size="sm" variant="outline" onClick={onAddDemoDrone}>
+            <Plus className="size-3.5" />
+            Add Demo Drone
+          </Button>
+          <Button size="sm" onClick={onRegisterClick}>
+            Register Drone
+          </Button>
+        </>
       }
     >
       {drones.length === 0 ? (
         <EmptyState
           icon={Radio}
           title="No drones registered"
-          description="Register a drone before connecting it and selecting a feed source."
+          description="Register a drone for real operations, or add a demo drone to try the feed workflow without one."
           action={
-            <Button size="sm" onClick={onRegisterClick}>
-              Register Drone
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button size="sm" onClick={onAddDemoDrone}>
+                <Plus className="size-3.5" />
+                Add Demo Drone
+              </Button>
+              <Button size="sm" variant="outline" onClick={onRegisterClick}>
+                Register Drone
+              </Button>
+            </div>
           }
         />
       ) : (

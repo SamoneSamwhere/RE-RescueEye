@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Sparkles, ArrowRight, CheckCircle2, Plus } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { DroneList } from '../data/components/drones'
-import { FeedModal, StoredMediaTable, MediaReviewModal } from '../data/components/media'
+import { Button } from '../data/components/ui'
+import { FeedModal, StoredMediaTable, MediaReviewModal, AddVideoModal } from '../data/components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import {
@@ -22,7 +23,7 @@ const CONNECT_DELAY_MS = 800
 export function CommandStaffDronesMediaPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { drones, liveDroneIds, connectDrone, startLiveFeed, captureMedia } =
+  const { drones, liveDroneIds, connectDrone, startLiveFeed, captureMedia, addDemoDrone } =
     useCommandStaffData()
 
   const agencyId = session?.agencyId
@@ -33,6 +34,7 @@ export function CommandStaffDronesMediaPage() {
   const [detectionCreated, setDetectionCreated] = useState(false)
   const [uploadedName, setUploadedName] = useState<string | null>(null)
   const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [addVideoOpen, setAddVideoOpen] = useState(false)
 
   const library = useMediaLibrary(agencyId)
   const upload = useUploadMedia()
@@ -63,6 +65,38 @@ export function CommandStaffDronesMediaPage() {
       connectDrone(droneId)
       setConnectingDroneId(null)
     }, CONNECT_DELAY_MS)
+  }
+
+  function handleAddDemoDrone() {
+    const drone = addDemoDrone()
+    // Connect it immediately: an operator who asked for a demo drone wants to
+    // reach the feed step, not watch a second spinner first.
+    handleConnect(drone.id)
+  }
+
+  /**
+   * Page-level upload. Unlike handleUploadVideo this does not require a drone,
+   * and it does not navigate away — the clip lands in the library below, where
+   * Monitor sends it to Live Monitoring when the operator is ready.
+   */
+  function handleAddVideo(file: File, droneId: string | undefined) {
+    upload.mutate(
+      {
+        file,
+        agencyId,
+        droneId,
+        uploadedBy: session?.id,
+        uploadedByName: session?.name,
+      },
+      {
+        onSuccess: (stored) => {
+          captureMedia('UPLOADED_VIDEO', droneId, stored.original_name)
+          setUploadedName(stored.original_name)
+          setDetectionCreated(true)
+          setAddVideoOpen(false)
+        },
+      },
+    )
   }
 
   function handleSelectFeedSource(droneId: string) {
@@ -161,6 +195,7 @@ export function CommandStaffDronesMediaPage() {
             onSelectFeedSource={handleSelectFeedSource}
             onViewLive={() => navigate(ROUTES.commandStaffLiveMonitoring)}
             onRegisterClick={() => navigate(ROUTES.commandStaffDroneRegistration)}
+            onAddDemoDrone={handleAddDemoDrone}
           />
         </Reveal>
 
@@ -203,6 +238,19 @@ export function CommandStaffDronesMediaPage() {
             onMonitor={handleMonitor}
             monitoringId={monitorMedia.isPending ? (monitorMedia.variables ?? null) : null}
             onRetry={() => void library.refetch()}
+            actions={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  upload.reset()
+                  setAddVideoOpen(true)
+                }}
+              >
+                <Plus className="size-3.5" />
+                Add Video
+              </Button>
+            }
           />
         </Reveal>
       </div>
@@ -223,6 +271,17 @@ export function CommandStaffDronesMediaPage() {
           onCancelUpload={upload.abort ?? undefined}
         />
       ) : null}
+
+      <AddVideoModal
+        open={addVideoOpen}
+        onClose={() => setAddVideoOpen(false)}
+        drones={drones}
+        onUpload={handleAddVideo}
+        uploading={upload.isPending}
+        progress={upload.progress}
+        error={uploadError}
+        onCancelUpload={upload.abort ?? undefined}
+      />
 
       <MediaReviewModal
         media={reviewing}
