@@ -45,7 +45,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     // fetch only rejects on network-level failure, which for this app almost
     // always means the Python service isn't running.
-    throw new ApiError(`Cannot reach the detection API at ${API_BASE_URL}. Is it running?`, 0)
+    throw new ApiError(`Cannot reach the detection API at ${API_BASE_URL}. Check that it is running, and that this page’s origin (${window.location.origin}) is in the API’s ALLOWED_ORIGINS.`, 0)
   }
   if (!response.ok) throw await toApiError(response)
   if (response.status === 204) return undefined as T
@@ -100,7 +100,7 @@ export function uploadWithProgress<T>(
       reject(new ApiError(detail, xhr.status))
     })
     xhr.addEventListener('error', () =>
-      reject(new ApiError(`Cannot reach the detection API at ${API_BASE_URL}. Is it running?`, 0)),
+      reject(new ApiError(`Cannot reach the detection API at ${API_BASE_URL}. Check that it is running, and that this page’s origin (${window.location.origin}) is in the API’s ALLOWED_ORIGINS.`, 0)),
     )
     xhr.addEventListener('abort', () => reject(new ApiError('Upload cancelled.', 0)))
     xhr.send(formData)

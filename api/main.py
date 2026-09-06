@@ -57,7 +57,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+# Vite claims 5173 but silently moves to 5174, 5175 ... when the port is taken
+# (a second `npm run dev`, a stale server), and it can be reached on either
+# localhost or 127.0.0.1. A single-origin default means that perfectly ordinary
+# situation blocks every API call, and the browser reports it as a failed
+# request — so the UI says "Cannot reach the detection API. Is it running?"
+# about an API that is running fine. Allow the local dev range explicitly.
+#
+# ALLOWED_ORIGINS overrides this entirely, so a real deployment still pins its
+# own origins and inherits none of this.
+_DEV_ORIGINS = [
+    f"http://{host}:{port}"
+    for host in ("localhost", "127.0.0.1")
+    for port in range(5173, 5181)
+]
+
+_configured = os.getenv("ALLOWED_ORIGINS", "").strip()
+allowed_origins = [o.strip() for o in _configured.split(",") if o.strip()] if _configured else _DEV_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,6 +82,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info(f"[startup] CORS allowed origins: {', '.join(allowed_origins)}")
 
 app.include_router(detect.router,         prefix="/detect",     tags=["detection"])
 app.include_router(classify.router,       prefix="/classify",   tags=["classification"])
