@@ -68,7 +68,7 @@ export const mockUsers: MockUser[] = [
     createdAt: '2025-11-10T09:00:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T14:00:00Z',
-    currentLocation: { lat: 37.781, lng: -122.413 },
+    currentLocation: { lat: 10.3215, lng: 123.901026 },
   },
   {
     id: 'usr-field-responder-2',
@@ -82,7 +82,7 @@ export const mockUsers: MockUser[] = [
     createdAt: '2025-11-10T09:05:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T13:20:00Z',
-    currentLocation: { lat: 37.77, lng: -122.43 },
+    currentLocation: { lat: 10.3105, lng: 123.887368 },
   },
   {
     id: 'usr-field-responder-3',
@@ -96,7 +96,7 @@ export const mockUsers: MockUser[] = [
     createdAt: '2025-12-02T09:00:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T13:40:00Z',
-    currentLocation: { lat: 37.769, lng: -122.426 },
+    currentLocation: { lat: 10.3095, lng: 123.890581 },
   },
   {
     id: 'usr-field-responder-4',
@@ -110,7 +110,7 @@ export const mockUsers: MockUser[] = [
     createdAt: '2026-01-15T09:00:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T14:05:00Z',
-    currentLocation: { lat: 37.784, lng: -122.407 },
+    currentLocation: { lat: 10.3245, lng: 123.905846 },
   },
   {
     id: 'usr-field-responder-5',
@@ -124,7 +124,7 @@ export const mockUsers: MockUser[] = [
     createdAt: '2026-02-20T09:00:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T12:55:00Z',
-    currentLocation: { lat: 37.759, lng: -122.434 },
+    currentLocation: { lat: 10.2995, lng: 123.884154 },
   },
   {
     id: 'usr-field-responder-6',
@@ -138,6 +138,6 @@ export const mockUsers: MockUser[] = [
     createdAt: '2025-12-15T09:00:00Z',
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-06-01T10:00:00Z',
-    currentLocation: { lat: 37.765, lng: -122.442 },
+    currentLocation: { lat: 10.3055, lng: 123.877727 },
   },
 ]

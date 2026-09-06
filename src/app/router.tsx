@@ -33,6 +33,7 @@ import { AgencyAdminDataProvider } from '../features/agency-admin'
 import { SystemAdminDataProvider } from '../features/system-admin'
 import { ROUTES } from '../routes/paths'
 import { RootLayout } from './RootLayout'
+import { RouteErrorBoundary } from './RouteErrorBoundary'
 import { PublicLayout } from './layouts/PublicLayout'
 import { SystemAdminLayout } from './layouts/SystemAdminLayout'
 import { AgencyAdminLayout } from './layouts/AgencyAdminLayout'
@@ -41,6 +42,9 @@ import { CommandStaffLayout } from './layouts/CommandStaffLayout'
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    // Covers every route beneath it: without an errorElement React Router
+    // falls back to its own developer-facing screen.
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         element: <PublicLayout />,

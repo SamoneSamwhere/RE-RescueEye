@@ -24,7 +24,7 @@ import { useLiveDetections } from '../media/useLiveDetections'
 import type { DroneRecord } from '../../hooks/useDroneDatabase'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
-const DEFAULT_AREA_CENTER: GeoPoint = { lat: 37.775, lng: -122.42 }
+const DEFAULT_AREA_CENTER: GeoPoint = { lat: 10.3155, lng: 123.895402 }
 
 interface CommandStaffDataContextValue {
   detections: Detection[]

@@ -10,7 +10,6 @@ import {
 } from '../data/components/dashboard'
 import type {
   DetectionListItem,
-  IncidentListItem,
   MissionListItem,
   ResponderStatusItem,
 } from '../data/components/dashboard'
@@ -47,20 +46,6 @@ export function CommandStaffDashboardPage() {
 
     const pendingDetections = detections.filter((d) => d.validationStatus === 'PENDING')
 
-    const incidents: IncidentListItem[] = sharedIncidents
-      .map((incident) => {
-        const detection = sharedDetections.find((d) => d.id === incident.detectionId)
-        return {
-          id: incident.id,
-          priority: incident.priority,
-          status: incident.status,
-          detectionCategory: detection?.category ?? 'DAMAGE',
-          verifiedAt: incident.verifiedAt,
-        }
-      })
-      .sort((a, b) => b.verifiedAt.localeCompare(a.verifiedAt))
-
-    const openIncidents = incidents.filter((incident) => incident.status !== 'CLOSED')
 
     const agencyResponders = mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId)
 
@@ -95,7 +80,21 @@ export function CommandStaffDashboardPage() {
       }
     })
 
-    const mapPins = openIncidents.map((incident) => ({ id: incident.id, priority: incident.priority }))
+    // An incident carries no coordinate of its own — its position is the
+    // position of the detection it was opened from, so one without a
+    // resolvable detection cannot be mapped and is dropped rather than pinned
+    // somewhere invented.
+    // An incident carries no coordinate of its own — its position is the
+    // position of the detection it was opened from, so one whose detection
+    // cannot be resolved is dropped rather than pinned somewhere invented.
+    const mapPins = sharedIncidents
+      .filter((incident) => incident.status !== 'CLOSED')
+      .map((incident) => {
+        const detection = sharedDetections.find((d) => d.id === incident.detectionId)
+        if (!detection) return null
+        return { id: incident.id, priority: incident.priority, location: detection.location }
+      })
+      .filter((pin): pin is NonNullable<typeof pin> => pin !== null)
 
     return {
       pendingDetections,

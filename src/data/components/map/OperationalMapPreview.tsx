@@ -1,11 +1,20 @@
+import { useEffect } from 'react'
+import { MapContainer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import { MapPin } from 'lucide-react'
+import 'leaflet/dist/leaflet.css'
 import { Panel, EmptyState } from '../ui'
 import { cn } from '../../../lib/cn'
+import { BaseTileLayer } from './BaseTileLayer'
+import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../../lib/mapViewport'
+import { computeBounds } from '../../../lib/mapProjection'
+import type { GeoPoint } from '../../../types/geo'
 import type { IncidentPriority } from '../../../types/incident'
 
-interface MapPreviewPin {
+export interface MapPreviewPin {
   id: string
   priority: IncidentPriority
+  location: GeoPoint
+  label?: string
 }
 
 interface DamageMapPreviewProps {
@@ -21,6 +30,18 @@ const DOT_CLASSES: Record<IncidentPriority, string> = {
   CRITICAL: 'bg-priority-critical',
 }
 
+/**
+ * Mirrors --color-priority-* in tokens.css. Leaflet writes `stroke`/`fill` as
+ * SVG presentation attributes, which do not accept `var(--token)`, so these
+ * have to be literals — keep them in step with the stylesheet.
+ */
+const DOT_COLOR: Record<IncidentPriority, string> = {
+  LOW: '#0284c7',
+  MEDIUM: '#d97706',
+  HIGH: '#ea580c',
+  CRITICAL: '#dc2626',
+}
+
 const LEGEND_ORDER: IncidentPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
 const LEGEND_LABEL: Record<IncidentPriority, string> = {
   LOW: 'Low',
@@ -29,60 +50,97 @@ const LEGEND_LABEL: Record<IncidentPriority, string> = {
   CRITICAL: 'Critical',
 }
 
-/**
- * Deterministic pseudo-position so the same incident always renders at the
- * same spot. Uses two independent FNV-1a passes (id, then id+salt) so
- * near-identical ids like "incident-1" / "incident-2" still land far apart
- * — a simple rolling hash clusters those together.
- */
-function fnv1a(input: string): number {
-  let hash = 0x811c9dc5
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i)
-    hash = Math.imul(hash, 0x01000193)
-  }
-  return hash >>> 0
+function FitPins({ points }: { points: GeoPoint[] }) {
+  const map = useMap()
+  const key = points.map((p) => `${p.lat},${p.lng}`).join('|')
+
+  useEffect(() => {
+    map.setMaxBounds(viewportBounds(points))
+    if (!points.length) {
+      map.fitBounds(FALLBACK_AOI, { padding: [16, 16] })
+      return
+    }
+    if (points.length === 1) {
+      map.setView([points[0].lat, points[0].lng], 15)
+      return
+    }
+    const b = computeBounds(points)
+    map.fitBounds(
+      [
+        [b.minLat, b.minLng],
+        [b.maxLat, b.maxLng],
+      ],
+      { padding: [28, 28], maxZoom: 16 },
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  // The dashboard reveals this panel with a transition, so the container has
+  // no final height on first paint; without this Leaflet caches the wrong size
+  // and leaves grey gaps where tiles should be.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => map.invalidateSize())
+    return () => cancelAnimationFrame(frame)
+  }, [map])
+
+  return null
 }
 
-function positionFor(id: string): { top: string; left: string } {
-  const top = 10 + (fnv1a(id) % 80)
-  const left = 6 + (fnv1a(`${id}#pos`) % 88)
-  return { top: `${top}%`, left: `${left}%` }
-}
-
 /**
- * Preview only — incident locations are not yet tracked in the domain model,
- * so pins are laid out deterministically rather than on real coordinates.
+ * Compact real basemap for dashboard and detail contexts — the same
+ * OpenStreetMap tiles as the full Damage Map, sized to sit inside a panel.
+ *
+ * Replaces a deterministic hash-to-percentage layout that scattered pins
+ * across an empty grid. Those positions were stable but fictional: two pins
+ * next to each other implied nothing about the incidents being near each
+ * other, which is the one thing a map is for.
  */
 export function DamageMapPreview({
   pins,
   title = 'Damage Map Preview',
   emptyLabel = 'No open incidents to display',
 }: DamageMapPreviewProps) {
+  const points = pins.map((pin) => pin.location)
+
   return (
     <Panel title={title}>
       {pins.length === 0 ? (
         <EmptyState icon={MapPin} title={emptyLabel} />
       ) : (
         <div className="flex flex-col gap-3">
-          <div
-            className="relative h-56 overflow-hidden rounded-md border border-border bg-surface-secondary"
-            style={{
-              backgroundImage:
-                'linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
-          >
-            {pins.map((pin) => {
-              const pos = positionFor(pin.id)
-              return (
-                <span
+          <div className="h-56 overflow-hidden rounded-md border border-border">
+            <MapContainer
+              center={[pins[0].location.lat, pins[0].location.lng]}
+              zoom={14}
+              minZoom={MIN_ZOOM}
+              maxBounds={viewportBounds(points)}
+              maxBoundsViscosity={1.0}
+              // A preview sits inside a scrolling dashboard: a wheel over it
+              // should scroll the page, not zoom the map out from under it.
+              scrollWheelZoom={false}
+              className="h-full w-full"
+              style={{ background: 'var(--color-surface-inverse)' }}
+            >
+              <BaseTileLayer />
+              <FitPins points={points} />
+              {pins.map((pin) => (
+                <CircleMarker
                   key={pin.id}
-                  className={cn('absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface', DOT_CLASSES[pin.priority])}
-                  style={pos}
-                />
-              )
-            })}
+                  center={[pin.location.lat, pin.location.lng]}
+                  radius={7}
+                  pathOptions={{
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: DOT_COLOR[pin.priority],
+                    fillOpacity: 0.9,
+                  }}
+                >
+                  <Tooltip direction="top" offset={[0, -6]}>
+                    {pin.label ?? `${LEGEND_LABEL[pin.priority]} priority`}
+                  </Tooltip>
+                </CircleMarker>
+              ))}
+            </MapContainer>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             {LEGEND_ORDER.map((priority) => (

@@ -172,7 +172,7 @@ export function CommandStaffIncidentDetailPage() {
             <DamageMapPreview
               title="Incident Location"
               emptyLabel="No location on record"
-              pins={[{ id: incident.id, priority: incident.priority }]}
+              pins={[{ id: incident.id, priority: incident.priority, location: detection.location }]}
             />
             <p className="-mt-2 px-1 text-xs text-foreground-muted">
               Coordinates: {detection.location.lat.toFixed(4)}, {detection.location.lng.toFixed(4)}
