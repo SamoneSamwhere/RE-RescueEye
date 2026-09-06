@@ -2,12 +2,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, MapPin, Navigation, CheckCircle2, Flag, LifeBuoy } from 'lucide-react'
 import { MobileShell } from '../data/components/layout'
 import { Card, Button, PriorityBadge, MissionStatusBadge, StatusIndicator, EmptyState } from '../data/components/ui'
-import { NavigationPlaceholder } from '../data/components/missions'
+import { MissionRouteMap } from '../data/components/missions'
 import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS, useFieldResponderData } from '../features/field-responder'
 import { mockUsers } from '../data/mockUsers'
 import { formatDateTime } from '../lib/formatDateTime'
-import { distanceKm } from '../lib/geo'
 import { notificationsFor } from '../lib/notifications'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../lib/labels'
 import { useNotificationStore } from '../state/NotificationStore'
@@ -60,7 +59,6 @@ export function FieldResponderMissionDetailPage() {
     )
   }
 
-  const distance = currentUser?.currentLocation ? distanceKm(currentUser.currentLocation, detection.location) : undefined
   const detectionTypeLabel = detection.damageClassification
     ? `${DETECTION_CATEGORY_LABEL[detection.category]} — ${DAMAGE_CLASSIFICATION_LABEL[detection.damageClassification]}`
     : DETECTION_CATEGORY_LABEL[detection.category]
@@ -108,8 +106,9 @@ export function FieldResponderMissionDetailPage() {
           </p>
         </Card>
 
-        <NavigationPlaceholder
-          distanceKm={distance ?? 0}
+        <MissionRouteMap
+          origin={currentUser?.currentLocation}
+          destination={detection.location}
           isEnRoute={mission.status === 'EN_ROUTE' || mission.status === 'ON_SITE'}
         />
 

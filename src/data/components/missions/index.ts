@@ -1,3 +1,3 @@
 export { MissionNotificationCard } from './MissionNotificationCard'
-export { NavigationPlaceholder } from './NavigationPlaceholder'
+export { MissionRouteMap } from './MissionRouteMap'
 export type { PendingMissionSummary } from './types'

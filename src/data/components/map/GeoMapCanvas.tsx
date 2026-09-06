@@ -1,62 +1,77 @@
 import { useEffect, useMemo } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
-import type { LatLngBoundsExpression, LatLngExpression } from 'leaflet'
+import { MapContainer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import type { LatLngExpression } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { cn } from '../../../lib/cn'
 import { computeBounds } from '../../../lib/mapProjection'
+import { BaseTileLayer } from './BaseTileLayer'
+import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../../lib/mapViewport'
 import type { MapMarker } from './types'
 
 export interface GeoMapCanvasProps {
   markers: MapMarker[]
   selectedId: string | null
   onSelect: (marker: MapMarker) => void
+  /**
+   * The signed-in responder's own user id. Their marker is drawn as "You" so a
+   * responder reading the map on a phone can find themselves without first
+   * tapping every cyan dot.
+   */
+  selfResponderId?: string
+  /** Sizing override for the map container — the mobile shell needs a shorter box than the desktop console. */
+  className?: string
 }
 
-/**
- * The Cebu City area of interest, matching CEBU_LAT/CEBU_LNG in the API's
- * detection store — the same box the drone survey is simulated within, so the
- * map can never show ground the platform does not operate over.
- */
-const CEBU_BOUNDS: LatLngBoundsExpression = [
-  [10.28, 123.87],
-  [10.35, 123.92],
-]
-const CEBU_CENTRE: LatLngExpression = [10.315, 123.895]
 const DEFAULT_ZOOM = 14
-/** Zooming out past this would put the AOI in a sea of irrelevant map. */
-const MIN_ZOOM = 12
 
-const MARKER_STYLE: Record<MapMarker['kind'], { color: string; radius: number }> = {
+type MarkerVisual = { color: string; radius: number }
+
+const MARKER_STYLE: Record<MapMarker['kind'], MarkerVisual> = {
   INCIDENT: { color: '#ff3b3b', radius: 10 },
   DETECTION: { color: '#ffdc00', radius: 8 },
   RESPONDER: { color: '#00d4ff', radius: 7 },
 }
 
-function markerLabel(marker: MapMarker): string {
+/** Distinct from the other responders' cyan so "me" never reads as "a colleague". */
+const SELF_STYLE: MarkerVisual = { color: '#00ff9c', radius: 9 }
+
+function isSelf(marker: MapMarker, selfResponderId?: string): boolean {
+  return marker.kind === 'RESPONDER' && !!selfResponderId && marker.responderId === selfResponderId
+}
+
+function markerLabel(marker: MapMarker, selfResponderId?: string): string {
   switch (marker.kind) {
     case 'INCIDENT':
       return `${marker.priority} incident · ${marker.status}`
     case 'DETECTION':
       return `${marker.category} · ${Math.round(marker.confidence * 100)}%`
-    case 'RESPONDER':
-      return marker.missionStatus ? `${marker.name} · ${marker.missionStatus}` : marker.name
+    case 'RESPONDER': {
+      const name = isSelf(marker, selfResponderId) ? 'You' : marker.name
+      return marker.missionStatus ? `${name} · ${marker.missionStatus}` : name
+    }
   }
 }
 
 /**
- * Keeps the viewport over the markers.
+ * Keeps the viewport, and the pannable area, over the markers.
  *
  * Only refits when the *set* of coordinates changes, not on every render —
  * otherwise panning the map would be undone the moment anything upstream
  * re-rendered, which makes it impossible to look around.
  */
-function FitToMarkers({ markers }: { markers: MapMarker[] }) {
+function ViewportController({ markers }: { markers: MapMarker[] }) {
   const map = useMap()
   const key = markers.map((m) => `${m.location.lat},${m.location.lng}`).join('|')
 
   useEffect(() => {
+    // maxBounds is an init-only MapContainer prop, so it has to be re-applied
+    // here whenever the data moves; otherwise the map stays clamped to whatever
+    // was on screen at mount.
+    map.setMaxBounds(viewportBounds(markers.map((m) => m.location)))
+
     // No markers yet: show the whole survey area rather than an arbitrary point.
     if (!markers.length) {
-      map.fitBounds(CEBU_BOUNDS, { padding: [24, 24] })
+      map.fitBounds(FALLBACK_AOI, { padding: [24, 24] })
       return
     }
     if (markers.length === 1) {
@@ -75,7 +90,36 @@ function FitToMarkers({ markers }: { markers: MapMarker[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
+  // The mobile shell lays the map out inside a column that settles after the
+  // first paint; without this Leaflet keeps the stale height and renders a
+  // strip of grey where tiles should be.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => map.invalidateSize())
+    return () => cancelAnimationFrame(frame)
+  }, [map])
+
   return null
+}
+
+/** Colour key for the marker kinds a map can show. */
+export function MapLegend({ includeSelf = false }: { includeSelf?: boolean }) {
+  const entries: Array<{ color: string; label: string }> = [
+    { color: MARKER_STYLE.INCIDENT.color, label: 'Confirmed incident' },
+    { color: MARKER_STYLE.DETECTION.color, label: 'Verified detection' },
+    { color: MARKER_STYLE.RESPONDER.color, label: 'Responder' },
+  ]
+  if (includeSelf) entries.push({ color: SELF_STYLE.color, label: 'You' })
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-foreground-secondary">
+      {entries.map((entry) => (
+        <span key={entry.label} className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full" style={{ background: entry.color }} />
+          {entry.label}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 /**
@@ -83,24 +127,31 @@ function FitToMarkers({ markers }: { markers: MapMarker[] }) {
  *
  * Replaces the percentage-positioned panel, which placed markers by CSS
  * `top`/`left` inside an empty rectangle — correct relative to each other, but
- * with no streets or terrain behind them, so a commander could not tell which
- * road a casualty was near. OpenStreetMap tiles need no API key or billing.
+ * with no streets or terrain behind them, so nobody could tell which road a
+ * casualty was near. OpenStreetMap tiles need no API key or billing.
  */
-export function GeoMapCanvas({ markers, selectedId, onSelect }: GeoMapCanvasProps) {
+export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, className }: GeoMapCanvasProps) {
   const centre = useMemo<LatLngExpression>(() => {
-    if (!markers.length) return CEBU_CENTRE
+    if (!markers.length) return [10.315, 123.895]
     return [markers[0].location.lat, markers[0].location.lng]
   }, [markers])
 
+  const initialBounds = useMemo(() => viewportBounds(markers.map((m) => m.location)), [markers])
+
   return (
-    <div className="h-[calc(100vh-13rem)] min-h-[32rem] overflow-hidden rounded-md border border-border">
+    <div
+      className={cn(
+        'overflow-hidden rounded-md border border-border',
+        className ?? 'h-[calc(100vh-13rem)] min-h-[32rem]',
+      )}
+    >
       <MapContainer
         center={centre}
         zoom={DEFAULT_ZOOM}
         minZoom={MIN_ZOOM}
-        // Panning is rubber-banded back into the survey area: this map is an
-        // operational picture of one AOI, not a world atlas to wander.
-        maxBounds={CEBU_BOUNDS}
+        // Panning is rubber-banded back to the area the data covers: this map is
+        // an operational picture of one AOI, not a world atlas to wander.
+        maxBounds={initialBounds}
         maxBoundsViscosity={1.0}
         scrollWheelZoom
         className="h-full w-full"
@@ -108,15 +159,12 @@ export function GeoMapCanvas({ markers, selectedId, onSelect }: GeoMapCanvasProp
         // through as white in dark mode before tiles load.
         style={{ background: 'var(--color-surface-inverse)' }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          maxZoom={19}
-        />
-        <FitToMarkers markers={markers} />
+        <BaseTileLayer />
+        <ViewportController markers={markers} />
 
         {markers.map((marker) => {
-          const style = MARKER_STYLE[marker.kind]
+          const self = isSelf(marker, selfResponderId)
+          const style = self ? SELF_STYLE : MARKER_STYLE[marker.kind]
           const isSelected = marker.id === selectedId
           return (
             <CircleMarker
@@ -125,14 +173,14 @@ export function GeoMapCanvas({ markers, selectedId, onSelect }: GeoMapCanvasProp
               radius={isSelected ? style.radius + 4 : style.radius}
               pathOptions={{
                 color: isSelected ? '#ffffff' : style.color,
-                weight: isSelected ? 3 : 2,
+                weight: isSelected || self ? 3 : 2,
                 fillColor: style.color,
                 fillOpacity: 0.75,
               }}
               eventHandlers={{ click: () => onSelect(marker) }}
             >
               <Tooltip direction="top" offset={[0, -6]}>
-                {markerLabel(marker)}
+                {markerLabel(marker, selfResponderId)}
               </Tooltip>
             </CircleMarker>
           )

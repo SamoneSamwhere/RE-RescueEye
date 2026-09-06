@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { MobileShell } from '../data/components/layout'
-import { DamageMapCanvas, MarkerDetailPanel } from '../data/components/map'
+import { GeoMapCanvas, MapLegend, MarkerDetailPanel } from '../data/components/map'
 import type { MapMarker, IncidentMapMarker } from '../data/components/map'
 import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS, useFieldResponderData } from '../features/field-responder'
@@ -77,9 +77,19 @@ export function FieldResponderMapPage() {
       <div className="flex flex-col gap-4 px-4 py-4">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Damage Map</h1>
-          <p className="text-sm text-foreground-secondary">Confirmed incidents and responder positions near you.</p>
+          <p className="text-sm text-foreground-secondary">Confirmed incidents and responder positions on the live basemap.</p>
         </div>
-        <DamageMapCanvas markers={markers} selectedId={selectedId} onSelect={(marker) => setSelectedId(marker.id)} />
+        <GeoMapCanvas
+          markers={markers}
+          selectedId={selectedId}
+          onSelect={(marker) => setSelectedId(marker.id)}
+          selfResponderId={session.id}
+          // Shorter than the desktop console's full-height map: the mobile shell
+          // already spends vertical space on a top bar and a bottom tab bar, and
+          // the detail panel below has to stay reachable without a long scroll.
+          className="h-[58vh] min-h-[20rem]"
+        />
+        <MapLegend includeSelf />
         <MarkerDetailPanel marker={selectedMarker} showIncidentLink={false} />
       </div>
     </MobileShell>
