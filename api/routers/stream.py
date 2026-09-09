@@ -97,27 +97,30 @@ def shutdown():
 # ── MJPEG generation ──────────────────────────────────────────────────────────
 def _mjpeg_generator(feed_id: str):
     boundary = f"--rescueeye_{feed_id}\r\n".encode()
-    interval = 1.0 / max(float(os.getenv("FRAME_RATE", "5")), 0.1)
+    last_seq = 0
     while True:
         try:
             feed = registry.get_feed(feed_id)
         except FeedNotFound:
-            # The feed was removed while a client was still streaming it —
+            # The feed was removed while a client was still streaming it -
             # ending the generator closes the response cleanly.
             return
-        frame = feed.snapshot()
-        if frame is None:
-            time.sleep(0.05)
-            continue
-        try:
-            display = _downscale_jpeg(frame)
-        except Exception:
-            display = frame
+        # Wait for a frame this client has not seen yet. The old fixed-interval
+        # sleep ran on its own clock: it could sit on a finished frame for most
+        # of a frame period before sending it, and re-sent unchanged frames
+        # whenever the producer was slower than the timer. Blocking on the
+        # producer removes that delay, and the wasted bytes with it.
+        frame, seq = feed.wait_for_frame(last_seq)
+        if frame is None or seq == last_seq:
+            continue                      # timed out - re-check the feed exists
+        last_seq = seq
+        # Converted on the feed, so every viewer of this feed shares one
+        # conversion per frame instead of repeating it per connection.
+        display = feed.display_jpeg() or frame
         yield (boundary
                + b"Content-Type: image/jpeg\r\n"
                + b"Content-Length: " + str(len(display)).encode() + b"\r\n\r\n"
                + display + b"\r\n")
-        time.sleep(interval)
 
 
 def _mjpeg_response(feed_id: str) -> StreamingResponse:
@@ -141,6 +144,108 @@ def _save_upload(file: UploadFile) -> Path:
 
 
 # ── Multi-feed endpoints ──────────────────────────────────────────────────────
+DEFAULT_RTMP_PORT = int(os.getenv("RTMP_LISTEN_PORT", "1935"))
+
+
+def _source_port(source: str, default: int = DEFAULT_RTMP_PORT) -> int:
+    """Port out of an rtmp://host:port/path source."""
+    try:
+        hostpart = source.split("//", 1)[1].split("/", 1)[0]
+        return int(hostpart.rsplit(":", 1)[1])
+    except (IndexError, ValueError):
+        return default
+
+
+def _port_in_use(port: int) -> bool:
+    """
+    Whether an existing feed already listens on this port.
+
+    Deliberately *not* a socket probe. FFmpeg's `-listen 1` accepts exactly one
+    connection, so dialling the port to test it consumes the very slot the
+    drone needs and kills the feed - the check would cause the failure it
+    exists to prevent. The registry already knows every listening feed, so ask
+    it instead.
+    """
+    return any(
+        registry._is_listen_source(f.source) and _source_port(f.source) == port
+        for f in registry.list_feeds()
+    )
+
+
+
+def _lan_addresses() -> list[str]:
+    """
+    This machine's LAN IPv4 addresses, best guess first.
+
+    The pilot has to type a publish URL into the DJI app by hand, and the one
+    address that will never work there is the one the dashboard is most likely
+    showing them - 127.0.0.1 means "the phone", not "this server". So resolve
+    real interface addresses and let the UI show them.
+    """
+    import socket
+
+    def is_lan(ip: str) -> bool:
+        """
+        Only addresses a phone on the same Wi-Fi could actually dial.
+
+        Loopback is meaningless to another device; 169.254.x is a link with no
+        DHCP; and a VPN adapter (Radmin, Tailscale, Hamachi) hands out a
+        routable-looking address on a network the phone is not a member of.
+        Offering one of those to the pilot produces a "livestream error" with
+        nothing wrong on this end, so they are filtered rather than ranked.
+        """
+        if ip.startswith(("127.", "169.254.")):
+            return False
+        if ip.startswith(("192.168.", "10.")):
+            return True
+        if ip.startswith("172."):
+            second = int(ip.split(".")[1])
+            return 16 <= second <= 31
+        return False
+
+    addrs: list[str] = []
+    # A UDP connect to a public address picks the interface that actually
+    # carries traffic without sending anything, which beats hostname lookup
+    # on machines with several adapters (VPN, WSL, Docker, Hyper-V).
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect(("8.8.8.8", 80))
+        addrs.append(probe.getsockname()[0])
+    except Exception:
+        pass
+    finally:
+        probe.close()
+
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in addrs:
+                addrs.append(ip)
+    except Exception:
+        pass
+    return [ip for ip in addrs if is_lan(ip)]
+
+
+
+@router.get("/publish-target")
+async def publish_target(port: int = DEFAULT_RTMP_PORT, key: str = "dji"):
+    """
+    Where a push-only aircraft should send its stream, and what to register here.
+
+    `listenSource` is what goes to POST /stream/feeds — a wildcard bind, so the
+    API receives the stream itself. `publishUrls` are what the pilot types into
+    the drone app, which must name a routable address rather than localhost.
+    """
+    addrs = _lan_addresses()
+    return {
+        "listenSource": f"rtmp://0.0.0.0:{port}/live/{key}",
+        "publishUrls":  [f"rtmp://{a}:{port}/live/{key}" for a in addrs],
+        "addresses":    addrs,
+        "port":         port,
+        "streamKey":    key,
+    }
+
+
 @router.get("/feeds")
 async def list_feeds():
     """All active feeds, plus the detection cadence the browser should use."""
@@ -159,6 +264,17 @@ async def add_live_feed(payload: dict = Body(...)):
     label = (payload.get("label") or "").strip() or None
     if not source:
         raise HTTPException(400, "A 'source' URL or path is required.")
+    if registry._is_listen_source(source) and _port_in_use(_source_port(source)):
+        # Windows lets a second socket bind the same port, so this would
+        # otherwise "succeed" and then lose the race for incoming streams to
+        # whatever got there first — usually an FFmpeg orphaned by a hard kill
+        # of the API. The drone then reports a livestream error while the
+        # dashboard shows a healthy feed, which is a miserable thing to debug.
+        raise HTTPException(
+            409,
+            f"Port {_source_port(source)} is already in use. A previous feed may still be "
+            "holding it — remove that feed, or end the leftover FFmpeg process, then retry.",
+        )
     try:
         feed = registry.add_feed(source=source, label=label, kind="live")
     except FeedLimitReached as exc:

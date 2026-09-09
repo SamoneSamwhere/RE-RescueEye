@@ -33,8 +33,50 @@ BASE_DETECT_INTERVAL_MS = 350
 MAX_DETECT_INTERVAL_MS = 1500
 
 
+def _ffmpeg_binary() -> str:
+    """
+    Which FFmpeg to run.
+
+    A bare "ffmpeg" takes whatever is first on PATH, and that is routinely an
+    ancient build — the box this was written on resolved to a 2013 snapshot,
+    which plays a local MP4 happily but cannot decode H.265 and does not
+    understand the current RTSP timeout flag. Both only bite once a real
+    aircraft is connected, which is the worst moment to discover them.
+
+    imageio-ffmpeg is already a dependency (frame extraction) and ships a
+    modern static build, so prefer that over PATH roulette. FFMPEG_BINARY
+    overrides everything for a deployment that pins its own.
+    """
+    override = os.getenv("FFMPEG_BINARY", "").strip()
+    if override:
+        return override
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        logger.warning("[feed] imageio-ffmpeg unavailable — falling back to 'ffmpeg' on PATH")
+        return "ffmpeg"
+
+
 def _is_network_source(source: str) -> bool:
     return source.startswith(("rtsp://", "rtsps://", "rtmp://", "udp://", "http://", "https://"))
+
+
+def _is_listen_source(source: str) -> bool:
+    """
+    True when we must *receive* the stream rather than fetch it.
+
+    Consumer drones (DJI in particular) run no server of their own: the phone
+    app pushes RTMP outward to an address you give it. Binding the host to a
+    wildcard is how an operator says "the aircraft will call us" — FFmpeg then
+    serves the endpoint itself, so no separate relay has to be installed.
+    """
+    return source.startswith(("rtmp://0.0.0.0", "rtmp://:", "rtmp://*"))
+
+
+def _normalise_listen_source(source: str) -> str:
+    """FFmpeg wants a concrete bind address; 'rtmp://:1935/x' is shorthand."""
+    return source.replace("rtmp://*", "rtmp://0.0.0.0", 1).replace("rtmp://:", "rtmp://0.0.0.0:", 1)
 
 
 # Frames wider than this are scaled down by FFmpeg before they ever reach the
@@ -47,24 +89,67 @@ FEED_MAX_WIDTH = int(os.getenv("FEED_MAX_WIDTH", "1920"))
 
 def _build_ffmpeg_cmd(source: str, fps: float) -> list[str]:
     """FFmpeg command with source-appropriate flags."""
-    cmd = ["ffmpeg", "-loglevel", "error"]
+    cmd = [_ffmpeg_binary(), "-loglevel", "error"]
     if source.startswith(("rtsp://", "rtsps://")):
         cmd += ["-rtsp_transport", "tcp", "-timeout", "5000000"]
+    if _is_network_source(source):
+        # Live sources are latency-critical: FFmpeg's defaults spend up to five
+        # seconds probing the stream before emitting anything, then keep a
+        # reorder buffer that adds more. A drone feed is a single H.264 track
+        # with nothing to discover, so probing is pure delay — and an operator
+        # watching a casualty needs the current frame, not a smooth one.
+        cmd += ["-fflags", "nobuffer", "-flags", "low_delay",
+                "-probesize", "32", "-analyzeduration", "0"]
+    if _is_listen_source(source):
+        # Wait for the aircraft to publish. No -timeout: the gap between
+        # arming the feed and the pilot hitting "Go Live" is measured in
+        # minutes, and a listener that gave up would strand the operator.
+        source = _normalise_listen_source(source)
+        cmd += ["-listen", "1"]
     if not _is_network_source(source):
-        cmd += ["-re"]          # pace file playback; omit for live network sources
+        # -re paces file playback to real time; omit for live network sources.
+        # -stream_loop loops inside the one process: the producer used to reach
+        # EOF, tear FFmpeg down and start it again, which froze a demo clip for
+        # about a second every time it wrapped. Looping here makes the seam
+        # invisible and leaves the restart path for genuine failures.
+        cmd += ["-stream_loop", "-1", "-re"]
     # -1 derives the height from the aspect ratio. (-2, which would also force
     # an even height, is rejected by some FFmpeg builds with "Size values less
     # than -1 are not acceptable".) min() leaves a source already narrower than
     # the cap untouched rather than upscaling it.
     vf = f"fps={fps},scale='min({FEED_MAX_WIDTH},iw)':-1"
+    # JPEG quality of the frames FFmpeg hands us (2 = best, 31 = worst). These
+    # frames are now served to the browser as-is rather than re-encoded, so the
+    # setting decides bytes on the wire as well as encode cost. q3 is visually
+    # lossless and roughly 2.5x the size of q6 for no benefit anyone can see at
+    # 720p, and that extra bandwidth was costing delivered frames.
+    quality = os.getenv("FEED_JPEG_QUALITY", "6")
     cmd += ["-i", source, "-vf", vf, "-f", "image2pipe",
-            "-vcodec", "mjpeg", "-q:v", "3", "pipe:1"]
+            "-vcodec", "mjpeg", "-q:v", quality, "pipe:1"]
     return cmd
 
 
 def _downscale_jpeg(jpeg: bytes, w: int = 1280, h: int = 720) -> bytes:
+    """
+    Fit a frame inside w x h for the browser, re-encoding only if it must.
+
+    The old version decoded and re-encoded unconditionally. When the producer
+    already emits frames at or below the display size that is a full JPEG
+    decode plus encode per frame per viewer, spent to produce a picture the
+    same size as the input and slightly worse, because re-encoding is lossy.
+    Reading the header is enough to find that out, and Image.open does not
+    decode pixels until they are asked for.
+
+    The fit also preserves aspect ratio now; the fixed resize stretched any
+    source that was not exactly 16:9.
+    """
+    src = Image.open(io.BytesIO(jpeg))
+    if src.width <= w and src.height <= h:
+        return jpeg                      # already small enough - hand it back untouched
+    scale = min(w / src.width, h / src.height)
+    size = (max(1, round(src.width * scale)), max(1, round(src.height * scale)))
     buf = io.BytesIO()
-    Image.open(io.BytesIO(jpeg)).resize((w, h), Image.BILINEAR).save(buf, format="JPEG", quality=78)
+    src.resize(size, Image.BILINEAR).save(buf, format="JPEG", quality=78)
     return buf.getvalue()
 
 
@@ -79,6 +164,15 @@ class Feed:
     lock: threading.Lock = field(default_factory=threading.Lock)
     stop_event: threading.Event = field(default_factory=threading.Event)
     current_frame: bytes | None = None
+    # Incremented on every decoded frame. Lets the MJPEG generator block until
+    # there is genuinely something new instead of waking on a timer and
+    # re-sending a frame the browser already has.
+    seq: int = 0
+    # Browser-sized copy of current_frame, built at most once per frame no
+    # matter how many viewers are watching. Two panels on one feed used to pay
+    # for the same conversion twice.
+    display_frame: bytes | None = None
+    frame_ready: threading.Condition = field(default_factory=threading.Condition)
     active: bool = False
     producer: str = "none"          # 'ffmpeg' | 'synthetic' | 'none'
     proc: subprocess.Popen | None = None
@@ -87,6 +181,39 @@ class Feed:
     def snapshot(self) -> bytes | None:
         with self.lock:
             return self.current_frame
+
+    def publish(self, frame: bytes) -> None:
+        """Store a newly decoded frame and wake anyone waiting on it."""
+        with self.lock:
+            self.current_frame = frame
+            self.seq += 1
+            self.display_frame = None      # invalidate the browser-sized copy
+        with self.frame_ready:
+            self.frame_ready.notify_all()
+
+    def display_jpeg(self) -> bytes | None:
+        """Current frame at browser size, converted once and reused."""
+        with self.lock:
+            if self.display_frame is not None:
+                return self.display_frame
+            raw = self.current_frame
+        if raw is None:
+            return None
+        try:
+            shown = _downscale_jpeg(raw)
+        except Exception:
+            shown = raw
+        with self.lock:
+            self.display_frame = shown
+        return shown
+
+    def wait_for_frame(self, last_seq: int, timeout: float = 1.0) -> tuple[bytes | None, int]:
+        """Block until a frame newer than `last_seq` exists, or time out."""
+        with self.frame_ready:
+            if self.seq <= last_seq:
+                self.frame_ready.wait(timeout)
+        with self.lock:
+            return self.current_frame, self.seq
 
     def to_dict(self) -> dict:
         return {
@@ -140,8 +267,7 @@ def _synthetic_producer(feed: Feed, fps: float):
     interval = 1.0 / fps
     while not feed.stop_event.is_set():
         frame = synthetic_frame(tick, label=feed.label)
-        with feed.lock:
-            feed.current_frame = frame
+        feed.publish(frame)
         tick += 1
         time.sleep(interval)
     feed.active = False
@@ -167,14 +293,18 @@ def _ffmpeg_producer(feed: Feed, fps: float):
                     e = buf.find(b"\xff\xd9", s + 2)
                     if s == -1 or e == -1:
                         break
-                    with feed.lock:
-                        feed.current_frame = buf[s:e + 2]
+                    feed.publish(buf[s:e + 2])
                     buf = buf[e + 2:]
             proc.wait()
             if feed.stop_event.is_set():
                 break
             # Files reach EOF; loop them so a demo clip runs continuously.
-            logger.info(f"[feed:{feed.id}] source ended — restarting")
+            # A listening endpoint "ends" when the aircraft stops publishing,
+            # and the same restart re-arms it for the next takeoff.
+            if _is_listen_source(feed.source):
+                logger.info(f"[feed:{feed.id}] publisher disconnected — waiting for next stream")
+            else:
+                logger.info(f"[feed:{feed.id}] source ended — restarting")
             time.sleep(0.5)
     except FileNotFoundError:
         logger.warning(f"[feed:{feed.id}] FFmpeg not installed — synthetic fallback")

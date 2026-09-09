@@ -1,5 +1,6 @@
+import { Fragment, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Archive, Camera, Film, MonitorPlay, Play, RefreshCw, ServerCrash } from 'lucide-react'
+import { Archive, Camera, ChevronDown, Film, MonitorPlay, Play, RefreshCw, ServerCrash, SearchX } from 'lucide-react'
 import {
   Panel,
   Table,
@@ -14,8 +15,9 @@ import {
   LoadingState,
 } from '../ui'
 import { formatDateTime } from '../../../lib/formatDateTime'
-import { mediaThumbnailUrl } from '../../../features/media'
+import { mediaThumbnailUrl, mediaFileUrl } from '../../../features/media'
 import type { StoredMedia } from '../../../types/media'
+import { cn } from '../../../lib/cn'
 
 export interface StoredMediaTableProps {
   items: StoredMedia[]
@@ -28,6 +30,13 @@ export interface StoredMediaTableProps {
   onRetry: () => void
   /** Rendered in the panel header — the page supplies its own Add Video action. */
   actions?: ReactNode
+  /** Filter controls rendered above the table. Hidden when nothing is stored. */
+  filterBar?: ReactNode
+  /** Mission this clip belongs to, when one can be resolved. */
+  missionLabelFor?: (media: StoredMedia) => string | undefined
+  /** True when filters are hiding everything — a different empty state to "nothing stored". */
+  filteredToNothing?: boolean
+  onClearFilters?: () => void
 }
 
 function formatBytes(bytes: number): string {
@@ -57,7 +66,16 @@ export function StoredMediaTable({
   monitoringId,
   onRetry,
   actions,
+  filterBar,
+  missionLabelFor,
+  filteredToNothing,
+  onClearFilters,
 }: StoredMediaTableProps) {
+  // Which row is expanded for inline playback. One at a time: two videos
+  // decoding at once on a laptop already running detection is a real cost,
+  // and nobody watches two clips simultaneously.
+  const [playingId, setPlayingId] = useState<string | null>(null)
+
   return (
     <Panel title="Media Storage & History" actions={actions}>
       {loading ? (
@@ -74,6 +92,22 @@ export function StoredMediaTable({
             </Button>
           }
         />
+      ) : filteredToNothing ? (
+        <>
+          {filterBar}
+          <EmptyState
+            icon={SearchX}
+            title="No clips match these filters"
+            description="Widen the date range, or clear the filters to see everything stored."
+            action={
+              onClearFilters ? (
+                <Button variant="outline" size="sm" onClick={onClearFilters}>
+                  Clear filters
+                </Button>
+              ) : undefined
+            }
+          />
+        </>
       ) : items.length === 0 ? (
         <EmptyState
           icon={Archive}
@@ -81,11 +115,14 @@ export function StoredMediaTable({
           description="Upload recorded drone footage to keep it here for later review."
         />
       ) : (
+        <>
+        {filterBar}
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Clip</TableHead>
               <TableHead>Drone</TableHead>
+              <TableHead>Mission</TableHead>
               <TableHead>Uploaded By</TableHead>
               <TableHead>Duration</TableHead>
               <TableHead>Size</TableHead>
@@ -95,21 +132,35 @@ export function StoredMediaTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
+            {items.map((item) => {
+              const isPlaying = playingId === item.id
+              return (
+              <Fragment key={item.id}>
+              <TableRow>
                 <TableCell>
                   <div className="flex items-center gap-2.5">
-                    <img
-                      src={mediaThumbnailUrl(item.id)}
-                      alt=""
-                      loading="lazy"
-                      className="h-9 w-16 shrink-0 rounded border border-border bg-black object-cover"
-                      // A clip whose poster frame can't be generated still has
-                      // a usable row; drop the broken-image icon instead.
-                      onError={(e) => {
-                        e.currentTarget.style.visibility = 'hidden'
-                      }}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setPlayingId(isPlaying ? null : item.id)}
+                      aria-expanded={isPlaying}
+                      aria-label={isPlaying ? `Stop ${item.original_name}` : `Play ${item.original_name}`}
+                      className="group relative h-9 w-16 shrink-0 overflow-hidden rounded border border-border bg-black"
+                    >
+                      <img
+                        src={mediaThumbnailUrl(item.id)}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                        // A clip whose poster frame can't be generated still has
+                        // a usable row; drop the broken-image icon instead.
+                        onError={(e) => {
+                          e.currentTarget.style.visibility = 'hidden'
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        {isPlaying ? <ChevronDown className="size-4" /> : <Play className="size-4" />}
+                      </span>
+                    </button>
                     <span className="flex min-w-0 items-center gap-1.5">
                       <Film className="size-3.5 shrink-0 text-foreground-muted" />
                       <span className="truncate text-sm text-foreground">{item.original_name}</span>
@@ -118,6 +169,9 @@ export function StoredMediaTable({
                 </TableCell>
                 <TableCell className="text-foreground-secondary">
                   {droneNameById(item.drone_id) ?? '—'}
+                </TableCell>
+                <TableCell className="text-foreground-secondary">
+                  {missionLabelFor?.(item) ?? '—'}
                 </TableCell>
                 <TableCell className="text-foreground-secondary">{item.uploaded_by_name ?? '—'}</TableCell>
                 <TableCell className="text-foreground-secondary tabular-nums">
@@ -150,16 +204,42 @@ export function StoredMediaTable({
                       <MonitorPlay className="size-3.5" />
                       {monitoringId === item.id ? 'Opening…' : 'Monitor'}
                     </Button>
+                    <Button
+                      variant={isPlaying ? 'secondary' : 'outline'}
+                      size="sm"
+                      onClick={() => setPlayingId(isPlaying ? null : item.id)}
+                    >
+                      {isPlaying ? <ChevronDown className="size-3.5" /> : <Play className="size-3.5" />}
+                      {isPlaying ? 'Close' : 'Play'}
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => onReview(item)}>
-                      <Play className="size-3.5" />
                       Review
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+
+              {isPlaying ? (
+                <TableRow>
+                  {/* Spans the whole row so the player gets the table's full width
+                      rather than being squeezed into the thumbnail column. */}
+                  <TableCell colSpan={9} className={cn('bg-surface-secondary')}>
+                    <video
+                      src={mediaFileUrl(item.id)}
+                      controls
+                      autoPlay
+                      preload="metadata"
+                      className="mx-auto max-h-[24rem] w-full max-w-3xl rounded-md border border-border bg-black"
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : null}
+              </Fragment>
+              )
+            })}
           </TableBody>
         </Table>
+        </>
       )}
     </Panel>
   )

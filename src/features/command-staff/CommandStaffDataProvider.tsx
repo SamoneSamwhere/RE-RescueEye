@@ -40,7 +40,12 @@ interface CommandStaffDataContextValue {
   updateIncidentPriority: (incidentId: string, priority: IncidentPriority) => void
   dispatchIncident: (incidentId: string, responderUserId: string) => Mission | null
   closeIncident: (incidentId: string) => void
-  captureMedia: (sourceType: MediaSourceType, droneId: string | undefined, fileName?: string) => Detection
+  captureMedia: (
+    sourceType: MediaSourceType,
+    droneId: string | undefined,
+    fileName?: string,
+    storedMediaId?: string,
+  ) => Detection
   registerDrone: (input: {
     name: string
     manufacturer: string
@@ -194,7 +199,12 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
    * Detection — the connective step between the Drones & Media workflow and
    * Detection Review. No real inference; see lib/mockAiService.
    */
-  function captureMedia(sourceType: MediaSourceType, droneId: string | undefined, fileName?: string): Detection {
+  function captureMedia(
+    sourceType: MediaSourceType,
+    droneId: string | undefined,
+    fileName?: string,
+    storedMediaId?: string,
+  ): Detection {
     if (!agencyId) throw new Error('No active agency')
     const nowIso = now().toISOString()
 
@@ -209,6 +219,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
           : `mock://uploads/${fileName ?? 'upload'}-${newAssetSuffix()}`,
       capturedAt: nowIso,
       uploadedByUserId: sourceType === 'UPLOADED_VIDEO' ? session?.id : undefined,
+      storedMediaId,
     }
     addMediaAsset(newAsset)
 

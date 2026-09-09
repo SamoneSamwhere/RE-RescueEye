@@ -15,6 +15,7 @@ at runtime without restarting the server (used by /models/reload endpoint).
 from __future__ import annotations
 
 import json
+import ast
 import logging
 import os
 import time
@@ -163,6 +164,47 @@ def get_coco_ort_session() -> Any:
     return _coco_ort_session
 
 
+# -- DirectML ONNX session for the damage classifier --------------------------
+# The last model still running through PyTorch, and the torch wheel here is a
+# CPU-only build, so it was the one piece of inference the GPU never touched.
+# The exported graph runs on the same DirectML provider as the other two.
+_damage_ort_session: Any = None
+_damage_ort_names: list[str] = []
+DAMAGE_ORT_IMGSZ = 224
+
+
+def _load_damage_ort(onnx_path: str) -> None:
+    global _damage_ort_session
+    try:
+        import onnxruntime as ort
+        providers = (["DmlExecutionProvider", "CPUExecutionProvider"]
+                     if _dml_available() else ["CPUExecutionProvider"])
+        opts = ort.SessionOptions()
+        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        _damage_ort_session = ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
+        # Take the class order from the graph, never from a hand-written list:
+        # DAMAGE_CLASS_NAMES is in a different order than the model was trained
+        # in, so indexing it by the argmax silently renames every prediction.
+        global _damage_ort_names
+        meta = _damage_ort_session.get_modelmeta().custom_metadata_map or {}
+        names = ast.literal_eval(meta["names"]) if "names" in meta else {}
+        _damage_ort_names = [names[i] for i in sorted(names)] if names else list(DAMAGE_CLASS_NAMES)
+        logger.info(f"[yolo] damage ONNX session ready - provider: "
+                    f"{_damage_ort_session.get_providers()[0]} - classes: {_damage_ort_names}")
+    except Exception as exc:
+        logger.warning(f"[yolo] damage ORT session failed ({exc}) - falling back to PyTorch")
+        _damage_ort_session = None
+
+
+def get_damage_ort_session() -> Any:
+    return _damage_ort_session
+
+
+def get_damage_ort_names() -> list[str]:
+    """Class names in the graph's own index order."""
+    return _damage_ort_names
+
+
 def _resolve_victim_weights() -> tuple[str, bool]:
     """Return (weights_path, is_custom). Prefers ONNX over PT for faster CPU inference."""
     onnx = MODELS_DIR / "victim_best.onnx"
@@ -237,6 +279,10 @@ def load_all() -> None:
     d_weights, d_custom = _resolve_damage_weights()
     _init_model(_damage, d_weights, d_custom,
                 meta_file=MODELS_DIR / "damage_meta.json", task="classify")
+
+    damage_onnx = MODELS_DIR / "damage_best.onnx"
+    if damage_onnx.exists():
+        _load_damage_ort(str(damage_onnx))
 
     if COCO_ASSIST_ENABLED:
         coco_onnx = REPO_ROOT / os.getenv("COCO_ASSIST_ONNX", "yolov8n.onnx")

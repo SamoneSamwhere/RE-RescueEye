@@ -75,6 +75,43 @@ export function useMonitorMedia() {
   })
 }
 
+export interface PublishTarget {
+  /** Wildcard bind to register as the feed source — the API receives the stream. */
+  listenSource: string
+  /** Routable addresses the pilot types into the drone app. */
+  publishUrls: string[]
+  addresses: string[]
+  port: number
+  streamKey: string
+}
+
+/**
+ * Where a push-only aircraft (any consumer DJI) should send its video.
+ *
+ * Fetched rather than built in the browser because the page only knows the
+ * host it was served from, which is routinely localhost — useless to a phone.
+ */
+export function usePublishTarget(enabled = true) {
+  return useQuery({
+    queryKey: ['publish-target'],
+    queryFn: () => api.get<PublishTarget>('/stream/publish-target'),
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
+/** Connects a live source: an RTSP/RTMP/HTTP URL, or a wildcard bind to receive a push. */
+export function useAddFeed() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { source: string; label?: string }) =>
+      api.post<Feed>('/stream/feeds', input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [FEEDS_KEY] })
+    },
+  })
+}
+
 export function useCloseFeed() {
   const queryClient = useQueryClient()
   return useMutation({

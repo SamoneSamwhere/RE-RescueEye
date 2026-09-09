@@ -18,7 +18,10 @@ from services.yolo_model import (
     DAMAGE_CLASS_NAMES,
     DAMAGE_PROXY_CLASSES,
     PERSON_CLASS,
+    DAMAGE_ORT_IMGSZ,
     get_damage_model,
+    get_damage_ort_session,
+    get_damage_ort_names,
     damage_state,
 )
 
@@ -61,6 +64,33 @@ def _get_severity(label: str, confidence: float) -> tuple[str, str]:
     return tier, actions.get((label, tier), f"{tier.title()} damage detected — assess area")
 
 
+def _run_damage_ort(session, frame) -> "np.ndarray":
+    """
+    Preprocess exactly as the classifier was trained: square resize to the
+    export size, RGB, scaled to 0-1, channels-first.
+
+    Ultralytics normally does this inside its predictor; driving the session
+    directly means doing it here, and getting it wrong shows up as confident
+    nonsense rather than an error.
+    """
+    img = frame if isinstance(frame, Image.Image) else Image.fromarray(frame)
+    img = img.convert("RGB")
+    # Match Ultralytics' classify transform exactly: resize the SHORT edge to
+    # the export size, then centre-crop. A square stretch instead of this
+    # changed the prediction on 5 of 8 sample frames - it fails silently as a
+    # confident wrong label, never as an error.
+    s = DAMAGE_ORT_IMGSZ
+    w, h = img.size
+    scale = s / min(w, h)
+    img = img.resize((round(w * scale), round(h * scale)), Image.BILINEAR)
+    left, top = (img.width - s) // 2, (img.height - s) // 2
+    img = img.crop((left, top, left + s, top + s))
+    arr = np.asarray(img, dtype=np.float32) / 255.0
+    arr = np.transpose(arr, (2, 0, 1))[None, ...]
+    out = session.run(None, {session.get_inputs()[0].name: arr})[0]
+    return np.asarray(out).reshape(-1)
+
+
 @router.post("")
 async def classify_damage(payload: dict = Body(...)):
     b64 = payload.get("frame", "")
@@ -90,8 +120,45 @@ async def classify_damage(payload: dict = Body(...)):
             "model_version":    "stub",
         }
 
+    # GPU path: the exported graph on DirectML, same provider as the victim
+    # model. Classification post-processing is just a softmax over four
+    # logits, so the whole Ultralytics result wrapper is unnecessary here.
+    ort_session = get_damage_ort_session()
+    if ort_session is not None and state.is_custom:
+        t0 = time.perf_counter()
+        try:
+            logits = _run_damage_ort(ort_session, frame)
+        except Exception as exc:
+            logger.warning(f"[classify] GPU inference failed ({exc}) - using CPU model")
+            ort_session = None
+        else:
+            inference_ms = round((time.perf_counter() - t0) * 1000, 1)
+            cls_id = int(np.argmax(logits))
+            conf = float(logits[cls_id])
+            ort_names = get_damage_ort_names()
+            label = (ort_names[cls_id] if cls_id < len(ort_names)
+                     else DAMAGE_CLASS_NAMES[cls_id % len(DAMAGE_CLASS_NAMES)])
+            tier, action = _get_severity(label, conf)
+            logger.info(
+                f"[classify] label={label} conf={conf:.2f} severity={tier} "
+                f"inference={inference_ms:.0f}ms model={state.version} device=gpu"
+            )
+            return {
+                "label":            label,
+                "confidence":       round(conf, 3),
+                "severity":         tier,
+                "suggested_action": action,
+                "timestamp":        timestamp,
+                "model_version":    state.version,
+                "inference_time_ms": inference_ms,
+            }
+
     t0 = time.perf_counter()
-    results = model(frame, verbose=False)
+    # Ultralytics assumes a numpy frame is BGR (OpenCV order) and runs
+    # cvtColor(BGR2RGB) on it. _decode_frame produces RGB, so passing it
+    # straight through fed the classifier inverted channels - reversing here
+    # means the model finally sees the colours it was trained on.
+    results = model(frame[:, :, ::-1], verbose=False)
     inference_ms = round((time.perf_counter() - t0) * 1000, 1)
 
     if state.is_custom:

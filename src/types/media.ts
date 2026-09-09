@@ -10,6 +10,16 @@ export interface MediaAsset {
   url: string
   capturedAt: string
   uploadedByUserId?: string
+  /**
+   * Id of the real clip in the API's media library, when this asset was
+   * created by an actual upload rather than a mock capture.
+   *
+   * This is the only bridge between the two id spaces: mock Detections point
+   * at MediaAsset ids, stored footage lives under the API's own ids, and
+   * without this there is no way to answer "which clip did this mission come
+   * from?" — Mission -> Incident -> Detection -> MediaAsset dead-ends here.
+   */
+  storedMediaId?: string
 }
 
 /* ── Stored media (real, served by the Python API) ────────────────────────────
