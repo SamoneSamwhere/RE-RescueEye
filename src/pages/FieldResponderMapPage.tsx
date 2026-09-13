@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react'
 import { MobileShell } from '../data/components/layout'
-import { GeoMapCanvas, MapLegend, MarkerDetailPanel } from '../data/components/map'
-import type { MapMarker, IncidentMapMarker } from '../data/components/map'
+import {
+  GeoMapCanvas,
+  MapLegend,
+  MarkerDetailPanel,
+  MarkerFilterBar,
+  EMPTY_MARKER_FILTERS,
+  applyMarkerFilters,
+  countIncidentMarkers,
+} from '../data/components/map'
+import type { MapMarker, IncidentMapMarker, MarkerFilters } from '../data/components/map'
 import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS, useFieldResponderData } from '../features/field-responder'
 import { useIncidentStore } from '../state/IncidentStore'
@@ -18,6 +26,7 @@ export function FieldResponderMapPage() {
   const { detections } = useDetectionStore()
   const { notifications: allNotifications } = useNotificationStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [filters, setFilters] = useState<MarkerFilters>(EMPTY_MARKER_FILTERS)
 
   const agencyId = session?.agencyId
   const notifications = session ? notificationsFor(allNotifications, session.id) : []
@@ -68,7 +77,12 @@ export function FieldResponderMapPage() {
     return [...incidentMarkers, ...responderMarkers]
   }, [detections, incidents, missions, agencyId])
 
-  const selectedMarker = markers.find((m) => m.id === selectedId) ?? null
+  const visibleMarkers = useMemo(() => applyMarkerFilters(markers, filters), [markers, filters])
+
+  // Looked up in the *visible* set, so filtering a marker off the map also
+  // clears its detail panel rather than leaving a card for a dot that is no
+  // longer there.
+  const selectedMarker = visibleMarkers.find((m) => m.id === selectedId) ?? null
 
   if (!session) return null
 
@@ -79,8 +93,14 @@ export function FieldResponderMapPage() {
           <h1 className="text-lg font-semibold text-foreground">Damage Map</h1>
           <p className="text-sm text-foreground-secondary">Confirmed incidents and responder positions on the live basemap.</p>
         </div>
+        <MarkerFilterBar
+          filters={filters}
+          onChange={setFilters}
+          shown={countIncidentMarkers(visibleMarkers)}
+          total={countIncidentMarkers(markers)}
+        />
         <GeoMapCanvas
-          markers={markers}
+          markers={visibleMarkers}
           selectedId={selectedId}
           onSelect={(marker) => setSelectedId(marker.id)}
           selfResponderId={session.id}

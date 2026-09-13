@@ -3,7 +3,16 @@ export { DamageMapCanvas } from './OperationalMapCanvas'
 export { GeoMapCanvas, MapLegend } from './GeoMapCanvas'
 export { GeoRouteMap } from './GeoRouteMap'
 export { MarkerDetailPanel } from './MarkerDetailPanel'
+export { MarkerFilterBar } from './MarkerFilterBar'
+export {
+  EMPTY_MARKER_FILTERS,
+  applyMarkerFilters,
+  countIncidentMarkers,
+  hasActiveMarkerFilters,
+  toggleFilterValue,
+} from './markerFilters'
 export type { MapMarker, IncidentMapMarker, DetectionMapMarker, ResponderMapMarker } from './types'
+export type { MarkerFilters } from './markerFilters'
 export type { GeoMapCanvasProps } from './GeoMapCanvas'
 export type { GeoRouteMapProps } from './GeoRouteMap'
 export type { MapPreviewPin } from './OperationalMapPreview'

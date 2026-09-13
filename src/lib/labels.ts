@@ -1,5 +1,5 @@
 import type { DetectionCategory, DamageClassification } from '../types/detection'
-import type { IncidentStatus } from '../types/incident'
+import type { IncidentPriority, IncidentStatus } from '../types/incident'
 import type { UserRole } from '../types/user'
 import type { AgencyRegistrationStatus } from '../types/agency'
 
@@ -21,6 +21,13 @@ export const INCIDENT_STATUS_LABEL: Record<IncidentStatus, string> = {
   DISPATCHED: 'Dispatched',
   IN_PROGRESS: 'In Progress',
   CLOSED: 'Closed',
+}
+
+export const INCIDENT_PRIORITY_LABEL: Record<IncidentPriority, string> = {
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  CRITICAL: 'Critical',
 }
 
 export const USER_ROLE_LABEL: Record<UserRole, string> = {

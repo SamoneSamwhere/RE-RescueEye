@@ -1,16 +1,10 @@
 import type { IncidentPriority } from '../../../types/incident'
 import { cn } from '../../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL } from '../../../lib/labels'
 
 interface PriorityBadgeProps {
   priority: IncidentPriority
   className?: string
-}
-
-const LABEL: Record<IncidentPriority, string> = {
-  LOW: 'Low',
-  MEDIUM: 'Medium',
-  HIGH: 'High',
-  CRITICAL: 'Critical',
 }
 
 const BADGE_CLASSES: Record<IncidentPriority, string> = {
@@ -37,7 +31,7 @@ export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
       )}
     >
       <span className={cn('size-1.5 rounded-full', DOT_CLASSES[priority])} />
-      {LABEL[priority]}
+      {INCIDENT_PRIORITY_LABEL[priority]}
     </span>
   )
 }
