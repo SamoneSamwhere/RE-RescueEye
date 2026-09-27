@@ -6,7 +6,14 @@ import { Button } from '../ui'
 import { ThemeToggle } from './ThemeToggle'
 import logo from '../../../assets/logo.png'
 
-const NAV_LINKS = []
+/**
+ * Anchor links for the landing page nav.
+ *
+ * Typed explicitly because the list is currently empty: an empty array literal
+ * infers as `any[]`, which fails the build under `noImplicitAny` at each of the
+ * three places it is mapped. The type is what the JSX below already assumes.
+ */
+const NAV_LINKS: Array<{ href: string; label: string }> = []
 
 export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false)

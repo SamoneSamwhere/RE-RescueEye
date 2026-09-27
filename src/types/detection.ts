@@ -45,6 +45,15 @@ export interface Detection {
    * behind them, so the preview falls back to its placeholder.
    */
   snapshotUrl?: string
+  /**
+   * How strongly the casualty gate believed this person was a casualty, 0-1,
+   * and which signals it used. Only present on detections ingested from the
+   * API: mock detections never went through the gate. See
+   * api/services/casualty.py — the detector finds people, and this is the
+   * evidence that promoted one of them to a casualty.
+   */
+  casualtyScore?: number
+  casualtyReasons?: string[]
   reviewedByUserId?: string
   reviewedAt?: string
   reviewerNotes?: string

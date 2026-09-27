@@ -41,7 +41,13 @@ DAMAGE_PROXY_CLASSES: dict[int, str] = {
 }
 
 # ── Damage classification labels (custom model) ───────────────────────────────
-DAMAGE_CLASS_NAMES = ["flood_damage", "fire_damage", "structural_damage", "no_damage"]
+# MUST stay in the model's own class order: routers/classify.py indexes this
+# list by the class id the model returns whenever the graph's names are not
+# available. It was previously ["flood", "fire", "structural", "no_damage"],
+# which is not the trained order — every one of the four ids resolved to the
+# wrong label, and id 2 turned real structural damage into "no_damage", which
+# _get_severity then reports as CLEAR. Verified against damage_best.onnx.
+DAMAGE_CLASS_NAMES = ["fire_damage", "flood_damage", "no_damage", "structural_damage"]
 
 
 @dataclass

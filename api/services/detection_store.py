@@ -36,6 +36,11 @@ class StoredDetection:
     # consumer can collapse a hundred sightings of one casualty into one thing
     # to act on instead of a hundred rows.
     track_id: int | None = None
+    # Why the casualty gate promoted this person (services/casualty.py). Stored
+    # because the review screen asks a commander to act on the verdict, and a
+    # verdict with no reasoning behind it is just a number to take on faith.
+    casualty_score: float | None = None
+    casualty_reasons: list[str] | None = None
     # A JPEG crop of the subject, kept in memory alongside the record so the
     # review screen can show what the model actually saw. It rides the same
     # bounded deque, so old crops are evicted with their detection and nothing
@@ -113,6 +118,8 @@ def add_detections(detections: list[dict], inference_time_ms: float,
                 frame_height=frame_height,
                 snapshot=_crop_snapshot(frame, det["bbox"]) if frame is not None else None,
                 track_id=det.get("track_id"),
+                casualty_score=det.get("casualty_score"),
+                casualty_reasons=det.get("casualty_reasons"),
             )
         )
 
@@ -133,6 +140,8 @@ def get_recent(limit: int = 20) -> list[dict]:
             "frame_height": d.frame_height,
             "has_snapshot": d.snapshot is not None,
             "track_id": d.track_id,
+            "casualty_score": d.casualty_score,
+            "casualty_reasons": d.casualty_reasons,
         }
         for d in reversed(items)
     ]

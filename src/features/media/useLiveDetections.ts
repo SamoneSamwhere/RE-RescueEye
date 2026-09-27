@@ -117,6 +117,8 @@ export function toDetection(d: ApiDetection, mediaAssetId: string): Detection {
     detectedAt: d.timestamp,
     validationStatus: 'PENDING',
     snapshotUrl: d.has_snapshot ? detectionSnapshotUrl(d.id) : undefined,
+    casualtyScore: d.casualty_score,
+    casualtyReasons: d.casualty_reasons,
   }
 }
 
@@ -276,6 +278,12 @@ export function useLiveDetections({
           location: next.location,
           detectedAt: next.detectedAt,
           snapshotUrl: next.snapshotUrl,
+          // The verdict moves with the evidence — a casualty scores ~0.8 on
+          // posture alone and climbs past 0.9 once the stillness window fills
+          // — so a better frame has to bring its reasoning with it. Leaving
+          // these out pinned the card to whatever the first sighting knew.
+          casualtyScore: next.casualtyScore,
+          casualtyReasons: next.casualtyReasons,
         })
       }
     }

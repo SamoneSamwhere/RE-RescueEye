@@ -5,6 +5,7 @@ import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { Panel, EmptyState, Button, LoadingState } from '../data/components/ui'
 import { LiveFeedPanel } from '../data/components/media'
+import { ResponderExclusionPanel } from '../data/components/command-staff'
 import { PossibleCasualtyCard } from '../data/components/detections'
 import { useCommandStaffData } from '../features/command-staff'
 import { useFeeds, useCloseFeed } from '../features/media/useFeeds'
@@ -137,6 +138,14 @@ export function CommandStaffLiveMonitoringPage() {
               ))}
             </div>
           )}
+        </Reveal>
+
+        {/* Sits under the feeds, where an operator looks after seeing a
+            detection: it answers "is the system currently ignoring any of my
+            own people, and where?" — the one piece of the casualty gate that
+            has no other visible trace. */}
+        <Reveal>
+          <ResponderExclusionPanel />
         </Reveal>
       </div>
     </>

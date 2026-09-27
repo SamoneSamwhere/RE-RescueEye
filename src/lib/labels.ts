@@ -50,3 +50,39 @@ export const AGENCY_REGISTRATION_STATUS_TONE: Record<AgencyRegistrationStatus, '
   REJECTED: 'danger',
   RESUBMISSION_REQUIRED: 'info',
 }
+
+/**
+ * Plain wording for the casualty gate's reason codes (api/services/casualty.py).
+ *
+ * The codes are written for logs and tests. A commander deciding whether to
+ * send responders needs to know which evidence fired, so each one gets a short
+ * phrase; anything unmapped falls back to the raw code rather than vanishing,
+ * because a silently dropped reason is worse than an ugly one.
+ */
+export const CASUALTY_REASON_LABEL: Record<string, string> = {
+  posture_from_pose: 'Lying down (side view)',
+  posture_from_pose_nadir: 'Lying down (overhead)',
+  posture_from_bbox: 'Shape only — weak signal',
+  posture_foreshortened: 'Posture unreadable at this angle',
+  posture_no_torso: 'Torso not visible',
+  posture_no_shoulder_width: 'Shoulders not visible',
+  posture_keypoints_outside_box: 'Pose did not match the subject',
+  posture_torso_implausible: 'Pose did not match the subject',
+  posture_unavailable: 'No pose reading',
+  stillness_measured: 'Has not moved',
+  stillness_warming_up: 'Still measuring movement',
+  stillness_window_short: 'Still measuring movement',
+  stillness_camera_unknown: 'Camera motion unknown',
+  stillness_untracked: 'Not tracked across frames',
+  known_responder: 'Matched a known responder',
+  responder_veto_unavailable_no_subject_position: 'No subject position for responder check',
+  no_qualifying_signal: 'No qualifying evidence',
+  gate_disabled: 'Casualty gate disabled',
+}
+
+/** Reasons that count as evidence for, rather than notes about, a casualty. */
+export const SUPPORTING_CASUALTY_REASONS = new Set([
+  'posture_from_pose',
+  'posture_from_pose_nadir',
+  'stillness_measured',
+])

@@ -1,7 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import { MapContainer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import type { LatLngExpression } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { cn } from '../../../lib/cn'
 import { computeBounds } from '../../../lib/mapProjection'
 import { BaseTileLayer } from './BaseTileLayer'
@@ -20,6 +24,15 @@ export interface GeoMapCanvasProps {
   selfResponderId?: string
   /** Sizing override for the map container — the mobile shell needs a shorter box than the desktop console. */
   className?: string
+  /**
+   * Collapse nearby markers into counted clusters that split as you zoom in.
+   *
+   * Off by default. On a phone the markers of one incident site overlap into an
+   * unreadable pile at the zoom levels that fit a whole search area on screen,
+   * which is where this earns its place; a wide desktop console showing the
+   * same data usually does not need it.
+   */
+  cluster?: boolean
 }
 
 const DEFAULT_ZOOM = 14
@@ -101,6 +114,59 @@ function ViewportController({ markers }: { markers: MapMarker[] }) {
   return null
 }
 
+/**
+ * Marker clustering, driven through Leaflet directly.
+ *
+ * react-leaflet has no cluster component, and markercluster wants real Leaflet
+ * layers rather than React children, so the markers are built here instead of
+ * as JSX. The styling deliberately mirrors the CircleMarker branch below —
+ * same colours, same selected treatment — so switching clustering on does not
+ * silently change what a marker means.
+ */
+function ClusterLayer({ markers, selectedId, onSelect, selfResponderId }: {
+  markers: MapMarker[]
+  selectedId: string | null
+  onSelect: (marker: MapMarker) => void
+  selfResponderId?: string
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    const group = L.markerClusterGroup({
+      // A cluster that still covers the marker it replaced helps nobody; at the
+      // tightest zoom the operator wants the individual casualties.
+      disableClusteringAtZoom: 18,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      maxClusterRadius: 48,
+    })
+
+    for (const marker of markers) {
+      const self = isSelf(marker, selfResponderId)
+      const style = self ? SELF_STYLE : MARKER_STYLE[marker.kind]
+      const isSelected = marker.id === selectedId
+      const layer = L.circleMarker([marker.location.lat, marker.location.lng], {
+        radius: isSelected ? style.radius + 4 : style.radius,
+        color: isSelected ? '#ffffff' : style.color,
+        weight: isSelected || self ? 3 : 2,
+        fillColor: style.color,
+        fillOpacity: 0.75,
+      })
+      layer.bindTooltip(markerLabel(marker, selfResponderId), { direction: 'top', offset: [0, -6] })
+      layer.on('click', () => onSelect(marker))
+      group.addLayer(layer)
+    }
+
+    map.addLayer(group)
+    return () => {
+      map.removeLayer(group)
+    }
+  }, [map, markers, selectedId, onSelect, selfResponderId])
+
+  return null
+}
+
+
 /** Colour key for the marker kinds a map can show. */
 export function MapLegend({ includeSelf = false }: { includeSelf?: boolean }) {
   const entries: Array<{ color: string; label: string }> = [
@@ -130,7 +196,7 @@ export function MapLegend({ includeSelf = false }: { includeSelf?: boolean }) {
  * with no streets or terrain behind them, so nobody could tell which road a
  * casualty was near. OpenStreetMap tiles need no API key or billing.
  */
-export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, className }: GeoMapCanvasProps) {
+export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, className, cluster = false }: GeoMapCanvasProps) {
   const centre = useMemo<LatLngExpression>(() => {
     if (!markers.length) return [10.315, 123.895]
     return [markers[0].location.lat, markers[0].location.lng]
@@ -162,7 +228,16 @@ export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, c
         <BaseTileLayer />
         <ViewportController markers={markers} />
 
-        {markers.map((marker) => {
+        {cluster ? (
+          <ClusterLayer
+            markers={markers}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            selfResponderId={selfResponderId}
+          />
+        ) : null}
+
+        {(cluster ? [] : markers).map((marker) => {
           const self = isSelf(marker, selfResponderId)
           const style = self ? SELF_STYLE : MARKER_STYLE[marker.kind]
           const isSelected = marker.id === selectedId

@@ -21,7 +21,6 @@ import type {
 } from '../data/components/landing/registration'
 import { useAgencyStore } from '../state/AgencyStore'
 import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
-import { generateId } from '../lib/id'
 import { now } from '../lib/now'
 import { cn } from '../lib/cn'
 

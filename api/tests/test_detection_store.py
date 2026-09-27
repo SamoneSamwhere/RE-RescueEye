@@ -131,3 +131,27 @@ def test_track_id_is_kept_so_one_casualty_collapses_to_one_record():
 def test_track_id_is_none_when_the_tracker_did_not_supply_one():
     ds.add_detections([_det()], 10.0, 640, 480)
     assert ds.get_recent(1)[0]["track_id"] is None
+
+
+def test_recent_carries_the_casualty_verdict():
+    """
+    The review screen asks a commander to act on the gate's verdict, so the
+    reasoning has to survive the store. It previously did not: StoredDetection
+    projected a fixed set of fields and silently dropped casualty_score, so the
+    card could only ever show detector confidence.
+    """
+    ds._store.clear()
+    ds.add_detections(
+        [{
+            "id": "d1", "class": "casualty", "confidence": 0.9,
+            "bbox": {"x": 1, "y": 2, "w": 3, "h": 4},
+            "lat": 10.3, "lng": 123.9,
+            "casualty_score": 0.93,
+            "casualty_reasons": ["posture_from_pose_nadir", "stillness_measured"],
+        }],
+        inference_time_ms=120.0,
+    )
+    row = ds.get_recent()[0]
+    assert row["casualty_score"] == 0.93
+    assert row["casualty_reasons"] == ["posture_from_pose_nadir", "stillness_measured"]
+    ds._store.clear()

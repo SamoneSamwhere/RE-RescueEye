@@ -100,6 +100,9 @@ export function FieldResponderMapPage() {
           total={countIncidentMarkers(markers)}
         />
         <GeoMapCanvas
+          // Clustered on the phone: at a zoom that fits the search area, the
+          // markers around one site overlap into an untappable pile.
+          cluster
           markers={visibleMarkers}
           selectedId={selectedId}
           onSelect={(marker) => setSelectedId(marker.id)}
