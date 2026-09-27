@@ -26,6 +26,7 @@ from services.yolo_model import (
     get_coco_assist,
     get_coco_ort_session,
     get_pose_assist,
+    get_pose_ort_session,
     get_victim_model,
     get_victim_ort_session,
     victim_state,
@@ -78,6 +79,12 @@ _egomotion = EgoMotionEstimator()
 # problem at the same scale, and a separate knob would only be a way to get
 # the two passes accidentally out of step.
 POSE_ASSIST_CONF = float(os.getenv("POSE_ASSIST_CONF", "0.35"))
+
+# Whether people the casualty gate rejected are reported at all. Off: the API
+# only ever emits casualties, so a person walking through the search area never
+# reaches an operator's screen. On: they come back labelled "person", for
+# threshold tuning.
+REPORT_NON_CASUALTIES = os.getenv("REPORT_NON_CASUALTIES", "false").lower() == "true"
 
 
 
@@ -507,6 +514,64 @@ def _run_coco_assist(frame: np.ndarray) -> list[dict]:
     return out
 
 
+def _run_pose_assist_ort(frame: np.ndarray) -> list[dict] | None:
+    """
+    Pose assist through ONNX Runtime on the GPU.
+
+    Output is [1, 56, N]: rows 0-3 are cx/cy/w/h, row 4 is the person score,
+    and rows 5.. are the 17 keypoints as (x, y, confidence) triples. Returns
+    None when no session is loaded, which tells the caller to fall back to the
+    PyTorch path.
+    """
+    sess = get_pose_ort_session()
+    if sess is None:
+        return None
+    try:
+        size = sess.get_inputs()[0].shape[2]
+        size = int(size) if isinstance(size, int) else COCO_ASSIST_IMGSZ
+        padded, scale, pad_x, pad_y = _letterbox(frame, size)
+        blob = (padded.astype(np.float32) / 255.0).transpose(2, 0, 1)[np.newaxis].copy()
+        raw = sess.run(None, {sess.get_inputs()[0].name: blob})[0][0]   # [56, N]
+    except Exception as exc:
+        logger.warning(f"[detect] pose assist ORT failed: {exc}")
+        return None
+
+    scores = raw[4]
+    keep = scores >= POSE_ASSIST_CONF
+    if not keep.any():
+        return []
+
+    cx, cy, bw, bh = raw[0][keep], raw[1][keep], raw[2][keep], raw[3][keep]
+    conf = scores[keep]
+    kps = raw[5:][:, keep]                      # [51, M]
+
+    x1 = ((cx - bw / 2) - pad_x) / scale
+    y1 = ((cy - bh / 2) - pad_y) / scale
+    x2 = ((cx + bw / 2) - pad_x) / scale
+    y2 = ((cy + bh / 2) - pad_y) / scale
+    boxes = np.stack([x1, y1, x2, y2], axis=1)
+
+    fh, fw = frame.shape[:2]
+    out: list[dict] = []
+    for i in _nms(boxes, conf):
+        x, y = max(0, int(boxes[i][0])), max(0, int(boxes[i][1]))
+        w, h = int(boxes[i][2] - boxes[i][0]), int(boxes[i][3] - boxes[i][1])
+        if w <= 0 or h <= 0:
+            continue
+        # Keypoints share the letterbox, so they come back the same way the
+        # box corners do. Confidence passes through untouched.
+        triples = kps[:, i].reshape(17, 3).astype(np.float32).copy()
+        triples[:, 0] = (triples[:, 0] - pad_x) / scale
+        triples[:, 1] = (triples[:, 1] - pad_y) / scale
+        out.append({
+            "class":      "person",
+            "confidence": round(float(conf[i]), 3),
+            "bbox":       {"x": x, "y": y, "w": min(fw - x, w), "h": min(fh - y, h)},
+            "keypoints":  triples,
+        })
+    return out
+
+
 def _run_pose_assist(frame: np.ndarray) -> list[dict]:
     """
     People plus their COCO keypoints, for the posture signal.
@@ -516,6 +581,10 @@ def _run_pose_assist(frame: np.ndarray) -> list[dict]:
     Empty when no pose model is loaded, which is a supported state — posture
     then falls back to bounding-box aspect ratio.
     """
+    gpu = _run_pose_assist_ort(frame)
+    if gpu is not None:
+        return gpu
+
     model = get_pose_assist()
     if model is None:
         return []
@@ -631,11 +700,15 @@ def _run_victim_primary(frame: np.ndarray) -> tuple[list[dict], float]:
     if model is None:
         import random
         elapsed = (time.perf_counter() - t0) * 1000
+        # Shaped like a body lying down, not standing. This path exists to
+        # prove the pipeline end to end with no weights present, and since the
+        # endpoint only emits casualties, an upright stub would be suppressed
+        # and the stub would demonstrate nothing.
         return [
             {
                 "class":      "person",
                 "confidence": round(random.uniform(0.82, 0.95), 2),
-                "bbox":       {"x": 80, "y": 60, "w": 55, "h": 110},
+                "bbox":       {"x": 80, "y": 60, "w": 110, "h": 55},
             }
         ], round(elapsed + random.uniform(40, 80), 1)
 
@@ -786,12 +859,22 @@ async def detect_objects(payload: dict = Body(...)):
 
     casualties = [d for d in annotated if d["class"] == "casualty"]
 
-    add_detections(annotated, inference_ms,
+    # ── What leaves this endpoint ──────────────────────────────────────────
+    # Only casualties. Everyone in frame is still detected, tracked and judged
+    # above — that is how a person who lies down and stops moving becomes a
+    # casualty a few seconds later — but a person walking around is not output
+    # at all: no box on the stream, no record in the store, no row to review.
+    # Set REPORT_NON_CASUALTIES=true to see the people the gate rejected, which
+    # is useful when tuning thresholds and noise the rest of the time.
+    emitted = annotated if REPORT_NON_CASUALTIES else casualties
+    suppressed = len(annotated) - len(emitted)
+
+    add_detections(emitted, inference_ms,
                    frame_width=frame.shape[1], frame_height=frame.shape[0],
                    frame=frame)
 
-    annotated_frame = (_annotate_frame(display_frame, annotated)
-                       if annotated and want_annotation else None)
+    annotated_frame = (_annotate_frame(display_frame, emitted)
+                       if emitted and want_annotation else None)
 
     # In thermal mode always return the thermal frame so the UI can show it
     if want_annotation and mode == "thermal" and annotated_frame is None:
@@ -802,8 +885,9 @@ async def detect_objects(payload: dict = Body(...)):
     # Persist to inference log
     append_log({
         "frame_id":        frame_id,
-        "detection_count": len(detections),
+        "detection_count": len(emitted),
         "casualty_count":  len(casualties),
+        "people_seen":     len(annotated),
         "inference_ms":    inference_ms,
         "model_version":   victim_state().version,
         "mode":            mode,
@@ -819,16 +903,20 @@ async def detect_objects(payload: dict = Body(...)):
 
     logger.info(
         f"[detect] mode={mode} brightness={brightness:.0f} "
-        f"people={len(annotated)} casualties={len(casualties)} "
+        f"people={len(annotated)} casualties={len(casualties)} suppressed={suppressed} "
         f"pose={'yes' if poses else 'no'} ego={'ok' if camera_motion.ok else 'unknown'} "
         f"inference={inference_ms:.0f}ms "
         f"model={victim_state().version}"
     )
 
     return {
-        "detections":        annotated,
+        "detections":        emitted,
         "casualty_count":    len(casualties),
+        # People seen in this frame, and how many of them the gate withheld as
+        # not casualties. Reported so "nothing found" can be told apart from
+        # "found three people, none of them casualties".
         "person_count":      len(annotated),
+        "suppressed_count":  suppressed,
         "inference_time_ms": inference_ms,
         "frame_id":          frame_id,
         "model_version":     victim_state().version,

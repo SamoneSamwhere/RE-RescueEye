@@ -7,16 +7,15 @@ def test_recent_detections_is_empty_before_any_detect_call(client):
     assert resp.json() == {"detections": []}
 
 
-def test_recent_detections_reflects_a_detect_call(client, bright_frame_b64):
+def test_recent_detections_reflects_a_detect_call(client, prone_victim, bright_frame_b64):
     client.post("/detect", json={"frame": bright_frame_b64})
     resp = client.get("/detections/recent")
     assert resp.status_code == 200
     body = resp.json()["detections"]
     assert len(body) == 1
-    # The stub box is upright, so the gate reports a person (see
-    # test_detect_endpoint.py); what matters here is that the record
-    # reached the store with its position stamped.
-    assert body[0]["class"] == "person"
+    # Only casualties are stored — a person walking through the search area
+    # never reaches this queue (see test_detect_endpoint.py).
+    assert body[0]["class"] == "casualty"
     assert "lat" in body[0] and "lng" in body[0]
 
 

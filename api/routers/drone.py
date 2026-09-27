@@ -56,6 +56,12 @@ class TelemetryIn(BaseModel):
     altitudeM: float | None = Field(default=None, description="Metres above ground")
     headingDeg: float | None = Field(default=None, ge=0, lt=360)
     speedMps: float | None = Field(default=None, ge=0)
+    gimbalPitchDeg: float | None = Field(
+        default=None, ge=-90, le=90,
+        description="Camera pitch below the horizon; -90 is straight down. "
+                    "The casualty gate measures posture differently overhead "
+                    "than obliquely, so reporting it materially changes results.",
+    )
 
 
 @router.get("/telemetry", response_model=DroneTelemetry)
@@ -100,6 +106,7 @@ async def push_telemetry(payload: TelemetryIn):
             altitude_m=payload.altitudeM,
             heading_deg=payload.headingDeg,
             speed_mps=payload.speedMps,
+            gimbal_pitch_deg=payload.gimbalPitchDeg,
         )
     )
     return {"ok": True, "droneId": payload.droneId, "staleAfterSeconds": STALE_AFTER_S}

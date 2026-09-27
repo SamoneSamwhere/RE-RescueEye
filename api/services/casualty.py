@@ -85,6 +85,17 @@ POSTURE_NADIR_PRONE_RATIO   = float(os.getenv("POSTURE_NADIR_PRONE_RATIO", "1.30
 # Keypoint confidence below which a joint is treated as not seen.
 POSTURE_KP_MIN_CONF = float(os.getenv("POSTURE_KP_MIN_CONF", "0.35"))
 
+# Plausibility limits on the keypoints themselves.
+#
+# In a crowded frame the pose model will happily hand back a "torso" whose
+# shoulder sits on a bus roof or inside the next person's box. Measured on
+# stock photographs of people standing, that produced torsos running diagonally
+# across the whole image at 45 and 89 degrees, and those were the only standing
+# people that survived the gate. A joint outside its own box, or a torso longer
+# than the body it belongs to, is not a posture reading - it is a mismatch.
+POSTURE_KP_BOX_MARGIN = float(os.getenv("POSTURE_KP_BOX_MARGIN", "0.15"))
+POSTURE_MAX_TORSO_RATIO = float(os.getenv("POSTURE_MAX_TORSO_RATIO", "0.8"))
+
 # The window is wall-clock, and it has to be sized against how often frames
 # actually reach this code — not against the frame rate of the video. A
 # /detect round-trip measures ~2.5-3s on this machine (pose, the victim model,
@@ -110,6 +121,16 @@ STILLNESS_TRACK_TTL_S  = float(os.getenv("STILLNESS_TRACK_TTL_S", "90"))
 # Fusion weights, used when both signals are available.
 POSTURE_WEIGHT   = float(os.getenv("POSTURE_WEIGHT", "0.6"))
 STILLNESS_WEIGHT = float(os.getenv("STILLNESS_WEIGHT", "0.4"))
+
+# How far box-shape posture is trusted relative to keypoint posture.
+#
+# Aspect ratio cannot actually tell posture apart from anything else that makes
+# a box wide: two people standing side by side, a vehicle the detector
+# mistook for a person, a clump of grass. Measured on real photographs of
+# people standing and walking, it promoted four of them to casualty at 0.8.
+# It is kept because it is better than nothing as a tiebreaker, and discounted
+# because on its own it is not evidence.
+POSTURE_BBOX_TRUST = float(os.getenv("POSTURE_BBOX_TRUST", "0.5"))
 
 # COCO-pose keypoint indices.
 KP_L_SHOULDER, KP_R_SHOULDER = 5, 6
@@ -152,6 +173,15 @@ class CasualtyVerdict:
 
 
 # -- Posture ------------------------------------------------------------------
+
+def _inside_box(point, bbox: dict, margin: float = POSTURE_KP_BOX_MARGIN) -> bool:
+    """True when a keypoint falls within its own detection box, plus slack."""
+    w = max(1.0, float(bbox.get("w", 1)))
+    h = max(1.0, float(bbox.get("h", 1)))
+    x, y = float(bbox.get("x", 0)), float(bbox.get("y", 0))
+    pad_x, pad_y = w * margin, h * margin
+    return (x - pad_x) <= point[0] <= (x + w + pad_x) and            (y - pad_y) <= point[1] <= (y + h + pad_y)
+
 
 def _torso_reliable(torso_len: float, bbox: dict) -> bool:
     diag = math.hypot(max(1.0, float(bbox.get("w", 1))), max(1.0, float(bbox.get("h", 1))))
@@ -198,13 +228,26 @@ def posture_from_keypoints(keypoints, bbox: dict, pitch_deg: float | None = None
     if shoulder is None or hip is None:
         return None, "posture_no_torso"
 
+    # Reject a torso built from joints that cannot belong to this person before
+    # measuring anything with it.
+    if not _inside_box(shoulder, bbox) or not _inside_box(hip, bbox):
+        return None, "posture_keypoints_outside_box"
+
     vec = hip - shoulder
     torso_len = float(np.hypot(vec[0], vec[1]))
     if torso_len < 1.0:
         return None, "posture_no_torso"
 
+    diag = math.hypot(max(1.0, float(bbox.get("w", 1))), max(1.0, float(bbox.get("h", 1))))
+    if torso_len > diag * POSTURE_MAX_TORSO_RATIO:
+        # A torso cannot be nearly as long as the diagonal of the box holding
+        # the whole body; these joints come from more than one person.
+        return None, "posture_torso_implausible"
+
     if pitch_deg is not None and abs(pitch_deg) >= POSTURE_NADIR_PITCH_DEG:
         left, right = kps[KP_L_SHOULDER], kps[KP_R_SHOULDER]
+        if not _inside_box(left[:2], bbox) or not _inside_box(right[:2], bbox):
+            return None, "posture_keypoints_outside_box"
         if left[2] < POSTURE_KP_MIN_CONF or right[2] < POSTURE_KP_MIN_CONF:
             # Shoulder width is the yardstick this measurement divides by; with
             # only one shoulder seen there is nothing to normalise against.
@@ -381,8 +424,10 @@ def judge(detection: dict, keypoints, frame_shape,
     posture, posture_reason = (None, "posture_unavailable")
     if keypoints is not None:
         posture, posture_reason = posture_from_keypoints(keypoints, bbox, pitch_deg)
+    posture_trusted = posture is not None
     if posture is None:
         posture, posture_reason = posture_from_bbox(bbox)
+        posture *= POSTURE_BBOX_TRUST
     verdict.posture = posture
     verdict.reasons.append(posture_reason)
 
@@ -401,7 +446,16 @@ def judge(detection: dict, keypoints, frame_shape,
     else:
         verdict.score = posture * POSTURE_WEIGHT + stillness * STILLNESS_WEIGHT
 
-    verdict.is_casualty = verdict.score >= CASUALTY_MIN_SCORE
+    # A casualty claim needs at least one signal that can actually tell a
+    # casualty from a person: keypoint posture, or a stillness window that was
+    # genuinely measured. Score alone is not enough, because box shape can
+    # reach a high score for reasons that have nothing to do with anyone lying
+    # down. Without a qualifying signal the person is reported as a person,
+    # which under the default configuration means not reported at all.
+    qualifying = posture_trusted or stillness is not None
+    if not qualifying:
+        verdict.reasons.append("no_qualifying_signal")
+    verdict.is_casualty = qualifying and verdict.score >= CASUALTY_MIN_SCORE
     return verdict
 
 

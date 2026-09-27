@@ -16,6 +16,7 @@ os.environ.setdefault("INCIDENT_CONF_MIN", "2.0")
 import base64
 import io
 
+import numpy as np
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -50,6 +51,37 @@ def bright_frame_b64() -> str:
 @pytest.fixture()
 def dark_frame_b64() -> str:
     return _jpeg_b64((5, 5, 5))
+
+
+@pytest.fixture()
+def prone_victim(monkeypatch):
+    """
+    Makes /detect return one body lying down, with the pose keypoints to prove
+    it — the evidence the casualty gate requires.
+
+    The stub path inside _run_victim cannot stand in for this any more: without
+    keypoints or a stillness window, box shape alone is not allowed to claim a
+    casualty (a wide box is just as likely to be two people or a vehicle). Tests
+    about endpoint mechanics still need something that actually gets emitted.
+    """
+    from routers import detect
+
+    bbox = {"x": 80, "y": 180, "w": 220, "h": 90}
+    kps = np.zeros((17, 3), dtype=np.float32)
+    # Torso across the box, both joints well inside it. Left and right
+    # shoulders are distinct points: the overhead posture measurement divides
+    # by shoulder width, and coincident shoulders give it nothing to divide by.
+    kps[5] = (130.0, 210.0, 0.95)   # left shoulder
+    kps[6] = (150.0, 234.0, 0.95)   # right shoulder
+    for idx in (11, 12):
+        kps[idx] = (250.0, 228.0, 0.95)
+    pose = {"class": "person", "confidence": 0.9, "bbox": bbox, "keypoints": kps}
+
+    monkeypatch.setattr(
+        detect, "_run_victim",
+        lambda frame: ([{"class": "person", "confidence": 0.9, "bbox": bbox}], 5.0, [pose]),
+    )
+    return bbox
 
 
 @pytest.fixture()

@@ -165,6 +165,34 @@ def get_coco_ort_session() -> Any:
     return _coco_ort_session
 
 
+# -- DirectML ONNX session for the pose assist --------------------------------
+# The pose pass replaced the COCO assist, and the COCO assist ran on the GPU
+# while yolov8n-pose.pt runs through PyTorch on a CPU-only torch build. That
+# swap roughly doubled the cost of a detection pass (~190ms to ~450ms measured)
+# and the CPU it spends is the same CPU FFmpeg needs to decode and re-encode
+# the video, which an operator sees as a choppier stream.
+_pose_ort_session: Any = None
+
+
+def _load_pose_ort(onnx_path: str) -> None:
+    global _pose_ort_session
+    try:
+        import onnxruntime as ort
+        providers = (["DmlExecutionProvider", "CPUExecutionProvider"]
+                     if _dml_available() else ["CPUExecutionProvider"])
+        opts = ort.SessionOptions()
+        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        _pose_ort_session = ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
+        logger.info(f"[yolo] pose assist ONNX ready — provider: {_pose_ort_session.get_providers()[0]}")
+    except Exception as exc:
+        logger.warning(f"[yolo] pose assist ORT session failed ({exc}) — falling back to PyTorch")
+        _pose_ort_session = None
+
+
+def get_pose_ort_session() -> Any:
+    return _pose_ort_session
+
+
 # -- DirectML ONNX session for the damage classifier --------------------------
 # The last model still running through PyTorch, and the torch wheel here is a
 # CPU-only build, so it was the one piece of inference the GPU never touched.
@@ -314,13 +342,19 @@ def load_all() -> None:
             _init_model(_coco_assist, COCO_ASSIST_WEIGHTS, is_custom=False, task="coco-assist")
 
     if POSE_ASSIST_ENABLED:
+        pose_onnx = REPO_ROOT / os.getenv("POSE_ASSIST_ONNX", "yolov8n-pose.onnx")
+        if pose_onnx.exists():
+            _load_pose_ort(str(pose_onnx))
+            _pose_assist.weights = str(pose_onnx)
+            _pose_assist.version = "pretrained_pose"
         # Ultralytics fetches these weights on first use. That download can
         # fail on an air-gapped or offline machine, and it must not take the
         # server down with it: _init_model leaves the state in "stub" and
         # detect.py falls back to the plain COCO assist, with posture derived
         # from box aspect ratio instead of keypoints.
-        _init_model(_pose_assist, POSE_ASSIST_WEIGHTS, is_custom=False, task="pose-assist")
-        if _pose_assist.model is None:
+        if _pose_ort_session is None:
+            _init_model(_pose_assist, POSE_ASSIST_WEIGHTS, is_custom=False, task="pose-assist")
+        if _pose_assist.model is None and _pose_ort_session is None:
             logger.warning(
                 "[yolo] pose assist unavailable — casualty posture will fall back "
                 "to bounding-box aspect ratio, which is a much weaker signal"
@@ -387,9 +421,10 @@ def model_status() -> dict:
         },
         "pose_assist": {
             "enabled":  POSE_ASSIST_ENABLED,
-            "loaded":   _pose_assist.model is not None,
+            "loaded":   _pose_assist.model is not None or _pose_ort_session is not None,
             "weights":  _pose_assist.weights,
-            "runtime":  "pytorch" if _pose_assist.model is not None else "none",
+            "runtime":  "onnx-directml" if _pose_ort_session is not None else
+                        ("pytorch" if _pose_assist.model is not None else "none"),
         },
     }
 

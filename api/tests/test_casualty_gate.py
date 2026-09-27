@@ -35,6 +35,20 @@ def _bbox(x=100, y=100, w=60, h=180):
     return {"x": x, "y": y, "w": w, "h": h}
 
 
+def _box_for(*points, pad=40):
+    """
+    Box enclosing the given joints.
+
+    Fixtures have to be geometrically coherent now: the gate rejects keypoints
+    that fall outside their own detection box, because in a crowded frame the
+    pose model pairs joints across neighbouring people.
+    """
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    return {"x": min(xs) - pad, "y": min(ys) - pad,
+            "w": (max(xs) - min(xs)) + 2 * pad, "h": (max(ys) - min(ys)) + 2 * pad}
+
+
 @pytest.fixture(autouse=True)
 def _clean():
     casualty.reset()
@@ -49,7 +63,7 @@ def _clean():
 def test_standing_person_reads_upright():
     # Torso runs down the image: shoulders above hips.
     score, reason = casualty.posture_from_keypoints(
-        _kps((200, 100), (205, 260)), _bbox(w=60, h=180)
+        _kps((200, 100), (205, 260)), _box_for((200, 100), (205, 260))
     )
     assert reason == "posture_from_pose"
     assert score == 0.0
@@ -58,7 +72,7 @@ def test_standing_person_reads_upright():
 def test_prone_body_reads_horizontal():
     # Torso runs across the image: shoulders left of hips, same height.
     score, reason = casualty.posture_from_keypoints(
-        _kps((100, 200), (260, 205)), _bbox(w=180, h=60)
+        _kps((100, 200), (260, 205)), _box_for((100, 200), (260, 205))
     )
     assert reason == "posture_from_pose"
     assert score == 1.0
@@ -174,7 +188,7 @@ def test_camera_motion_is_removed_from_subject_motion(monkeypatch):
 
 def test_person_at_a_responder_position_is_never_a_casualty():
     responder_registry.report("user-5", 10.3157, 123.8854, name="Casey Nolan")
-    det = {"bbox": _bbox(w=180, h=60), "lat": 10.3157, "lng": 123.8854,
+    det = {"bbox": _box_for((100, 200), (260, 205)), "lat": 10.3157, "lng": 123.8854,
            "track_id": 1, "subject_located": True}
     # Prone posture — the strongest casualty evidence the gate has — and it
     # still loses to knowing who this is.
@@ -187,7 +201,7 @@ def test_person_at_a_responder_position_is_never_a_casualty():
 def test_responder_veto_is_bounded_by_distance():
     responder_registry.report("user-5", 10.3157, 123.8854)
     # ~500m away: a different person entirely.
-    det = {"bbox": _bbox(w=180, h=60), "lat": 10.3202, "lng": 123.8854,
+    det = {"bbox": _box_for((100, 200), (260, 205)), "lat": 10.3202, "lng": 123.8854,
            "track_id": 1, "subject_located": True}
     verdict = casualty.judge(det, _kps((100, 200), (260, 205)), FRAME)
     assert verdict.responder == ""
@@ -197,7 +211,7 @@ def test_responder_veto_is_bounded_by_distance():
 # ── Fusion ────────────────────────────────────────────────────────────────────
 
 def test_prone_body_is_promoted_on_posture_alone():
-    det = {"bbox": _bbox(w=180, h=60), "track_id": 1}
+    det = {"bbox": _box_for((100, 200), (260, 205)), "track_id": 1}
     verdict = casualty.judge(det, _kps((100, 200), (260, 205)), FRAME)
     assert verdict.is_casualty is True
     assert verdict.posture == 1.0
@@ -205,7 +219,7 @@ def test_prone_body_is_promoted_on_posture_alone():
 
 
 def test_standing_person_is_reported_but_not_promoted():
-    det = {"bbox": _bbox(w=60, h=180), "track_id": 1}
+    det = {"bbox": _box_for((200, 100), (205, 260)), "track_id": 1}
     verdict = casualty.judge(det, _kps((200, 100), (205, 260)), FRAME)
     assert verdict.is_casualty is False
     assert verdict.score == 0.0
@@ -221,7 +235,7 @@ def test_single_signal_scores_below_two_agreeing_signals(monkeypatch):
     monkeypatch.setattr(casualty, "STILLNESS_MIN_SAMPLES", 3)
     casualty.reset()
     prone = _kps((100, 200), (260, 205))
-    bbox = _bbox(w=180, h=60)
+    bbox = _box_for((100, 200), (260, 205))
 
     posture_only = casualty.judge({"bbox": bbox}, prone, FRAME)
 
@@ -281,7 +295,8 @@ def test_standing_person_seen_from_nadir_stays_upright():
     """
     # Shoulders 40px apart, torso foreshortened to 12px.
     kps = _nadir_kps((180, 420), (220, 420), (200, 432))
-    score, reason = casualty.posture_from_keypoints(kps, _bbox(w=60, h=70), pitch_deg=-90)
+    box = _box_for((180, 420), (220, 420), (200, 432))
+    score, reason = casualty.posture_from_keypoints(kps, box, pitch_deg=-90)
     assert reason == "posture_from_pose_nadir"
     assert score == 0.0
 
@@ -290,7 +305,8 @@ def test_nadir_needs_both_shoulders():
     """Shoulder width is the yardstick; one shoulder gives nothing to divide by."""
     kp = _nadir_kps((180, 420), (218, 420), (199, 478))
     kp[casualty.KP_R_SHOULDER][2] = 0.01
-    score, reason = casualty.posture_from_keypoints(kp, _bbox(), pitch_deg=-90)
+    box = _box_for((180, 420), (218, 420), (199, 478))
+    score, reason = casualty.posture_from_keypoints(kp, box, pitch_deg=-90)
     assert score is None
     assert reason == "posture_no_shoulder_width"
 
@@ -301,7 +317,8 @@ def test_unknown_pitch_falls_back_to_the_abstaining_measurement():
     answer on a foreshortened torso instead of guessing.
     """
     kps = _nadir_kps((180, 420), (220, 420), (200, 432))
-    score, reason = casualty.posture_from_keypoints(kps, _bbox(w=60, h=70), pitch_deg=None)
+    box = _box_for((180, 420), (220, 420), (200, 432))
+    score, reason = casualty.posture_from_keypoints(kps, box, pitch_deg=None)
     assert score is None
     assert reason == "posture_foreshortened"
 
@@ -358,9 +375,69 @@ def test_veto_does_not_fire_on_a_drone_position():
     verdict records that the veto could not be applied.
     """
     responder_registry.report("user-5", 10.3157, 123.8854, name="Casey Nolan")
-    det = {"bbox": _bbox(w=180, h=60), "lat": 10.3157, "lng": 123.8854,
+    det = {"bbox": _box_for((100, 200), (260, 205)), "lat": 10.3157, "lng": 123.8854,
            "track_id": 1, "subject_located": False}
     verdict = casualty.judge(det, _kps((100, 200), (260, 205)), FRAME)
     assert verdict.is_casualty is True
     assert verdict.responder == ""
     assert "responder_veto_unavailable_no_subject_position" in verdict.reasons
+
+
+# ── Keypoint plausibility ─────────────────────────────────────────────────────
+
+def test_keypoints_outside_the_box_are_rejected():
+    """
+    Regression from stock photographs of people walking. In a crowded frame the
+    pose model returned a "shoulder" sitting on a bus roof, well outside the
+    box it belonged to — a torso running diagonally across the whole image at
+    45 degrees, which scored as half horizontal and promoted a walking man to
+    casualty.
+    """
+    kps = _kps((60, 40), (500, 900))          # joints sprayed across the frame
+    bbox = {"x": 640, "y": 380, "w": 140, "h": 490}   # a tall, narrow person
+    score, reason = casualty.posture_from_keypoints(kps, bbox)
+    assert score is None
+    assert reason == "posture_keypoints_outside_box"
+
+
+def test_torso_longer_than_the_body_is_rejected():
+    """
+    A torso cannot be nearly as long as the diagonal of the box containing the
+    whole body. When it is, the joints came from more than one person — the
+    failure that paired one man's shoulder with another man's hip and read the
+    result as a body lying flat.
+    """
+    kps = _kps((100, 300), (700, 320))
+    bbox = {"x": 80, "y": 280, "w": 640, "h": 60}
+    score, reason = casualty.posture_from_keypoints(kps, bbox)
+    assert score is None
+    assert reason == "posture_torso_implausible"
+
+
+def test_box_shape_alone_cannot_promote_a_casualty():
+    """
+    Aspect ratio cannot distinguish a fallen body from two people standing side
+    by side, a vehicle misread as a person, or a clump of grass. Without a
+    keypoint reading or a measured stillness window there is no signal that
+    actually separates a casualty from a person, so nothing is claimed.
+    """
+    det = {"bbox": {"x": 100, "y": 100, "w": 200, "h": 60}, "track_id": 1}
+    verdict = casualty.judge(det, None, FRAME)
+    assert verdict.is_casualty is False
+    assert "posture_from_bbox" in verdict.reasons
+    assert "no_qualifying_signal" in verdict.reasons
+
+
+def test_box_shape_plus_measured_stillness_can_promote(monkeypatch):
+    """Stillness is a qualifying signal, so the weak posture reading can count."""
+    monkeypatch.setattr(casualty, "STILLNESS_WINDOW_S", 0.2)
+    monkeypatch.setattr(casualty, "STILLNESS_MIN_SAMPLES", 3)
+    casualty.reset()
+    det = {"bbox": {"x": 100, "y": 100, "w": 200, "h": 60}, "track_id": 4}
+    verdict = None
+    for _ in range(6):
+        casualty.monitor().advance_camera(CameraMotion(ok=True), FRAME)
+        verdict = casualty.judge(det, None, FRAME)
+        time.sleep(0.03)
+    assert verdict.stillness is not None
+    assert "no_qualifying_signal" not in verdict.reasons
