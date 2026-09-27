@@ -52,6 +52,11 @@ class TelemetryFix:
     altitude_m: float | None = None
     heading_deg: float | None = None
     speed_mps: float | None = None
+    # Camera pitch below the horizon (-90 = straight down). Optional: a source
+    # that does not report gimbal attitude leaves it None and the configured
+    # default applies. The casualty gate reads it to choose how to measure
+    # posture, so a wrong value is worse than an absent one.
+    gimbal_pitch_deg: float | None = None
     extra: dict = field(default_factory=dict)
 
     def is_fresh(self, now: float | None = None) -> bool:

@@ -22,6 +22,7 @@ import { useNotificationStore } from '../../state/NotificationStore'
 import { useDroneStore } from '../../state/DroneStore'
 import { useDroneDatabase } from '../../hooks/useDroneDatabase'
 import { useLiveDetections } from '../media/useLiveDetections'
+import { useResponderPositions } from '../media/useResponderPositions'
 import type { DroneRecord } from '../../hooks/useDroneDatabase'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
@@ -151,6 +152,16 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     onUpdateDetection: updateDetection,
     enabled: !!agencyId,
   })
+
+  // Tells the detector where our own responders are, so it stops calling them
+  // casualties. Mounted here rather than on a screen because the veto has to
+  // hold for every frame the API processes, not only while someone happens to
+  // be looking at the map.
+  const agencyResponders = useMemo(
+    () => mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId),
+    [agencyId],
+  )
+  useResponderPositions(agencyResponders, !!agencyId)
   const missions = useMemo(
     () =>
       allMissions.filter((mission) => {

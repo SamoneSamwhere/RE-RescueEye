@@ -19,6 +19,10 @@ const STREAM_RETRY_MS = 1200
 
 const BOX_COLORS: Record<string, string> = {
   casualty: '#ff3b3b',
+  // A person the casualty gate did not promote. Deliberately drawn, and
+  // deliberately not red: the operator should see that the system noticed
+  // someone and decided they were not a casualty.
+  person: '#94a3b8',
   fire_damage: '#ff7700',
   flood_damage: '#00d4ff',
   structural_damage: '#f97316',

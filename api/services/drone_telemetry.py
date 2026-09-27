@@ -17,6 +17,7 @@ Replacing this with real telemetry means swapping `current_position()` for a
 read of the flight controller's GPS feed; nothing else needs to change.
 """
 import math
+import os
 import random
 import threading
 import time
@@ -61,6 +62,13 @@ class DroneState:
     # to clients so the UI can label a simulated marker honestly instead of
     # implying a GPS fix the platform does not have.
     source: str = "simulated"
+    # Camera pitch below the horizon: 0 = looking straight ahead, -90 = straight
+    # down. services/casualty.py needs it because the posture of a body reads
+    # completely differently at the two extremes — from nadir a person lying on
+    # the ground projects along the image just like a standing person seen from
+    # the side, so the same measurement means opposite things. Search flights
+    # fly the camera down, which is why the default is nadir.
+    gimbal_pitch_deg: float = float(os.getenv("GIMBAL_PITCH_DEG", "-90"))
 
     @property
     def heading_deg(self) -> float:
@@ -138,6 +146,16 @@ def is_simulated() -> bool:
     return telemetry_sources.live_fix() is None
 
 
+def current_pitch_deg() -> float:
+    """
+    Camera pitch below the horizon for the active drone.
+
+    Read once per frame by the casualty gate, which picks a different posture
+    measurement for nadir and oblique views.
+    """
+    return current_state().gimbal_pitch_deg
+
+
 def current_position() -> tuple[float, float]:
     """
     The drone's position right now. Called once per processed frame so every
@@ -170,6 +188,9 @@ def current_state(drone_id: str | None = None) -> DroneState:
             updated_at=fix.received_at,
             altitude_m=fix.altitude_m,
             source=fix.source,
+            gimbal_pitch_deg=(fix.gimbal_pitch_deg
+                              if getattr(fix, "gimbal_pitch_deg", None) is not None
+                              else float(os.getenv("GIMBAL_PITCH_DEG", "-90"))),
         )
 
     global _state

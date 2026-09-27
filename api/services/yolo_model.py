@@ -65,6 +65,7 @@ _damage = ModelState()
 # shot from low altitude looks like. A generic COCO detector covers that case;
 # the two are merged in detect.py rather than one replacing the other.
 _coco_assist = ModelState()
+_pose_assist = ModelState()
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 REPO_ROOT  = Path(__file__).parent.parent
@@ -255,6 +256,15 @@ def _init_model(state: ModelState, weights: str, is_custom: bool,
 COCO_ASSIST_ENABLED = os.getenv("COCO_ASSIST", "true").lower() == "true"
 COCO_ASSIST_WEIGHTS = os.getenv("COCO_ASSIST_WEIGHTS", "yolov8n.pt")
 
+# Pose assist. Same person boxes as the COCO assist, plus the 17 COCO
+# keypoints, which is what lets services/casualty.py tell a body lying on the
+# ground from a person standing up. When it loads, it REPLACES the plain COCO
+# assist pass rather than adding a third inference: yolov8n-pose detects the
+# same class 0 people, so running both would cost latency to produce duplicate
+# boxes for NMS to throw away.
+POSE_ASSIST_ENABLED = os.getenv("POSE_ASSIST", "true").lower() == "true"
+POSE_ASSIST_WEIGHTS = os.getenv("POSE_ASSIST_WEIGHTS", "yolov8n-pose.pt")
+
 
 def get_coco_assist() -> Any:
     """Generic COCO detector used to catch close-range bodies, or None."""
@@ -263,6 +273,15 @@ def get_coco_assist() -> Any:
 
 def coco_assist_state() -> ModelState:
     return _coco_assist
+
+
+def get_pose_assist() -> Any:
+    """Pose detector used to read body posture, or None when unavailable."""
+    return _pose_assist.model
+
+
+def pose_assist_state() -> ModelState:
+    return _pose_assist
 
 
 def load_all() -> None:
@@ -293,6 +312,19 @@ def load_all() -> None:
         if _coco_ort_session is None:
             # No ONNX export available — the PyTorch path still works, just slower.
             _init_model(_coco_assist, COCO_ASSIST_WEIGHTS, is_custom=False, task="coco-assist")
+
+    if POSE_ASSIST_ENABLED:
+        # Ultralytics fetches these weights on first use. That download can
+        # fail on an air-gapped or offline machine, and it must not take the
+        # server down with it: _init_model leaves the state in "stub" and
+        # detect.py falls back to the plain COCO assist, with posture derived
+        # from box aspect ratio instead of keypoints.
+        _init_model(_pose_assist, POSE_ASSIST_WEIGHTS, is_custom=False, task="pose-assist")
+        if _pose_assist.model is None:
+            logger.warning(
+                "[yolo] pose assist unavailable — casualty posture will fall back "
+                "to bounding-box aspect ratio, which is a much weaker signal"
+            )
 
 
 def get_victim_model() -> Any:
@@ -352,6 +384,12 @@ def model_status() -> dict:
             "weights":  _coco_assist.weights,
             "runtime":  "onnx-directml" if _coco_ort_session is not None else
                         ("pytorch-cpu" if _coco_assist.model is not None else "none"),
+        },
+        "pose_assist": {
+            "enabled":  POSE_ASSIST_ENABLED,
+            "loaded":   _pose_assist.model is not None,
+            "weights":  _pose_assist.weights,
+            "runtime":  "pytorch" if _pose_assist.model is not None else "none",
         },
     }
 

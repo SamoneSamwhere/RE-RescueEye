@@ -13,7 +13,10 @@ def test_recent_detections_reflects_a_detect_call(client, bright_frame_b64):
     assert resp.status_code == 200
     body = resp.json()["detections"]
     assert len(body) == 1
-    assert body[0]["class"] == "casualty"
+    # The stub box is upright, so the gate reports a person (see
+    # test_detect_endpoint.py); what matters here is that the record
+    # reached the store with its position stamped.
+    assert body[0]["class"] == "person"
     assert "lat" in body[0] and "lng" in body[0]
 
 

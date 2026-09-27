@@ -13,7 +13,7 @@ import pytest
 from routers import detect
 
 
-def _det(x, y, w, h, conf, cls="casualty"):
+def _det(x, y, w, h, conf, cls="person"):
     return {"class": cls, "confidence": conf, "bbox": {"x": x, "y": y, "w": w, "h": h}}
 
 
@@ -82,12 +82,12 @@ def test_merge_preserves_small_custom_detections_alongside_a_big_body():
 
 # ── assist pass ───────────────────────────────────────────────────────────────
 
-def test_assist_returns_casualty_boxes_clamped_to_the_frame(frame, monkeypatch):
+def test_assist_returns_person_boxes_clamped_to_the_frame(frame, monkeypatch):
     model = _FakeModel(boxes=[((100, 50, 400, 600), 0.77)])
     monkeypatch.setattr(detect, "get_coco_assist", lambda: model)
     out = detect._run_coco_assist(frame)
     assert len(out) == 1
-    assert out[0]["class"] == "casualty"
+    assert out[0]["class"] == "person"
     assert out[0]["confidence"] == 0.77
     assert out[0]["bbox"] == {"x": 100, "y": 50, "w": 300, "h": 550}
 
@@ -124,7 +124,7 @@ def test_run_victim_merges_assist_into_primary(frame, monkeypatch):
                         lambda f: ([_det(20, 20, 15, 18, 0.31)], 12.0))
     monkeypatch.setattr(detect, "get_coco_assist",
                         lambda: _FakeModel(boxes=[((500, 300, 760, 640), 0.8)]))
-    dets, ms = detect._run_victim(frame)
+    dets, ms, _poses = detect._run_victim(frame)
     assert len(dets) == 2
     assert max(d["confidence"] for d in dets) == 0.8
     assert ms >= 0
@@ -134,7 +134,7 @@ def test_run_victim_returns_primary_alone_when_assist_is_off(frame, monkeypatch)
     primary = [_det(20, 20, 15, 18, 0.31)]
     monkeypatch.setattr(detect, "_run_victim_primary", lambda f: (primary, 12.0))
     monkeypatch.setattr(detect, "get_coco_assist", lambda: None)
-    dets, ms = detect._run_victim(frame)
+    dets, ms, _poses = detect._run_victim(frame)
     assert dets == primary
     assert ms == 12.0
 
@@ -170,7 +170,7 @@ def test_ort_assist_decodes_person_row_and_maps_back_to_frame(frame, monkeypatch
     out = detect._run_coco_assist_ort(frame)
     assert len(out) == 1
     b = out[0]["bbox"]
-    assert out[0]["class"] == "casualty"
+    assert out[0]["class"] == "person"
     assert out[0]["confidence"] == 0.9
     assert abs((b["x"] + b["w"] / 2) - 640) < 3      # frame centre x
     assert abs((b["y"] + b["h"] / 2) - 360) < 3      # frame centre y

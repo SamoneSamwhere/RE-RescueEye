@@ -25,11 +25,17 @@ from services.yolo_model import (
     PERSON_CLASS,
     get_coco_assist,
     get_coco_ort_session,
+    get_pose_assist,
     get_victim_model,
     get_victim_ort_session,
     victim_state,
 )
+from services import casualty as casualty_gate
 from services.detection_store import add_detections
+from services.egomotion import EgoMotionEstimator
+from services import georef
+from services.drone_telemetry import current_pitch_deg as drone_pitch
+from services.drone_telemetry import current_state as drone_state
 from services.drone_telemetry import current_position as drone_position
 from services.tracker import Sort
 from routers.logs import append_log
@@ -63,6 +69,15 @@ _ntfy_lock = asyncio.Lock()
 
 # SORT tracker — persists across requests, maintains Kalman state per person
 _tracker = Sort(max_age=4, min_hits=1, iou_threshold=0.20)
+
+# Camera motion between consecutive frames, so the stillness signal in
+# services/casualty.py measures the subject rather than the drone.
+_egomotion = EgoMotionEstimator()
+
+# Pose assist shares the COCO assist resolution — it is the same detection
+# problem at the same scale, and a separate knob would only be a way to get
+# the two passes accidentally out of step.
+POSE_ASSIST_CONF = float(os.getenv("POSE_ASSIST_CONF", "0.35"))
 
 
 
@@ -166,6 +181,7 @@ def _decode_frame(b64: str) -> np.ndarray:
 
 LABEL_COLORS: dict[str, tuple[int, int, int]] = {
     "casualty":          (255, 59,  59),
+    "person":            (148, 163, 184),
     "fire_damage":       (255, 119, 0),
     "flood_damage":      (0,   212, 255),
     "structural_damage": (249, 115, 22),
@@ -310,7 +326,7 @@ def _run_victim_ort(frame: np.ndarray) -> tuple[list[dict], float]:
         if x2 <= x1 or y2 <= y1:
             continue
         detections.append({
-            "class":      "casualty",
+            "class":      "person",
             "confidence": round(float(conf[i]), 3),
             "bbox":       {"x": x1, "y": y1, "w": x2 - x1, "h": y2 - y1},
         })
@@ -391,7 +407,7 @@ def _run_victim_ort_sahi(frame: np.ndarray) -> tuple[list[dict], float]:
     for i in keep:
         x1, y1, x2, y2 = boxes[i]
         detections.append({
-            "class":      "casualty",
+            "class":      "person",
             "confidence": round(float(scores[i]), 3),
             "bbox":       {"x": int(x1), "y": int(y1), "w": int(x2 - x1), "h": int(y2 - y1)},
         })
@@ -445,7 +461,7 @@ def _run_coco_assist_ort(frame: np.ndarray) -> list[dict] | None:
         if w <= 0 or h <= 0:
             continue
         out.append({
-            "class":      "casualty",
+            "class":      "person",
             "confidence": round(float(conf[i]), 3),
             "bbox":       {"x": x, "y": y, "w": min(fw - x, w), "h": min(fh - y, h)},
         })
@@ -482,13 +498,88 @@ def _run_coco_assist(frame: np.ndarray) -> list[dict]:
             x1, y1, x2, y2 = box.xyxy[0].tolist()
             x, y = max(0, int(x1)), max(0, int(y1))
             out.append({
-                "class":      "casualty",
+                "class":      "person",
                 "confidence": round(float(box.conf[0]), 3),
                 "bbox":       {"x": x, "y": y,
                                "w": min(fw - x, int(x2 - x1)),
                                "h": min(fh - y, int(y2 - y1))},
             })
     return out
+
+
+def _run_pose_assist(frame: np.ndarray) -> list[dict]:
+    """
+    People plus their COCO keypoints, for the posture signal.
+
+    Returns the same shape as the COCO assist (class "person") with an extra
+    `keypoints` entry: a 17x3 array of (x, y, confidence) in frame pixels.
+    Empty when no pose model is loaded, which is a supported state — posture
+    then falls back to bounding-box aspect ratio.
+    """
+    model = get_pose_assist()
+    if model is None:
+        return []
+    try:
+        results = model(frame, imgsz=COCO_ASSIST_IMGSZ, conf=POSE_ASSIST_CONF,
+                        classes=[PERSON_CLASS], verbose=False)
+    except Exception as exc:
+        logger.warning(f"[detect] pose assist failed: {exc}")
+        return []
+
+    out: list[dict] = []
+    fh, fw = frame.shape[:2]
+    for result in results:
+        kp_all = getattr(result, "keypoints", None)
+        for i, box in enumerate(result.boxes):
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            x, y = max(0, int(x1)), max(0, int(y1))
+            entry = {
+                "class":      "person",
+                "confidence": round(float(box.conf[0]), 3),
+                "bbox":       {"x": x, "y": y,
+                               "w": min(fw - x, int(x2 - x1)),
+                               "h": min(fh - y, int(y2 - y1))},
+            }
+            if kp_all is not None and kp_all.data is not None and i < len(kp_all.data):
+                entry["keypoints"] = kp_all.data[i].cpu().numpy()
+            out.append(entry)
+    return out
+
+
+def _iou(a: dict, b: dict) -> float:
+    """IoU of two bbox dicts."""
+    ax1, ay1 = a["x"], a["y"]
+    ax2, ay2 = ax1 + a["w"], ay1 + a["h"]
+    bx1, by1 = b["x"], b["y"]
+    bx2, by2 = bx1 + b["w"], by1 + b["h"]
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0, ix2 - ix1), max(0, iy2 - iy1)
+    inter = iw * ih
+    if inter <= 0:
+        return 0.0
+    union = a["w"] * a["h"] + b["w"] * b["h"] - inter
+    return inter / union if union > 0 else 0.0
+
+
+def _keypoints_for(bbox: dict, poses: list[dict], iou_min: float = 0.35):
+    """
+    Best-matching pose keypoints for a tracked box, or None.
+
+    Keypoints are matched back by overlap rather than carried through the
+    merge: NMS may keep the box from the custom model over the pose one, and
+    the tracker rebuilds boxes from its Kalman state, so neither path can be
+    relied on to preserve a field.
+    """
+    best, best_iou = None, iou_min
+    for pose in poses:
+        kps = pose.get("keypoints")
+        if kps is None:
+            continue
+        overlap = _iou(bbox, pose["bbox"])
+        if overlap >= best_iou:
+            best, best_iou = kps, overlap
+    return best
 
 
 def _merge_detections(primary: list[dict], extra: list[dict],
@@ -505,15 +596,25 @@ def _merge_detections(primary: list[dict], extra: list[dict],
     return [combined[i] for i in keep]
 
 
-def _run_victim(frame: np.ndarray) -> tuple[list[dict], float]:
-    """Custom victim model plus the close-range COCO assist, merged."""
+def _run_victim(frame: np.ndarray) -> tuple[list[dict], float, list[dict]]:
+    """
+    Custom victim model plus a close-range assist pass, merged.
+
+    The assist is the pose model when one is loaded and the plain COCO
+    detector otherwise — never both. They find the same class 0 people, so
+    running the pair would spend a second inference producing duplicate boxes
+    for NMS to discard. The pose entries are returned alongside so the caller
+    can match keypoints back to the tracked boxes.
+    """
     t_all = time.perf_counter()
     detections, elapsed = _run_victim_primary(frame)
-    assist = _run_coco_assist(frame)
+
+    poses = _run_pose_assist(frame)
+    assist = poses if poses else _run_coco_assist(frame)
     if assist:
         detections = _merge_detections(detections, assist)
         elapsed = (time.perf_counter() - t_all) * 1000
-    return detections, round(elapsed, 1)
+    return detections, round(elapsed, 1), poses
 
 
 def _run_victim_primary(frame: np.ndarray) -> tuple[list[dict], float]:
@@ -532,7 +633,7 @@ def _run_victim_primary(frame: np.ndarray) -> tuple[list[dict], float]:
         elapsed = (time.perf_counter() - t0) * 1000
         return [
             {
-                "class":      "casualty",
+                "class":      "person",
                 "confidence": round(random.uniform(0.82, 0.95), 2),
                 "bbox":       {"x": 80, "y": 60, "w": 55, "h": 110},
             }
@@ -549,9 +650,9 @@ def _run_victim_primary(frame: np.ndarray) -> tuple[list[dict], float]:
             x1, y1, x2, y2 = box.xyxy[0].tolist()
 
             if state.is_custom:
-                label = "casualty"
+                label = "person"
             elif cls_id == PERSON_CLASS:
-                label = "casualty"
+                label = "person"
             elif cls_id in DAMAGE_PROXY_CLASSES:
                 label = DAMAGE_PROXY_CLASSES[cls_id]
             else:
@@ -595,11 +696,11 @@ async def detect_objects(payload: dict = Body(...)):
         # the original RGB (the colouring is display-only). The class stays
         # "casualty" — thermal vs visual is reported in `mode`, so it does not
         # need a second name for the same subject.
-        display_frame            = _apply_thermal(frame) if want_annotation else frame
-        detections, inference_ms = _run_victim(frame)
+        display_frame                   = _apply_thermal(frame) if want_annotation else frame
+        detections, inference_ms, poses = _run_victim(frame)
     else:
-        display_frame            = frame
-        detections, inference_ms = _run_victim(frame)
+        display_frame                   = frame
+        detections, inference_ms, poses = _run_victim(frame)
 
     # ── SORT tracking — assign persistent IDs via Kalman filter ─────────────
     if detections:
@@ -611,13 +712,15 @@ async def detect_objects(payload: dict = Body(...)):
             for d in detections
         ], dtype=np.float32)
         tracked = _tracker.update(det_arr)  # [M, 6]: x1,y1,x2,y2,score,track_id
-        tracked_label = "casualty"
         detections = []
         for row in tracked:
             x1, y1, x2, y2, score, tid = row
             fh, fw = frame.shape[:2]
             detections.append({
-                "class":      tracked_label,
+                # Still a person here. The casualty verdict is assigned below,
+                # once posture, stillness and responder context are in hand —
+                # this used to hardcode "casualty" for every tracked box.
+                "class":      "person",
                 "confidence": round(float(score), 3),
                 "track_id":   int(tid),
                 "bbox":       {
@@ -643,9 +746,45 @@ async def detect_objects(payload: dict = Body(...)):
     # from a single frame kilometres apart on the map.
     lat, lng = drone_position()
 
+    # Each subject gets its own ground coordinate where the geometry allows it,
+    # falling back to the drone's. `subject_located` records which happened —
+    # the responder veto below must not act on a position that is really the
+    # aircraft's, or a drone hovering near one rescuer would suppress every
+    # casualty in the frame.
+    state = drone_state()
+    fh, fw = frame.shape[0], frame.shape[1]
     annotated = []
     for i, d in enumerate(detections):
-        annotated.append({**d, "id": f"{frame_id[:8]}-{i}", "timestamp": timestamp, "lat": lat, "lng": lng})
+        fix = georef.locate_detection(
+            d["bbox"], fw, fh, lat, lng,
+            state.altitude_m, state.heading_deg, state.gimbal_pitch_deg,
+        )
+        annotated.append({
+            **d,
+            "id": f"{frame_id[:8]}-{i}",
+            "timestamp": timestamp,
+            "lat": round(fix[0], 6) if fix else lat,
+            "lng": round(fix[1], 6) if fix else lng,
+            "subject_located": fix is not None,
+        })
+
+    # ── Casualty gate — which of these people are casualties ────────────────
+    # Runs after the position stamp, because the responder veto is a question
+    # about where the detection is, and after tracking, because stillness is a
+    # property of a track rather than of a box.
+    camera_motion = _egomotion.estimate(frame, exclude=annotated)
+    casualty_gate.monitor().advance_camera(camera_motion, frame.shape)
+    # Camera pitch decides how posture is measured at all — straight down, the
+    # angle of a torso means the opposite of what it means from the side.
+    pitch_deg = drone_pitch()
+    for det in annotated:
+        verdict = casualty_gate.judge(det, _keypoints_for(det["bbox"], poses),
+                                      frame.shape, pitch_deg)
+        det["class"] = "casualty" if verdict.is_casualty else "person"
+        det.update(verdict.as_fields())
+        det["camera_motion_known"] = camera_motion.ok
+
+    casualties = [d for d in annotated if d["class"] == "casualty"]
 
     add_detections(annotated, inference_ms,
                    frame_width=frame.shape[1], frame_height=frame.shape[0],
@@ -664,25 +803,32 @@ async def detect_objects(payload: dict = Body(...)):
     append_log({
         "frame_id":        frame_id,
         "detection_count": len(detections),
+        "casualty_count":  len(casualties),
         "inference_ms":    inference_ms,
         "model_version":   victim_state().version,
         "mode":            mode,
     })
 
-    # Bridge high-confidence detections to Node.js /incidents + ntfy push (non-blocking)
-    for det in annotated:
+    # Bridge high-confidence detections to Node.js /incidents + ntfy push
+    # (non-blocking). Only casualties escalate: a bystander or a rescuer is a
+    # real detection worth showing on the stream, but it is not an incident and
+    # it must not wake anyone up.
+    for det in casualties:
         asyncio.create_task(_maybe_create_incident(det))
         asyncio.create_task(_send_ntfy_alert(det))
 
     logger.info(
         f"[detect] mode={mode} brightness={brightness:.0f} "
-        f"detections={len(detections)} "
+        f"people={len(annotated)} casualties={len(casualties)} "
+        f"pose={'yes' if poses else 'no'} ego={'ok' if camera_motion.ok else 'unknown'} "
         f"inference={inference_ms:.0f}ms "
         f"model={victim_state().version}"
     )
 
     return {
         "detections":        annotated,
+        "casualty_count":    len(casualties),
+        "person_count":      len(annotated),
         "inference_time_ms": inference_ms,
         "frame_id":          frame_id,
         "model_version":     victim_state().version,

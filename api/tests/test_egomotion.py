@@ -1,0 +1,88 @@
+"""
+Tests for frame-to-frame camera motion estimation.
+
+This exists to serve the stillness signal in services/casualty.py: without it,
+a motionless casualty drifts across the sensor at exactly the speed of the
+drone and reads as "moving". The tests use a synthetic textured frame and
+shift it by a known amount, so the expected answer is known exactly.
+"""
+import numpy as np
+import pytest
+
+from services.egomotion import CameraMotion, EgoMotionEstimator
+
+
+def _textured_frame(w=640, h=480, seed=7):
+    """
+    Random blobs, not random noise: ORB needs corners it can match between
+    frames, and per-pixel noise gives it nothing stable to lock onto.
+    """
+    rng = np.random.default_rng(seed)
+    frame = np.full((h, w, 3), 40, dtype=np.uint8)
+    for _ in range(120):
+        cx, cy = int(rng.integers(20, w - 20)), int(rng.integers(20, h - 20))
+        size = int(rng.integers(6, 18))
+        colour = rng.integers(80, 255, size=3).astype(np.uint8)
+        frame[cy - size // 2:cy + size // 2, cx - size // 2:cx + size // 2] = colour
+    return frame
+
+
+def test_first_frame_has_no_reference():
+    est = EgoMotionEstimator()
+    motion = est.estimate(_textured_frame())
+    assert motion.ok is False
+
+
+def test_static_camera_reports_no_motion():
+    frame = _textured_frame()
+    est = EgoMotionEstimator()
+    est.estimate(frame)
+    motion = est.estimate(frame.copy())
+    assert motion.ok is True
+    assert abs(motion.dx) < 2.0
+    assert abs(motion.dy) < 2.0
+
+
+def test_translation_is_recovered():
+    frame = _textured_frame()
+    shifted = np.roll(frame, shift=24, axis=1)  # 24px to the right
+    est = EgoMotionEstimator()
+    est.estimate(frame)
+    motion = est.estimate(shifted)
+    assert motion.ok is True
+    assert motion.dx == pytest.approx(24, abs=4)
+    assert abs(motion.dy) < 4
+
+
+def test_blank_frames_fail_honestly():
+    """
+    A featureless frame — fog, an overexposed sky, a dropped feed — gives ORB
+    nothing to match. The estimator must report failure rather than return a
+    zero transform that would be indistinguishable from a stationary camera.
+    """
+    blank = np.full((480, 640, 3), 128, dtype=np.uint8)
+    est = EgoMotionEstimator()
+    est.estimate(blank)
+    motion = est.estimate(blank.copy())
+    assert motion.ok is False
+
+
+def test_reset_drops_the_reference_frame():
+    frame = _textured_frame()
+    est = EgoMotionEstimator()
+    est.estimate(frame)
+    est.reset()
+    assert est.estimate(frame.copy()).ok is False
+
+
+def test_apply_is_identity_when_estimate_failed():
+    """A failed estimate must not silently move points around."""
+    motion = CameraMotion(dx=99, dy=99, ok=False)
+    assert motion.apply(10.0, 20.0, 320.0, 240.0) == (10.0, 20.0)
+
+
+def test_apply_shifts_by_translation():
+    motion = CameraMotion(dx=30.0, dy=-10.0, scale=1.0, rotation_deg=0.0, ok=True)
+    x, y = motion.apply(100.0, 100.0, 320.0, 240.0)
+    assert x == pytest.approx(130.0)
+    assert y == pytest.approx(90.0)

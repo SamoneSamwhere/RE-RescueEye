@@ -12,6 +12,7 @@ from routers import detect, classify, detections
 from routers import stream, models as models_router, logs as logs_router
 from routers import drone as drone_router
 from routers import media as media_router
+from routers import responders as responders_router
 from services import feed_registry
 from services import telemetry_sources
 from services.yolo_model import load_all, model_info, model_status
@@ -92,6 +93,7 @@ app.include_router(models_router.router,  prefix="/models",     tags=["models"])
 app.include_router(logs_router.router,    prefix="/logs",       tags=["logs"])
 app.include_router(drone_router.router,   prefix="/drone",      tags=["drone"])
 app.include_router(media_router.router,   prefix="/media",      tags=["media"])
+app.include_router(responders_router.router, prefix="/responders", tags=["responders"])
 
 
 @app.get("/health", tags=["system"])

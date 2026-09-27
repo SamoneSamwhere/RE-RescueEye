@@ -40,6 +40,12 @@ export interface ApiDetection {
   has_snapshot: boolean
   /** Same subject keeps this id across frames; null when untracked. */
   track_id: number | null
+  /** 0..1 evidence that this person is a casualty; see api/services/casualty.py. */
+  casualty_score?: number
+  /** Which signals fired, e.g. ["posture_from_pose", "stillness_measured"]. */
+  casualty_reasons?: string[]
+  /** Set when the detection was vetoed as one of our own responders. */
+  matched_responder?: string
 }
 
 /** JPEG crop of the subject, served straight from the API. */
@@ -60,6 +66,22 @@ const DAMAGE_BY_CLASS: Record<string, DamageClassification> = {
 
 function toCategory(cls: string): DetectionCategory {
   return cls === 'casualty' ? 'CASUALTY' : 'DAMAGE'
+}
+
+/**
+ * The API now reports plain people as `person` and reserves `casualty` for
+ * those its gate promoted (posture, stillness, responder veto — see
+ * api/services/casualty.py). Only casualties belong in Detection Review:
+ * queueing every bystander and rescuer for a human decision is exactly the
+ * flooding the queue cap elsewhere in this file exists to prevent.
+ *
+ * They are still drawn on the live overlay — LiveFeedPanel colours `person`
+ * grey — so an operator can see the system noticed someone and chose not to
+ * escalate. That transparency is the point: a silently dropped box looks like
+ * a missed detection.
+ */
+function isReviewable(d: ApiDetection): boolean {
+  return d.class !== 'person'
 }
 
 /**
@@ -200,7 +222,7 @@ export function useLiveDetections({
   })
 
   useEffect(() => {
-    const items = query.data?.detections
+    const items = query.data?.detections?.filter(isReviewable)
     if (!items?.length) return
     const { existing: current, onDetection: emit, onUpdateDetection: patch, mediaAssetId: assetId } =
       latest.current
@@ -262,6 +284,6 @@ export function useLiveDetections({
   return {
     error: query.error instanceof Error ? query.error.message : null,
     isReachable: !query.error,
-    count: query.data?.detections.length ?? 0,
+    count: query.data?.detections.filter(isReviewable).length ?? 0,
   }
 }
