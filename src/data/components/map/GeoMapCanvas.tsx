@@ -27,10 +27,9 @@ export interface GeoMapCanvasProps {
   /**
    * Collapse nearby markers into counted clusters that split as you zoom in.
    *
-   * Off by default. On a phone the markers of one incident site overlap into an
-   * unreadable pile at the zoom levels that fit a whole search area on screen,
-   * which is where this earns its place; a wide desktop console showing the
-   * same data usually does not need it.
+   * Off by default. At the zoom levels that fit a whole search area on screen,
+   * the markers of one incident site overlap into an unreadable pile — on a
+   * phone and on the Command Staff console alike, so both Damage Maps enable it.
    */
   cluster?: boolean
 }

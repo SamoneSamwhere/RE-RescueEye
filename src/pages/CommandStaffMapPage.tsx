@@ -2,8 +2,16 @@ import { useMemo, useState } from 'react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { Panel } from '../data/components/ui'
-import { GeoMapCanvas, MarkerDetailPanel } from '../data/components/map'
-import type { MapMarker, IncidentMapMarker } from '../data/components/map'
+import {
+  GeoMapCanvas,
+  MapLegend,
+  MarkerDetailPanel,
+  MarkerFilterBar,
+  EMPTY_MARKER_FILTERS,
+  applyMarkerFilters,
+  countIncidentMarkers,
+} from '../data/components/map'
+import type { MapMarker, IncidentMapMarker, MarkerFilters } from '../data/components/map'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { mockUsers } from '../data/mockUsers'
@@ -13,6 +21,7 @@ export function CommandStaffMapPage() {
   const { session } = useAuth()
   const { detections, incidents, missions } = useCommandStaffData()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [filters, setFilters] = useState<MarkerFilters>(EMPTY_MARKER_FILTERS)
 
   const agencyId = session?.agencyId
 
@@ -92,7 +101,12 @@ export function CommandStaffMapPage() {
     return [...incidentMarkers, ...detectionMarkers, ...responderMarkers]
   }, [detections, incidents, missions, agencyId])
 
-  const selectedMarker = markers.find((m) => m.id === selectedId) ?? null
+  const visibleMarkers = useMemo(() => applyMarkerFilters(markers, filters), [markers, filters])
+
+  // Looked up in the *visible* set, so filtering a marker off the map also
+  // clears its detail panel rather than leaving a card for a dot that is no
+  // longer there.
+  const selectedMarker = visibleMarkers.find((m) => m.id === selectedId) ?? null
 
   return (
     <>
@@ -102,12 +116,24 @@ export function CommandStaffMapPage() {
       />
 
       <Reveal className="grid grid-cols-1 gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <Panel title={`Damage Map (${markers.length} markers)`}>
-          <GeoMapCanvas
-            markers={markers}
-            selectedId={selectedId}
-            onSelect={(marker) => setSelectedId(marker.id)}
-          />
+        <Panel title={`Damage Map (${visibleMarkers.length} markers)`}>
+          <div className="flex flex-col gap-3">
+            <MarkerFilterBar
+              filters={filters}
+              onChange={setFilters}
+              shown={countIncidentMarkers(visibleMarkers)}
+              total={countIncidentMarkers(markers)}
+            />
+            <GeoMapCanvas
+              // Clustered here as on the phone: a whole survey area on screen
+              // stacks the markers of one site into a pile nobody can click.
+              cluster
+              markers={visibleMarkers}
+              selectedId={selectedId}
+              onSelect={(marker) => setSelectedId(marker.id)}
+            />
+            <MapLegend />
+          </div>
         </Panel>
         <MarkerDetailPanel marker={selectedMarker} />
       </Reveal>
