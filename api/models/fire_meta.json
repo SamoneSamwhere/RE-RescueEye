@@ -1,0 +1,18 @@
+{
+  "map50": 0.6988,
+  "map50_95": 0.3907,
+  "precision": 0.6909,
+  "recall": 0.6333,
+  "best_epoch": 19,
+  "epochs_trained": 19,
+  "epochs_planned": 30,
+  "stopped_early": "user deadline 14:00",
+  "imgsz": 640,
+  "classes": [
+    "smoke",
+    "fire"
+  ],
+  "dataset": "D-Fire (huggingface.co/datasets/badsaarow/d-fire)",
+  "model": "yolov8n",
+  "trained_at": "2026-09-29T06:00:27Z"
+}

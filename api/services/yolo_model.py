@@ -158,7 +158,7 @@ def _load_victim_ort(onnx_path: str) -> None:
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         _victim_ort_session = ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
         active = _victim_ort_session.get_providers()[0]
-        logger.info(f"[yolo] victim ONNX session ready — provider: {active}")
+        logger.info(f"[yolo] victim ONNX session ready — provider: {active} — {Path(onnx_path).name}")
     except Exception as exc:
         logger.warning(f"[yolo] ORT session failed: {exc}")
         _victim_ort_session = None
@@ -212,7 +212,7 @@ def _load_pose_ort(onnx_path: str) -> None:
         opts = ort.SessionOptions()
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         _pose_ort_session = ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
-        logger.info(f"[yolo] pose assist ONNX ready — provider: {_pose_ort_session.get_providers()[0]}")
+        logger.info(f"[yolo] pose assist ONNX ready — provider: {_pose_ort_session.get_providers()[0]} — {Path(onnx_path).name}")
     except Exception as exc:
         logger.warning(f"[yolo] pose assist ORT session failed ({exc}) — falling back to PyTorch")
         _pose_ort_session = None
@@ -381,6 +381,23 @@ def pose_assist_state() -> ModelState:
     return _pose_assist
 
 
+def _gpu_graph(override: str | None, fast: Path, standard: Path) -> str | None:
+    """
+    Which ONNX file the DirectML session loads: an explicit override, else the
+    fast export when present, else the standard one.
+
+    The fast exports (rectangular 736x1280 / 544x960 input, FP16) cut a 4-feed
+    detection round from ~1.7-2.1s to ~0.55-0.77s with the same detections on
+    the demo clips. They exist only for this ORT path: the Ultralytics fallback
+    feeds float32 and rejects an FP16 graph, so the standard files stay in
+    place for it — overwriting them would have left the model "stub".
+    """
+    for candidate in (override, fast, standard):
+        if candidate and Path(candidate).exists():
+            return str(candidate)
+    return None
+
+
 def load_all() -> None:
     """Called once from FastAPI lifespan. Loads both models."""
     v_weights, v_custom = _resolve_victim_weights()
@@ -388,8 +405,9 @@ def load_all() -> None:
                 meta_file=MODELS_DIR / "victim_meta.json", task="detect")
 
     # Load GPU-accelerated ONNX session for victim model (DirectML)
-    onnx_path = str(MODELS_DIR / "victim_best.onnx")
-    if Path(onnx_path).exists():
+    onnx_path = _gpu_graph(os.getenv("VICTIM_ORT_ONNX"), MODELS_DIR / "victim_fast.onnx",
+                           MODELS_DIR / "victim_best.onnx")
+    if onnx_path:
         _load_victim_ort(onnx_path)
 
     d_weights, d_custom = _resolve_damage_weights()
@@ -418,8 +436,11 @@ def load_all() -> None:
             _init_model(_coco_assist, COCO_ASSIST_WEIGHTS, is_custom=False, task="coco-assist")
 
     if POSE_ASSIST_ENABLED:
-        pose_onnx = REPO_ROOT / os.getenv("POSE_ASSIST_ONNX", "yolov8n-pose.onnx")
-        if pose_onnx.exists():
+        pose_path = _gpu_graph(
+            str(REPO_ROOT / os.environ["POSE_ASSIST_ONNX"]) if os.getenv("POSE_ASSIST_ONNX") else None,
+            REPO_ROOT / "yolov8n-pose-fast.onnx", REPO_ROOT / "yolov8n-pose.onnx")
+        pose_onnx = Path(pose_path) if pose_path else REPO_ROOT / "yolov8n-pose.onnx"
+        if pose_path:
             _load_pose_ort(str(pose_onnx))
             _pose_assist.weights = str(pose_onnx)
             _pose_assist.version = "pretrained_pose"

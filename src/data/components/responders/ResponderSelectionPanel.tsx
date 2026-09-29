@@ -16,16 +16,27 @@ interface ResponderSelectionPanelProps {
  * and updating state happens in the parent's onNotify handler, not here.
  */
 export function ResponderSelectionPanel({ candidates, selectedId, onSelect, onNotify }: ResponderSelectionPanelProps) {
-  const selected = candidates.find((candidate) => candidate.id === selectedId) ?? null
+  // Only responders who can take this incident are offered. Listing everyone
+  // with the busy and off-duty rows greyed out made the reviewer scan past a
+  // wall of people they could not pick to find the one or two they could.
+  const available = candidates.filter((candidate) => candidate.isAvailable)
+  const unavailableCount = candidates.length - available.length
+  const selected = available.find((candidate) => candidate.id === selectedId) ?? null
 
   return (
     <Panel title="Select Field Responder to Notify">
       {candidates.length === 0 ? (
         <EmptyState icon={Users} title="No field responders in this agency" />
+      ) : available.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No field responders available right now"
+          description={`All ${candidates.length} are on a mission or off duty.`}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           <ul className="flex flex-col divide-y divide-border">
-            {candidates.map((candidate) => {
+            {available.map((candidate) => {
               const isSelected = candidate.id === selectedId
               return (
                 <li key={candidate.id}>
@@ -82,6 +93,7 @@ export function ResponderSelectionPanel({ candidates, selectedId, onSelect, onNo
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
             <p className="text-xs text-foreground-muted">
               {selected ? `Selected: ${selected.name}` : 'Select an available responder to notify.'}
+              {unavailableCount > 0 ? ` ${unavailableCount} on a mission or off duty not shown.` : ''}
             </p>
             <Button size="sm" disabled={!selected} onClick={onNotify}>
               Notify Selected Responder

@@ -45,6 +45,16 @@ class TestRegistry:
         assert registry.get_feed(a.id).label == "A"
         assert a.stop_event.is_set() is False
 
+    @pytest.mark.parametrize("source, kind", [
+        (SOURCE, "upload"),                                   # file on disk, whatever the caller said
+        ("rtsp://192.168.1.10:554/live", "live"),             # pulled from a camera
+        ("rtmp://0.0.0.0:1935/live/dji", "live"),             # aircraft pushes to us
+        ("", "synthetic"),
+    ])
+    def test_kind_follows_the_source(self, empty_registry, monkeypatch, source, kind):
+        monkeypatch.setattr(registry, "_start_producer", lambda feed: None)
+        assert registry.add_feed(source=source, kind="live").kind == kind
+
     def test_cap_is_enforced(self, empty_registry):
         for i in range(registry.MAX_FEEDS):
             registry.add_feed(source="", label=f"F{i}")
@@ -89,11 +99,13 @@ class TestFeedEndpoints:
         assert body["max"] == registry.MAX_FEEDS
         assert "suggestedDetectIntervalMs" in body
 
-    def test_add_live_feed(self, client):
+    def test_add_feed_from_a_file_is_a_recording(self, client):
+        # A file on disk is never "live", however it was added — the panel
+        # would otherwise badge a looping clip LIVE.
         res = client.post("/stream/feeds", json={"source": SOURCE, "label": "Cam A"})
         assert res.status_code == 201
         assert res.json()["label"] == "Cam A"
-        assert res.json()["kind"] == "live"
+        assert res.json()["kind"] == "upload"
 
     def test_add_requires_a_source(self, client):
         assert client.post("/stream/feeds", json={}).status_code == 400

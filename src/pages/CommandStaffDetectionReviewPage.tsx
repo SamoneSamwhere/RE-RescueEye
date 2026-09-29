@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { DetectionQueueList, DetectionDetailPanel, PossibleCasualtyCard } from '../data/components/detections'
@@ -30,8 +31,14 @@ function isReviewable(confidence: number): boolean {
 export function CommandStaffDetectionReviewPage() {
   const { detections, incidents, mediaAssets, verifyDetection, rejectDetection } = useCommandStaffData()
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('PENDING')
+  // Arriving from Live Monitoring's "Verify casualty": open on that detection.
+  // It is VERIFIED by then, so the PENDING default would hide it from the queue.
+  const location = useLocation()
+  const arrivedWith = (location.state as { selectDetectionId?: string } | null)?.selectDetectionId
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(arrivedWith ? 'ALL' : 'PENDING')
   const [selectedId, setSelectedId] = useState<string | null>(() => {
+    if (arrivedWith) return arrivedWith
     const pending = [...detections]
       .filter((d) => d.validationStatus === 'PENDING' && isReviewable(d.confidence))
       .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt))
@@ -100,7 +107,13 @@ export function CommandStaffDetectionReviewPage() {
         <div className="px-4 pt-4">
           <PossibleCasualtyCard
             detection={latestPendingCasualty}
-            onVerify={(id) => handleVerify(id, 'MEDIUM', '')}
+            onVerify={(id) => {
+              handleVerify(id, 'MEDIUM', '')
+              // Show what was just decided — the detection and its new
+              // incident — rather than leaving the reviewer on another row.
+              setSelectedId(id)
+              if (statusFilter === 'PENDING') setStatusFilter('ALL')
+            }}
           />
         </div>
       ) : null}

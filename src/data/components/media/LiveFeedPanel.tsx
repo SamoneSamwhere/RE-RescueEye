@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Building2, Camera, Flame, RefreshCw, Scan, ShieldCheck, Waves, X, Zap } from 'lucide-react'
+import { Building2, Camera, Film, Flame, RefreshCw, Scan, ShieldCheck, Waves, X, Zap } from 'lucide-react'
 import { Panel, Button, Badge } from '../ui'
 import { cn } from '../../../lib/cn'
 import { feedMjpegUrl, useFeedDetection } from '../../../features/media/useFeeds'
@@ -176,10 +176,19 @@ export function LiveFeedPanel({
             />
           )}
 
-          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-danger px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground-inverse">
-            <span className="size-1.5 animate-pulse rounded-full bg-foreground-inverse" />
-            Live
-          </span>
+          {/* LIVE is a claim an operator acts on — "this is happening now" —
+              so only a real live source makes it. A recording says so. */}
+          {feed.kind === 'live' ? (
+            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-danger px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground-inverse">
+              <span className="size-1.5 animate-pulse rounded-full bg-foreground-inverse" />
+              Live
+            </span>
+          ) : (
+            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/65 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
+              {feed.kind === 'upload' ? <Film className="size-3" /> : <Scan className="size-3" />}
+              {feed.kind === 'upload' ? 'Recorded' : 'Simulated'}
+            </span>
+          )}
 
           {detectEnabled ? (
             <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/65 px-2 py-0.5 text-xs font-medium text-white">

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { MonitorPlay, Sparkles, ArrowRight, ServerCrash, Zap, ZapOff } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
@@ -14,6 +14,7 @@ import { ROUTES } from '../routes/paths'
 
 export function CommandStaffLiveMonitoringPage() {
   const { drones, detections, captureMedia, verifyDetection } = useCommandStaffData()
+  const navigate = useNavigate()
   const [detectionCreated, setDetectionCreated] = useState(false)
   const [detectEnabled, setDetectEnabled] = useState(true)
 
@@ -73,7 +74,13 @@ export function CommandStaffLiveMonitoringPage() {
         {pendingCasualty ? (
           <PossibleCasualtyCard
             detection={pendingCasualty}
-            onVerify={(id) => verifyDetection(id, 'MEDIUM', '')}
+            onVerify={(id) => {
+              verifyDetection(id, 'MEDIUM', '')
+              // Verifying opens an incident; Detection Review is where its
+              // priority is set and the follow-up happens, so go there with
+              // the casualty already selected.
+              navigate(ROUTES.commandStaffDetections, { state: { selectDetectionId: id } })
+            }}
           />
         ) : null}
 

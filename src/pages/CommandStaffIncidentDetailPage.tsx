@@ -180,37 +180,41 @@ export function CommandStaffIncidentDetailPage() {
           </div>
         </Reveal>
 
-        <Reveal delayMs={200} className="flex flex-col gap-4">
-          {dispatchSuccess ? (
-            <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-              <Send className="size-4 shrink-0" />
-              Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
-            </div>
-          ) : null}
+        {/* Side by side on a wide screen: choosing who to send on the left,
+            what has happened so far on the right. Stacked on a narrow one. */}
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+          <Reveal delayMs={200} className="flex flex-col gap-4">
+            {dispatchSuccess ? (
+              <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
+                <Send className="size-4 shrink-0" />
+                Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
+              </div>
+            ) : null}
 
-          {hasActiveMission ? (
-            <Panel title="Select Field Responder to Notify">
-              <EmptyState
-                icon={Send}
-                title="A mission is already in progress"
-                description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
+            {hasActiveMission ? (
+              <Panel title="Select Field Responder to Notify">
+                <EmptyState
+                  icon={Send}
+                  title="A mission is already in progress"
+                  description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
+                />
+              </Panel>
+            ) : (
+              <ResponderSelectionPanel
+                candidates={responderCandidates}
+                selectedId={selectedResponderId}
+                onSelect={setSelectedResponderId}
+                onNotify={() => setConfirmOpen(true)}
               />
-            </Panel>
-          ) : (
-            <ResponderSelectionPanel
-              candidates={responderCandidates}
-              selectedId={selectedResponderId}
-              onSelect={setSelectedResponderId}
-              onNotify={() => setConfirmOpen(true)}
-            />
-          )}
-        </Reveal>
+            )}
+          </Reveal>
 
-        <Reveal delayMs={300}>
-          <Panel title="Incident Timeline">
-            <IncidentTimeline events={timelineEvents} />
-          </Panel>
-        </Reveal>
+          <Reveal delayMs={300}>
+            <Panel title="Incident Timeline">
+              <IncidentTimeline events={timelineEvents} />
+            </Panel>
+          </Reveal>
+        </div>
       </div>
 
       <Modal

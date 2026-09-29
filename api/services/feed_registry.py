@@ -342,11 +342,19 @@ def add_feed(source: str, label: str | None = None, kind: str = "live") -> Feed:
             )
         _counter += 1
         feed_id = f"feed{_counter}"
+        # The source decides what a feed is, not the caller: a file on disk is
+        # a recording however it was added. The startup feed and a file path
+        # posted to /stream/feeds both arrived as "live", so a looping demo clip
+        # was badged LIVE in front of an operator who would take it at its word.
+        if not source:
+            kind = "synthetic"
+        elif not (_is_network_source(source) or _is_listen_source(source)):
+            kind = "upload"
         feed = Feed(
             id=feed_id,
             label=label or f"Feed {_counter}",
             source=source,
-            kind=kind if source else "synthetic",
+            kind=kind,
         )
         _registry[feed_id] = feed
 

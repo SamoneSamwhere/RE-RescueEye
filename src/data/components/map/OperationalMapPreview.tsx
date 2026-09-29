@@ -108,7 +108,7 @@ export function DamageMapPreview({
         <EmptyState icon={MapPin} title={emptyLabel} />
       ) : (
         <div className="flex flex-col gap-3">
-          <div className="h-56 overflow-hidden rounded-md border border-border">
+          <div className="h-80 overflow-hidden rounded-md border border-border">
             <MapContainer
               center={[pins[0].location.lat, pins[0].location.lng]}
               zoom={14}
