@@ -200,24 +200,35 @@ export function AuthPage() {
     }
     setSignupError(null)
 
-    // Create agency in Supabase
-    const result = await createAgencyInDb({
-      agencyName: agency.agencyName,
-      agencyType: agency.agencyType,
-      agencyAddress: agency.agencyAddress,
-      agencyPhone: agency.agencyPhone,
-      agencyEmail: agency.agencyEmail,
-      agencyWebsite: agency.agencyWebsite,
-      adminFirstName: admin.firstName,
-      adminLastName: admin.lastName,
-      adminPosition: admin.position,
-      adminEmail: admin.email,
-      adminPhone: admin.phone,
-      adminPassword: admin.password,
-    })
+    let result: Awaited<ReturnType<typeof createAgencyInDb>>
+    try {
+      result = await createAgencyInDb({
+        agencyName: agency.agencyName,
+        agencyType: agency.agencyType,
+        agencyAddress: agency.agencyAddress,
+        agencyPhone: agency.agencyPhone,
+        agencyEmail: agency.agencyEmail,
+        agencyWebsite: agency.agencyWebsite,
+        adminFirstName: admin.firstName,
+        adminLastName: admin.lastName,
+        adminPosition: admin.position,
+        adminEmail: admin.email,
+        adminPhone: admin.phone,
+        adminPassword: admin.password,
+      })
+    } catch (err) {
+      // createAgency reports its own failures; this catches anything it didn't
+      // (a crash in password hashing, say) so the form never fails silently.
+      console.error('Registration failed unexpectedly:', err)
+      setSignupError('Registration could not be submitted. Please try again.')
+      return
+    }
 
     if (!result.success) {
       setSignupError(result.error || 'Failed to create agency. Please try again.')
+      // The email lives on the Admin step; land the user where they can fix it
+      // instead of leaving them on Documents with nothing to change.
+      if (result.field === 'adminEmail') setCurrentStep(1)
       return
     }
 
@@ -373,7 +384,7 @@ export function AuthPage() {
 
                     <div className="flex items-center justify-end gap-3">
                       {currentStep > 0 ? (
-                        <Button type="button" variant="outline" onClick={goToPreviousStep}>
+                        <Button type="button" variant="outline" onClick={goToPreviousStep} disabled={isCreatingAgency}>
                           Back
                         </Button>
                       ) : null}

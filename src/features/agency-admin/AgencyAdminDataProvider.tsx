@@ -21,7 +21,9 @@ export interface CreateUserInput {
   role: CreatableUserRole
 }
 
-export type CreateUserResult = { ok: true; userId: string } | { ok: false; error: string }
+export type CreateUserResult =
+  | { ok: true; userId: string }
+  | { ok: false; error: string; field?: 'email' }
 
 /**
  * One agency response record — a Field Responder's dispatch to a verified
@@ -117,10 +119,16 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
   }, [missions, agencyUsers])
 
   async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
-    if (!session || !agencyId) return { ok: false, error: 'No active session.' }
+    if (!session || !agencyId) return { ok: false, error: 'Your session has ended. Sign in again and retry.' }
+    // Demo logins carry agency ids like "agency-1", which Number() turns into
+    // NaN — the insert then failed with a database type error nobody could act on.
+    const dbAgencyId = Number(agencyId)
+    if (session.id.startsWith('usr-') || !Number.isInteger(dbAgencyId)) {
+      return { ok: false, error: 'Creating users requires a real agency account — demo accounts cannot add personnel.' }
+    }
 
     const result = await createStaffUser({
-      agencyId: Number(agencyId),
+      agencyId: dbAgencyId,
       firstName: input.firstName,
       lastName: input.lastName,
       email: input.email,
@@ -130,7 +138,13 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
     })
 
     if (!result.ok) return result
-    await refresh()
+    // The user exists at this point. A failed list refresh must not turn that
+    // into a reported failure — the admin would retry and hit "already exists".
+    try {
+      await refresh()
+    } catch (err) {
+      console.error('Personnel list refresh failed after creating a user:', err)
+    }
     return { ok: true, userId: String(result.userId) }
   }
 

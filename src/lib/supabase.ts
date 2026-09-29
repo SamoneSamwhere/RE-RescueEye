@@ -9,19 +9,65 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Helper function to handle database errors
+/** The fields every Supabase/PostgREST error carries. */
+interface DbErrorLike {
+  message?: string
+  code?: string
+  details?: string
+}
+
+function errorText(error: unknown): { message: string; code: string; text: string } {
+  const e = (error && typeof error === 'object' ? error : {}) as DbErrorLike
+  const message = typeof error === 'string' ? error : (e.message ?? '')
+  return { message, code: e.code ?? '', text: `${message} ${e.details ?? ''}` }
+}
+
+/** fetch() failing outright: offline, DNS, CORS, the project paused. */
+export function isNetworkError(error: unknown): boolean {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
+  return /failed to fetch|networkerror|load failed|network request failed/i.test(errorText(error).message)
+}
+
+export const NETWORK_ERROR_MESSAGE = "Can't reach the server. Check your internet connection and try again."
+
+/**
+ * A database failure as a sentence a user can act on.
+ *
+ * Supabase returns PostgrestError objects, which are plain objects rather than
+ * Error instances — the previous `instanceof Error` check never matched them,
+ * so every real database error (a duplicate email included) fell through to a
+ * generic "An error occurred".
+ */
 export function handleDatabaseError(error: unknown): string {
-  if (error instanceof Error) {
-    if (error.message.includes('duplicate key')) {
-      if (error.message.includes('serial_number')) {
-        return 'This serial number is already registered.'
-      }
-      if (error.message.includes('registration_number')) {
-        return 'This registration number is already in use.'
-      }
-      return 'This record already exists.'
-    }
-    return error.message
+  if (isNetworkError(error)) return NETWORK_ERROR_MESSAGE
+  const { message, code, text } = errorText(error)
+
+  if (code === '23505' || text.includes('duplicate key')) {
+    if (text.includes('serial_number')) return 'This serial number is already registered.'
+    if (text.includes('registration_number')) return 'This registration number is already in use.'
+    if (/email/i.test(text)) return 'An account with this email address already exists.'
+    return 'This record already exists.'
   }
-  return 'An error occurred'
+  if (code === '42501' || /row-level security|permission denied/i.test(text)) {
+    return "You don't have permission to do this. Contact your administrator."
+  }
+  if (code === 'PGRST301' || /jwt/i.test(text)) {
+    return 'Your session has expired. Sign in again and retry.'
+  }
+  // not-null, bad input syntax, check constraint: the form let something through.
+  if (code === '23502' || code === '22P02' || code === '23514') {
+    return 'Some of the information entered is invalid. Check the form and try again.'
+  }
+  return message || 'Something went wrong. Please try again.'
+}
+
+/**
+ * An email as a case-insensitive exact-match pattern for `.ilike()`.
+ *
+ * ilike treats `_` and `%` as wildcards, so a bare email like "j_doe@x.org"
+ * also matched "jxdoe@x.org" — a duplicate check that could flag the wrong
+ * account, and a login lookup that could find two.
+ */
+export function emailPattern(email: string): string {
+  return email.trim().replace(/[\\%_]/g, (c) => `\\${c}`)
 }

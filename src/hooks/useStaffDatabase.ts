@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, emailPattern, handleDatabaseError } from '../lib/supabase'
 import { hashPassword } from './useAgencyDatabase'
 
 export type StaffRole = 'COMMAND_STAFF' | 'FIELD_RESPONDER'
@@ -26,7 +26,9 @@ export interface CreateStaffInput {
   role: StaffRole
 }
 
-export type CreateStaffResult = { ok: true; userId: number } | { ok: false; error: string }
+export type CreateStaffResult =
+  | { ok: true; userId: number }
+  | { ok: false; error: string; field?: 'email' }
 
 export function useStaffDatabase() {
   const [isLoading, setIsLoading] = useState(false)
@@ -54,13 +56,17 @@ export function useStaffDatabase() {
   const createStaffUser = async (input: CreateStaffInput): Promise<CreateStaffResult> => {
     setIsLoading(true)
     try {
-      const { data: existing } = await supabase
+      // A failed lookup used to be ignored — the insert then went ahead with
+      // no duplicate check at all. Login matches email case-insensitively, so
+      // the check must too, or two case-variants of one address could exist.
+      const { data: existing, error: lookupError } = await supabase
         .from('user')
         .select('id')
-        .ilike('email', input.email.trim())
-        .maybeSingle()
-      if (existing) {
-        return { ok: false, error: 'A user with this email address already exists.' }
+        .ilike('email', emailPattern(input.email))
+        .limit(1)
+      if (lookupError) throw lookupError
+      if (existing && existing.length > 0) {
+        return { ok: false, error: 'A user with this email address already exists.', field: 'email' }
       }
 
       const passwordHash = await hashPassword(input.password)
@@ -70,9 +76,9 @@ export function useStaffDatabase() {
           {
             email: input.email.trim(),
             passwordHash,
-            firstName: input.firstName,
-            lastName: input.lastName,
-            phone: input.phone || null,
+            firstName: input.firstName.trim(),
+            lastName: input.lastName.trim(),
+            phone: input.phone?.trim() || null,
             role: input.role,
             agencyId: input.agencyId,
             active: true,
@@ -85,9 +91,9 @@ export function useStaffDatabase() {
       if (dbError || !data) throw dbError || new Error('Failed to create user')
       return { ok: true, userId: data.id }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create user'
       console.error('Create staff user error:', err)
-      return { ok: false, error: errorMessage }
+      const errorMessage = handleDatabaseError(err)
+      return { ok: false, error: errorMessage, field: /email/i.test(errorMessage) ? 'email' : undefined }
     } finally {
       setIsLoading(false)
     }

@@ -103,21 +103,31 @@ export function AgencyAdminUserCreationPage() {
     if (!role) return
     setStepError(null)
     setIsSubmitting(true)
-    // Brief simulated latency so the loading state is actually visible — this is a mock backend with no real network call.
-    await new Promise((resolve) => setTimeout(resolve, 600))
 
-    const result = await createUser({
-      firstName: personnel.firstName,
-      lastName: personnel.lastName,
-      email: personnel.email,
-      phone: personnel.phone,
-      password: account.password,
-      role,
-    })
-    setIsSubmitting(false)
+    let result: Awaited<ReturnType<typeof createUser>>
+    try {
+      result = await createUser({
+        firstName: personnel.firstName,
+        lastName: personnel.lastName,
+        email: personnel.email,
+        phone: personnel.phone,
+        password: account.password,
+        role,
+      })
+    } catch (err) {
+      // createUser reports its own failures; this catches anything it didn't,
+      // so the button can never stay stuck on "Creating User…".
+      console.error('Create user failed unexpectedly:', err)
+      setStepError('The user could not be created. Please try again.')
+      return
+    } finally {
+      setIsSubmitting(false)
+    }
 
     if (!result.ok) {
       setStepError(result.error)
+      // The email is entered on the Personnel step; take the admin there to fix it.
+      if (result.field === 'email') setCurrentStep(0)
       return
     }
     setCreatedUser({ id: result.userId, name: `${personnel.firstName} ${personnel.lastName}`.trim(), role })

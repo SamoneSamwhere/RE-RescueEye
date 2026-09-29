@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { ScanSearch, Navigation, UserCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ScanSearch, Navigation, UserCheck, Maximize2 } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import {
@@ -13,13 +14,15 @@ import type {
   MissionListItem,
   ResponderStatusItem,
 } from '../data/components/dashboard'
-import { DamageMapPreview } from '../data/components/map'
+import { GeoMapCanvas, MapLegend } from '../data/components/map'
+import { Button, Panel } from '../data/components/ui'
 import { useAuth } from '../features/auth'
-import { useCommandStaffData } from '../features/command-staff'
+import { useCommandStaffData, useDamageMapMarkers } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
 import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
+import { ROUTES } from '../routes/paths'
 
 export function CommandStaffDashboardPage() {
   const { session } = useAuth()
@@ -29,6 +32,8 @@ export function CommandStaffDashboardPage() {
     missions: sharedMissions,
     mediaAssets,
   } = useCommandStaffData()
+  const mapMarkers = useDamageMapMarkers()
+  const navigate = useNavigate()
 
   const agencyId = session?.agencyId
 
@@ -80,27 +85,10 @@ export function CommandStaffDashboardPage() {
       }
     })
 
-    // An incident carries no coordinate of its own — its position is the
-    // position of the detection it was opened from, so one without a
-    // resolvable detection cannot be mapped and is dropped rather than pinned
-    // somewhere invented.
-    // An incident carries no coordinate of its own — its position is the
-    // position of the detection it was opened from, so one whose detection
-    // cannot be resolved is dropped rather than pinned somewhere invented.
-    const mapPins = sharedIncidents
-      .filter((incident) => incident.status !== 'CLOSED')
-      .map((incident) => {
-        const detection = sharedDetections.find((d) => d.id === incident.detectionId)
-        if (!detection) return null
-        return { id: incident.id, priority: incident.priority, location: detection.location }
-      })
-      .filter((pin): pin is NonNullable<typeof pin> => pin !== null)
-
     return {
       pendingDetections,
       activeMissions,
       responderStatus,
-      mapPins,
       availableResponders: responderStatus.filter((r) => r.isActive && !r.missionStatus).length,
     }
   }, [agencyId, sharedDetections, sharedIncidents, sharedMissions, mediaAssets])
@@ -114,33 +102,61 @@ export function CommandStaffDashboardPage() {
         description={`Operational overview for ${session.agencyName ?? 'your agency'}`}
       />
 
-      <div className="flex flex-col gap-6 px-4 py-4">
-        <Reveal>
-          <div className="grid grid-cols-1 gap-4">
-            <DamageMapPreview pins={data.mapPins} />
-          </div>
-        </Reveal>
+      <div className="px-4 py-4">
+        {/* Two halves on a wide screen: the numbers, the queue, missions and
+            responders on the left; the map on the right, held in view while
+            the left side scrolls. On a narrow screen the map stays first. */}
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+          <Reveal className="lg:order-2 lg:sticky lg:top-4">
+            {/* The same map, markers and clustering as the full Damage Map —
+                one marker source, so the two can never disagree. Clicking a
+                marker opens the full map with it selected. */}
+            <Panel
+              title={`Damage Map (${mapMarkers.length} markers)`}
+              actions={
+                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.commandStaffMap)}>
+                  <Maximize2 className="size-3.5" />
+                  Open Damage Map
+                </Button>
+              }
+            >
+              <div className="flex flex-col gap-3">
+                <GeoMapCanvas
+                  cluster
+                  markers={mapMarkers}
+                  selectedId={null}
+                  onSelect={(marker) =>
+                    navigate(`${ROUTES.commandStaffMap}?marker=${encodeURIComponent(marker.id)}`)
+                  }
+                  className="h-72 lg:h-[calc(100vh-15rem)] lg:min-h-[24rem]"
+                />
+                <MapLegend />
+              </div>
+            </Panel>
+          </Reveal>
 
-        <Reveal delayMs={100}>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
-            <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
-            <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
-          </div>
-        </Reveal>
+          <div className="flex flex-col gap-4 lg:order-1">
+            <Reveal delayMs={100}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
+                <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
+                <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
+              </div>
+            </Reveal>
 
-        <Reveal delayMs={200}>
-          <div className="grid grid-cols-1 gap-4">
-            <PendingDetectionsPanel detections={data.pendingDetections} />
-          </div>
-        </Reveal>
+            <Reveal delayMs={200}>
+              <PendingDetectionsPanel detections={data.pendingDetections} />
+            </Reveal>
 
-        <Reveal delayMs={300}>
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <ActiveMissionsPanel missions={data.activeMissions} />
-            <ResponderStatusPanel responders={data.responderStatus} />
+            <Reveal delayMs={300}>
+              <ActiveMissionsPanel missions={data.activeMissions} />
+            </Reveal>
+
+            <Reveal delayMs={350}>
+              <ResponderStatusPanel responders={data.responderStatus} />
+            </Reveal>
           </div>
-        </Reveal>
+        </div>
       </div>
     </>
   )

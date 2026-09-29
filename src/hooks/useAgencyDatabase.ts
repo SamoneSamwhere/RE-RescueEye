@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, emailPattern, handleDatabaseError } from '../lib/supabase'
 
 interface CreateAgencyInput {
   agencyName: string
@@ -34,15 +34,61 @@ export interface DbAgency {
   reviewNotes: string | null
 }
 
+/**
+ * Best-effort undo of a registration that failed part-way. Errors are logged,
+ * not thrown: the user is already being shown the original failure, which is
+ * the one they can act on.
+ */
+async function rollback(agencyId: number | null, userId: number | null): Promise<void> {
+  if (agencyId != null) {
+    const { error } = await supabase.from('agency').delete().eq('id', agencyId)
+    if (error) console.error('Registration rollback: could not remove agency', agencyId, error)
+  }
+  if (userId != null) {
+    const { error } = await supabase.from('user').delete().eq('id', userId)
+    if (error) console.error('Registration rollback: could not remove user', userId, error)
+  }
+}
+
 export function useAgencyDatabase() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const createAgency = async (input: CreateAgencyInput) => {
+  const createAgency = async (
+    input: CreateAgencyInput,
+  ): Promise<
+    | { success: true; agencyId: number; userId: number }
+    | { success: false; error: string; field?: 'adminEmail' }
+  > => {
     setIsLoading(true)
     setError(null)
 
+    // Registration is three writes with no transaction around them. Track what
+    // was created so a failure part-way can be undone: a user row left behind
+    // by a failed agency insert kept its email taken, so every retry of the
+    // same registration failed as a "duplicate" and the agency could never
+    // sign up at all.
+    let createdUserId: number | null = null
+    let createdAgencyId: number | null = null
+
     try {
+      const adminEmail = input.adminEmail.trim()
+
+      // Login matches email case-insensitively, but the unique constraint does
+      // not — without this check "Ana@x.org" and "ana@x.org" could both be
+      // registered, and neither could then sign in.
+      const { data: existing, error: lookupError } = await supabase
+        .from('user')
+        .select('id')
+        .ilike('email', emailPattern(adminEmail))
+        .limit(1)
+      if (lookupError) throw lookupError
+      if (existing && existing.length > 0) {
+        const message = 'An account with this email address already exists. Sign in instead, or use a different email.'
+        setError(message)
+        return { success: false, error: message, field: 'adminEmail' }
+      }
+
       // Step 1: Create admin user account (inactive until agency is approved)
       const passwordHash = await hashPassword(input.adminPassword)
 
@@ -50,12 +96,12 @@ export function useAgencyDatabase() {
         .from('user')
         .insert([
           {
-            email: input.adminEmail,
+            email: adminEmail,
             passwordHash: passwordHash,
-            firstName: input.adminFirstName,
-            lastName: input.adminLastName,
-            position: input.adminPosition,
-            phone: input.adminPhone,
+            firstName: input.adminFirstName.trim(),
+            lastName: input.adminLastName.trim(),
+            position: input.adminPosition.trim(),
+            phone: input.adminPhone.trim(),
             role: 'AGENCY_ADMIN',
             agencyId: null, // Will be set after agency creation
             active: false, // Inactive until approved
@@ -67,18 +113,19 @@ export function useAgencyDatabase() {
 
       if (userError) throw userError
       if (!userData) throw new Error('Failed to create user')
+      createdUserId = userData.id
 
       // Step 2: Create agency with the user as creator
       const { data: agencyData, error: agencyError } = await supabase
         .from('agency')
         .insert([
           {
-            name: input.agencyName,
+            name: input.agencyName.trim(),
             agencyType: input.agencyType,
-            address: input.agencyAddress,
-            website: input.agencyWebsite || null,
-            contactEmail: input.agencyEmail,
-            contactPhone: input.agencyPhone,
+            address: input.agencyAddress.trim(),
+            website: input.agencyWebsite?.trim() || null,
+            contactEmail: input.agencyEmail.trim(),
+            contactPhone: input.agencyPhone.trim(),
             registrationStatus: 'PENDING',
             accountStatus: 'INACTIVE',
             subscriptionStatus: 'ACTIVE',
@@ -91,6 +138,7 @@ export function useAgencyDatabase() {
 
       if (agencyError) throw agencyError
       if (!agencyData) throw new Error('Failed to create agency')
+      createdAgencyId = agencyData.id
 
       // Step 3: Update user with agencyId
       const { error: updateError } = await supabase
@@ -102,10 +150,15 @@ export function useAgencyDatabase() {
 
       return { agencyId: agencyData.id, userId: userData.id, success: true }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create agency'
-      setError(errorMessage)
       console.error('Agency creation error:', err)
-      return { success: false, error: errorMessage }
+      await rollback(createdAgencyId, createdUserId)
+      const errorMessage = handleDatabaseError(err)
+      setError(errorMessage)
+      return {
+        success: false,
+        error: errorMessage,
+        field: /email/i.test(errorMessage) ? 'adminEmail' : undefined,
+      }
     } finally {
       setIsLoading(false)
     }
