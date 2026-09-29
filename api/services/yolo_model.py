@@ -18,6 +18,7 @@ import json
 import ast
 import logging
 import os
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -101,6 +102,28 @@ def _load_single(weights_path: str, task: str, imgsz: int | None = None) -> tupl
     except Exception as exc:
         logger.warning(f"[yolo] Failed to load {weights_path}: {exc}")
         return None, False
+
+
+# Every ONNX session shares one DirectML device. Detection now runs on a small
+# thread pool, and concurrent Run() calls on DML sessions are not something to
+# rely on — so GPU calls are serialised here while the CPU work around them
+# (decode, NMS, tracking, the casualty gate) overlaps freely across feeds.
+GPU_LOCK = threading.Lock()
+
+
+def ort_run(session: Any, blob: np.ndarray) -> list:
+    """
+    session.run for a single-input graph, under GPU_LOCK.
+
+    An FP16 export takes and returns half precision; callers always build and
+    read float32, so the cast lives here rather than at every call site.
+    """
+    inp = session.get_inputs()[0]
+    if getattr(inp, "type", "") == "tensor(float16)":
+        blob = blob.astype(np.float16)
+    with GPU_LOCK:
+        outs = session.run(None, {inp.name: blob})
+    return [o.astype(np.float32) if getattr(o, "dtype", None) == np.float16 else o for o in outs]
 
 
 def _dml_available() -> bool:
@@ -240,6 +263,46 @@ def get_damage_ort_names() -> list[str]:
     return _damage_ort_names
 
 
+# -- DirectML ONNX session for the fire/smoke detector ------------------------
+# The damage classifier labels a whole frame; it cannot say where the fire is.
+# This detector boxes flame and smoke (trained on D-Fire, see
+# scripts/prepare_aerial_datasets.py). ONNX only: there is no PyTorch fallback,
+# because the CPU torch path would cost more than the rest of /detect combined.
+FIRE_DETECT_ENABLED = os.getenv("FIRE_DETECT", "true").lower() == "true"
+_fire_ort_session: Any = None
+_fire_ort_names: list[str] = []
+_fire_meta: dict = {}
+
+
+def _load_fire_ort(onnx_path: str) -> None:
+    global _fire_ort_session, _fire_ort_names, _fire_meta
+    try:
+        import onnxruntime as ort
+        providers = (["DmlExecutionProvider", "CPUExecutionProvider"]
+                     if _dml_available() else ["CPUExecutionProvider"])
+        opts = ort.SessionOptions()
+        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        _fire_ort_session = ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
+        meta = _fire_ort_session.get_modelmeta().custom_metadata_map or {}
+        names = ast.literal_eval(meta["names"]) if "names" in meta else {}
+        _fire_ort_names = [names[i] for i in sorted(names)] if names else ["smoke", "fire"]
+        _fire_meta = _load_meta(MODELS_DIR / "fire_meta.json")
+        logger.info(f"[yolo] fire ONNX session ready - provider: "
+                    f"{_fire_ort_session.get_providers()[0]} - classes: {_fire_ort_names}")
+    except Exception as exc:
+        logger.warning(f"[yolo] fire ORT session failed ({exc}) - fire detection off")
+        _fire_ort_session = None
+
+
+def get_fire_ort_session() -> Any:
+    return _fire_ort_session
+
+
+def get_fire_ort_names() -> list[str]:
+    """Class names in the graph's own index order."""
+    return _fire_ort_names
+
+
 def _resolve_victim_weights() -> tuple[str, bool]:
     """Return (weights_path, is_custom). Prefers ONNX over PT for faster CPU inference."""
     onnx = MODELS_DIR / "victim_best.onnx"
@@ -337,6 +400,13 @@ def load_all() -> None:
     if damage_onnx.exists():
         _load_damage_ort(str(damage_onnx))
 
+    fire_onnx = MODELS_DIR / "fire_best.onnx"
+    if FIRE_DETECT_ENABLED and fire_onnx.exists():
+        _load_fire_ort(str(fire_onnx))
+    elif FIRE_DETECT_ENABLED:
+        logger.info(f"[yolo] no {fire_onnx.name} - fire/smoke boxes off "
+                    "(train with scripts/train_models.py --fire-only)")
+
     if COCO_ASSIST_ENABLED:
         coco_onnx = REPO_ROOT / os.getenv("COCO_ASSIST_ONNX", "yolov8n.onnx")
         if coco_onnx.exists():
@@ -396,6 +466,11 @@ def reload_damage() -> dict:
     weights, is_custom = _resolve_damage_weights()
     _init_model(_damage, weights, is_custom,
                 meta_file=MODELS_DIR / "damage_meta.json", task="classify")
+    # /classify prefers the ONNX session over the model reloaded above, so a
+    # reload that left the old session in place kept serving the old weights.
+    damage_onnx = MODELS_DIR / "damage_best.onnx"
+    if damage_onnx.exists():
+        _load_damage_ort(str(damage_onnx))
     return model_status()
 
 
@@ -431,6 +506,12 @@ def model_status() -> dict:
             "weights":  _pose_assist.weights,
             "runtime":  "onnx-directml" if _pose_ort_session is not None else
                         ("pytorch" if _pose_assist.model is not None else "none"),
+        },
+        "fire_model": {
+            "enabled":  FIRE_DETECT_ENABLED,
+            "loaded":   _fire_ort_session is not None,
+            "classes":  _fire_ort_names,
+            "map50":    _fire_meta.get("map50"),
         },
     }
 

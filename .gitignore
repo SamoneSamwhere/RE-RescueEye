@@ -35,6 +35,7 @@ dist-ssr
 
 # ── Python API service (api/) ─────────────────────────────────────────────────
 .venv/
+.venv-*/
 venv/
 __pycache__/
 *.pyc
@@ -47,3 +48,14 @@ __pycache__/
 # Uploaded / demo drone footage
 api/data/uploads/
 api/data/media/
+
+# Training datasets and runs — rebuilt by api/scripts/prepare_aerial_datasets.py
+# and train_models.py; gigabytes of images, not source.
+api/data/raw/
+api/data/damage/
+api/data/damage_holdout/
+api/data/fire/
+api/data/fire.yaml
+api/models/*_results/
+api/models/candidates/
+api/models/placeholder_*

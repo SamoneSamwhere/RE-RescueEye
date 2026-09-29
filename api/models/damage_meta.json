@@ -1,5 +1,32 @@
 {
-  "accuracy_top1": 1.0,
+  "accuracy_top1": 0.9883,
   "accuracy_top5": 1.0,
-  "trained_at": "2026-06-11T14:01:07Z"
+  "clip_holdout_accuracy": {
+    "fire_damage": {
+      "frames": 27,
+      "accuracy": 1.0,
+      "predicted": {
+        "fire_damage": 27
+      }
+    },
+    "flood_damage": {
+      "frames": 10,
+      "accuracy": 1.0,
+      "predicted": {
+        "flood_damage": 10
+      }
+    },
+    "no_damage": {
+      "frames": 2,
+      "accuracy": 1.0,
+      "predicted": {
+        "no_damage": 2
+      }
+    }
+  },
+  "best_epoch": 40,
+  "epochs_trained": 40,
+  "imgsz": 224,
+  "dataset": "AIDER (Zenodo 3888300) + demo clip frames",
+  "trained_at": "2026-09-29T03:28:23Z"
 }

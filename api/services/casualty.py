@@ -385,9 +385,14 @@ def monitor() -> StillnessMonitor:
 # -- Fusion -------------------------------------------------------------------
 
 def judge(detection: dict, keypoints, frame_shape,
-          pitch_deg: float | None = None) -> CasualtyVerdict:
+          pitch_deg: float | None = None,
+          monitor: StillnessMonitor | None = None) -> CasualtyVerdict:
     """
     Decides whether one person detection is a casualty.
+
+    `monitor` is the stillness history to judge against. Track ids are only
+    unique within one video stream, so each feed passes its own; omitted, the
+    module-wide monitor is used.
 
     The detection is expected to carry `bbox`, and `track_id`/`lat`/`lng` when
     available. Missing signals narrow the evidence rather than blocking a
@@ -434,7 +439,7 @@ def judge(detection: dict, keypoints, frame_shape,
     stillness, stillness_reason = (None, "stillness_untracked")
     track_id = detection.get("track_id")
     if track_id is not None:
-        stillness, stillness_reason = _monitor.update(int(track_id), bbox, frame_shape)
+        stillness, stillness_reason = (monitor or _monitor).update(int(track_id), bbox, frame_shape)
     verdict.stillness = stillness
     verdict.reasons.append(stillness_reason)
 

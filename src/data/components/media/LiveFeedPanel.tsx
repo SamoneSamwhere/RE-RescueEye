@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, RefreshCw, Scan, X, Zap } from 'lucide-react'
+import { Building2, Camera, Flame, RefreshCw, Scan, ShieldCheck, Waves, X, Zap } from 'lucide-react'
 import { Panel, Button, Badge } from '../ui'
 import { cn } from '../../../lib/cn'
 import { feedMjpegUrl, useFeedDetection } from '../../../features/media/useFeeds'
-import type { Feed } from '../../../features/media/useFeeds'
+import type { DetectionBox, Feed, SceneLabel } from '../../../features/media/useFeeds'
 
 export interface LiveFeedPanelProps {
   feed: Feed
@@ -26,6 +26,29 @@ const BOX_COLORS: Record<string, string> = {
   fire_damage: '#ff7700',
   flood_damage: '#00d4ff',
   structural_damage: '#f97316',
+  fire: '#ff7700',
+  smoke: '#cbd5e1',
+}
+
+const SCENE_LABEL: Record<SceneLabel['label'], string> = {
+  fire_damage: 'Fire damage',
+  flood_damage: 'Flood damage',
+  structural_damage: 'Structural damage',
+  no_damage: 'No damage',
+}
+
+const SCENE_ICON: Record<SceneLabel['label'], typeof Flame> = {
+  fire_damage: Flame,
+  flood_damage: Waves,
+  structural_damage: Building2,
+  no_damage: ShieldCheck,
+}
+
+const SCENE_TONE: Record<SceneLabel['severity'], string> = {
+  CRITICAL: 'bg-danger text-foreground-inverse',
+  MODERATE: 'bg-warning text-black',
+  MINOR: 'bg-black/65 text-white',
+  CLEAR: 'bg-black/65 text-white',
 }
 
 /**
@@ -89,8 +112,40 @@ export function LiveFeedPanel({
     }
   }
 
-  const { boxes, frameWidth, frameHeight } = detection
+  const { boxes, hazards, scene, frameWidth, frameHeight } = detection
   const canScale = frameWidth > 0 && frameHeight > 0
+  const SceneIcon = (scene && SCENE_ICON[scene.label]) ?? Flame
+
+  function renderBox(box: DetectionBox, key: string | number, dashed = false) {
+    const color = BOX_COLORS[box.class] ?? '#ffffff'
+    return (
+      <div
+        key={key}
+        className="pointer-events-none absolute"
+        style={{
+          left: `${(box.bbox.x / frameWidth) * 100}%`,
+          top: `${(box.bbox.y / frameHeight) * 100}%`,
+          width: `${(box.bbox.w / frameWidth) * 100}%`,
+          height: `${(box.bbox.h / frameHeight) * 100}%`,
+          border: `2px ${dashed ? 'dashed' : 'solid'} ${color}`,
+          boxShadow: `0 0 0 1px rgba(0,0,0,.45)`,
+          // Detections arrive in discrete steps; easing between
+          // them reads as tracking rather than teleporting. Keyed
+          // on the SORT track id, so the same subject keeps the
+          // same DOM node for the transition to animate.
+          transition: 'left 200ms linear, top 200ms linear, width 200ms linear, height 200ms linear',
+        }}
+      >
+        <span
+          className="absolute -top-5 left-0 whitespace-nowrap px-1 text-[10px] font-semibold"
+          style={{ background: color, color: '#0a0e1a' }}
+        >
+          {box.class.replace('_', ' ').toUpperCase()} {Math.round(box.confidence * 100)}%
+          {box.track_id != null ? ` #${box.track_id}` : ''}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <Panel title={feed.label}>
@@ -132,43 +187,32 @@ export function LiveFeedPanel({
               {detection.error
                 ? 'AI error'
                 : detection.inferenceMs != null
-                  ? `${boxes.length} detected · ${Math.round(detection.inferenceMs)}ms`
+                  ? `${boxes.length} detected${hazards.length ? ` · ${hazards.length} fire/smoke` : ''} · ${Math.round(detection.inferenceMs)}ms`
                   : 'Analysing…'}
             </span>
           ) : null}
 
-          {/* Detection overlay */}
+          {/* Whole-frame damage label. "No damage" is left off the frame: a
+              badge on every quiet frame is noise that trains people to stop
+              reading it. */}
+          {detectEnabled && scene && scene.label !== 'no_damage' ? (
+            <span
+              title={scene.suggested_action}
+              className={cn(
+                'absolute bottom-3 left-3 flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-xs font-semibold',
+                SCENE_TONE[scene.severity],
+              )}
+            >
+              <SceneIcon className="size-3" />
+              {SCENE_LABEL[scene.label]} · {scene.severity.toLowerCase()} · {Math.round(scene.confidence * 100)}%
+            </span>
+          ) : null}
+
+          {/* Detection overlay. Hazards first so a casualty box always sits on
+              top of the smoke around it. */}
+          {canScale ? hazards.map((box, i) => renderBox(box, `hz-${i}`, box.class === 'smoke')) : null}
           {canScale
-            ? boxes.map((box, i) => {
-                const color = BOX_COLORS[box.class] ?? '#ffffff'
-                return (
-                  <div
-                    key={box.track_id ?? `${box.bbox.x}-${box.bbox.y}-${i}`}
-                    className="pointer-events-none absolute"
-                    style={{
-                      left: `${(box.bbox.x / frameWidth) * 100}%`,
-                      top: `${(box.bbox.y / frameHeight) * 100}%`,
-                      width: `${(box.bbox.w / frameWidth) * 100}%`,
-                      height: `${(box.bbox.h / frameHeight) * 100}%`,
-                      border: `2px solid ${color}`,
-                      boxShadow: `0 0 0 1px rgba(0,0,0,.45)`,
-                      // Detections arrive in discrete steps; easing between
-                      // them reads as tracking rather than teleporting. Keyed
-                      // on the SORT track id, so the same subject keeps the
-                      // same DOM node for the transition to animate.
-                      transition: 'left 200ms linear, top 200ms linear, width 200ms linear, height 200ms linear',
-                    }}
-                  >
-                    <span
-                      className="absolute -top-5 left-0 whitespace-nowrap px-1 text-[10px] font-semibold"
-                      style={{ background: color, color: '#0a0e1a' }}
-                    >
-                      {box.class.replace('_', ' ').toUpperCase()} {Math.round(box.confidence * 100)}%
-                      {box.track_id != null ? ` #${box.track_id}` : ''}
-                    </span>
-                  </div>
-                )
-              })
+            ? boxes.map((box, i) => renderBox(box, box.track_id ?? `${box.bbox.x}-${box.bbox.y}-${i}`))
             : null}
         </div>
 

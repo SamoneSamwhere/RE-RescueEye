@@ -303,6 +303,8 @@ async def delete_feed(feed_id: str):
         registry.remove_feed(feed_id)
     except FeedNotFound:
         raise HTTPException(404, f"No such feed '{feed_id}'")
+    from routers.detect import drop_stream
+    drop_stream(feed_id)
     return {"ok": True, "removed": feed_id, "count": registry.count()}
 
 
@@ -339,20 +341,14 @@ async def detect_on_feed(feed_id: str):
 
     # Imported lazily: routers.detect pulls in the model stack, and importing it
     # at module load would make stream.py depend on it for every endpoint here.
-    from routers.detect import detect_objects
-    import base64
-    result = await detect_objects({"frame": base64.b64encode(jpeg).decode(),
-                                   "annotate": False})
-
-    # Boxes are in the analysed frame's pixel space, and the caller never sees
-    # that frame — it renders the MJPEG stream at whatever size it likes. Ship
-    # the dimensions so the overlay can be scaled without a second request.
+    from routers.detect import run_detection
+    # Keyed by feed so each one keeps its own tracks and motion history. The
+    # result carries frameWidth/frameHeight: boxes are in the analysed frame's
+    # pixel space, and the caller renders the MJPEG stream at whatever size.
     try:
-        width, height = Image.open(io.BytesIO(jpeg)).size
-        result["frameWidth"], result["frameHeight"] = width, height
-    except Exception:
-        pass
-    return result
+        return await run_detection(jpeg, stream_key=feed_id, annotate=False)
+    except (ValueError, OSError) as exc:
+        raise HTTPException(502, f"Feed frame could not be decoded: {exc}")
 
 
 @router.get("/feeds/{feed_id}/snapshot")

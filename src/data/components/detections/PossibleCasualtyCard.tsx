@@ -22,16 +22,14 @@ export interface PossibleCasualtyCardProps {
  * produce both — so the decision to send responders should be made against a
  * picture, not a percentage.
  *
- * The two numbers are different questions and are labelled as such. Detector
- * confidence is "how sure am I this is a person"; the casualty score is "how
- * sure am I this person is a casualty", and it comes from the gate in
- * api/services/casualty.py rather than from any model. Showing only the first,
- * as this card used to, left the gate's entire decision invisible to the
- * person being asked to act on it.
+ * The one number shown is the casualty score — "how sure am I this person is
+ * a casualty" — which comes from the gate in api/services/casualty.py rather
+ * than from any model. Detector confidence ("how sure am I this is a person")
+ * is left to the full detection panel; a card that led with it left the gate's
+ * entire decision invisible to the person being asked to act on it.
  */
 export function PossibleCasualtyCard({ detection, onVerify, verifying = false }: PossibleCasualtyCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
-  const percent = Math.round(detection.confidence * 100)
   const isVerified = detection.validationStatus === 'VERIFIED'
   const casualtyPercent =
     detection.casualtyScore != null ? Math.round(detection.casualtyScore * 100) : null
@@ -67,7 +65,6 @@ export function PossibleCasualtyCard({ detection, onVerify, verifying = false }:
           <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
             <AlertTriangle className="size-3.5 shrink-0 text-accent" />
             Possible casualty
-            <Badge tone={percent >= 80 ? 'danger' : 'warning'}>{percent}% person</Badge>
           </p>
           <p className="mt-0.5 truncate text-xs text-foreground-muted">
             {formatDateTime(detection.detectedAt)} · {detection.location.lat.toFixed(5)},{' '}

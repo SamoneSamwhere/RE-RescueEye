@@ -23,6 +23,7 @@ from services.yolo_model import (
     get_damage_ort_session,
     get_damage_ort_names,
     damage_state,
+    ort_run,
 )
 
 logger = logging.getLogger("rescueeye.classify")
@@ -87,7 +88,7 @@ def _run_damage_ort(session, frame) -> "np.ndarray":
     img = img.crop((left, top, left + s, top + s))
     arr = np.asarray(img, dtype=np.float32) / 255.0
     arr = np.transpose(arr, (2, 0, 1))[None, ...]
-    out = session.run(None, {session.get_inputs()[0].name: arr})[0]
+    out = ort_run(session, arr)[0]
     return np.asarray(out).reshape(-1)
 
 
@@ -102,6 +103,15 @@ async def classify_damage(payload: dict = Body(...)):
     except Exception as exc:
         raise HTTPException(422, f"Could not decode frame: {exc}")
 
+    return classify_frame(frame)
+
+
+def classify_frame(frame: np.ndarray) -> dict:
+    """
+    Whole-frame damage label for an RGB frame. Shared with /detect, which
+    labels the scene on every live pass — one code path, so the preprocessing
+    and label-order fixes above cannot drift between the two endpoints.
+    """
     model     = get_damage_model()
     state     = damage_state()
     timestamp = datetime.now(timezone.utc).isoformat()

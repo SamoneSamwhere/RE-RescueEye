@@ -12,10 +12,14 @@ import base64
 import io
 import logging
 import os
+import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+import cv2
 import numpy as np
 from fastapi import APIRouter, Body, HTTPException
 from PIL import Image
@@ -25,10 +29,13 @@ from services.yolo_model import (
     PERSON_CLASS,
     get_coco_assist,
     get_coco_ort_session,
+    get_fire_ort_names,
+    get_fire_ort_session,
     get_pose_assist,
     get_pose_ort_session,
     get_victim_model,
     get_victim_ort_session,
+    ort_run,
     victim_state,
 )
 from services import casualty as casualty_gate
@@ -39,6 +46,7 @@ from services.drone_telemetry import current_pitch_deg as drone_pitch
 from services.drone_telemetry import current_state as drone_state
 from services.drone_telemetry import current_position as drone_position
 from services.tracker import Sort
+from routers.classify import classify_frame
 from routers.logs import append_log
 
 logger = logging.getLogger("rescueeye.detect")
@@ -85,6 +93,12 @@ POSE_ASSIST_CONF = float(os.getenv("POSE_ASSIST_CONF", "0.35"))
 # reaches an operator's screen. On: they come back labelled "person", for
 # threshold tuning.
 REPORT_NON_CASUALTIES = os.getenv("REPORT_NON_CASUALTIES", "false").lower() == "true"
+
+# Fire/smoke boxes and the whole-frame damage label ride along on every pass so
+# the live overlay needs no second request. Both are hazards to show, not
+# subjects to track: they skip the tracker, the store and the casualty alerts.
+FIRE_CONF       = float(os.getenv("FIRE_CONF", "0.35"))
+SCENE_CLASSIFY  = os.getenv("SCENE_CLASSIFY", "true").lower() == "true"
 
 
 
@@ -179,13 +193,6 @@ async def _send_ntfy_alert(detection: dict) -> None:
         logger.debug(f"[detect] ntfy error (non-fatal): {exc}")
 
 
-def _decode_frame(b64: str) -> np.ndarray:
-    if "," in b64:
-        b64 = b64.split(",", 1)[1]
-    raw = base64.b64decode(b64)
-    return np.array(Image.open(io.BytesIO(raw)).convert("RGB"))
-
-
 LABEL_COLORS: dict[str, tuple[int, int, int]] = {
     "casualty":          (255, 59,  59),
     "person":            (148, 163, 184),
@@ -269,6 +276,41 @@ def _letterbox(img: np.ndarray, target: int = 1280) -> tuple[np.ndarray, float, 
     return pad, scale, pad_x, pad_y
 
 
+def _input_hw(sess, default: int) -> tuple[int, int]:
+    """(height, width) a graph was exported at; `default` square if dynamic."""
+    shape = sess.get_inputs()[0].shape
+    if len(shape) == 4 and isinstance(shape[2], int) and isinstance(shape[3], int):
+        return int(shape[2]), int(shape[3])
+    return default, default
+
+
+def _blob(img: np.ndarray, target: int | tuple[int, int]) -> tuple[np.ndarray, float, int, int]:
+    """
+    Letterboxed NCHW float32 input for an ONNX YOLO graph, built in one buffer.
+
+    The old chain — PIL resize, pad, astype, /255, transpose, copy — made five
+    full-size copies per model and was ~75ms of every pass. cv2 INTER_LINEAR is
+    also what Ultralytics letterboxes with in training; PIL's BILINEAR
+    antialiases on downscale, so the models were seeing slightly softer frames
+    than they were trained on. Returns (blob, scale, pad_x, pad_y) like
+    _letterbox.
+
+    `target` may be (height, width): a graph exported at 736x1280 takes a 16:9
+    frame with 16 rows of padding instead of the 560 a 1280 square needs —
+    44% of a square input's compute was spent on grey bars.
+    """
+    th, tw = (target, target) if isinstance(target, int) else target
+    h, w = img.shape[:2]
+    scale = min(th / h, tw / w)
+    new_w, new_h = int(round(w * scale)), int(round(h * scale))
+    resized = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+    pad_x, pad_y = (tw - new_w) // 2, (th - new_h) // 2
+    blob = np.full((1, 3, th, tw), 114, dtype=np.float32)
+    blob[0, :, pad_y:pad_y + new_h, pad_x:pad_x + new_w] = resized.transpose(2, 0, 1)
+    blob *= 1.0 / 255.0
+    return blob, scale, pad_x, pad_y
+
+
 def _nms(boxes: np.ndarray, scores: np.ndarray, iou_thresh: float = 0.45) -> list[int]:
     """Simple NMS — returns surviving indices."""
     if len(boxes) == 0:
@@ -295,12 +337,9 @@ def _run_victim_ort(frame: np.ndarray) -> tuple[list[dict], float]:
     sess = get_victim_ort_session()
     t0   = time.perf_counter()
 
-    padded, scale, pad_x, pad_y = _letterbox(frame, 1280)
-    blob = padded.astype(np.float32) / 255.0
-    blob = blob.transpose(2, 0, 1)[np.newaxis]  # NCHW
+    blob, scale, pad_x, pad_y = _blob(frame, _input_hw(sess, 1280))
 
-    input_name = sess.get_inputs()[0].name
-    raw = sess.run(None, {input_name: blob})[0]  # [1, 5, 33600]
+    raw = ort_run(sess, blob)[0]  # [1, 5, 33600]
 
     preds = raw[0]          # [5, 33600]
     cx, cy, bw, bh = preds[0], preds[1], preds[2], preds[3]
@@ -356,11 +395,9 @@ def _run_victim_ort_sahi(frame: np.ndarray) -> tuple[list[dict], float]:
     all_boxes:  list[list[float]] = []
     all_scores: list[float]       = []
 
-    def _infer_tile(tile: np.ndarray, off_x: int, off_y: int, target: int) -> None:
-        padded, scale, pad_x, pad_y = _letterbox(tile, target)
-        blob = padded.astype(np.float32) / 255.0
-        blob = blob.transpose(2, 0, 1)[np.newaxis]
-        raw  = sess.run(None, {sess.get_inputs()[0].name: blob})[0][0]  # [5, N]
+    def _infer_tile(tile: np.ndarray, off_x: int, off_y: int, target: tuple[int, int]) -> None:
+        blob, scale, pad_x, pad_y = _blob(np.ascontiguousarray(tile), target)
+        raw  = ort_run(sess, blob)[0][0]  # [5, N]
         cx, cy, bw_, bh_, conf = raw[0], raw[1], raw[2], raw[3], raw[4]
         mask = conf >= CONFIDENCE_THRESHOLD
         if not mask.any():
@@ -376,11 +413,11 @@ def _run_victim_ort_sahi(frame: np.ndarray) -> tuple[list[dict], float]:
                 all_scores.append(float(conf[i]))
 
     # Determine model's fixed input size from the session
-    input_shape = sess.get_inputs()[0].shape   # e.g. [1, 3, 1280, 1280]
-    model_size  = int(input_shape[2]) if len(input_shape) == 4 and isinstance(input_shape[2], int) else 1280
+    model_size = _input_hw(sess, 1280)   # e.g. (1280, 1280), or (736, 1280) for a rectangular export
 
     # Pass 1 — full frame (global context)
     _infer_tile(frame, 0, 0, model_size)
+    n = SAHI_TILES   # logged below even when the early exit skips the tiles
 
     # Adaptive early-exit: if full-frame already found a confident detection,
     # tiles won't add much — skip them to save ~800ms
@@ -388,7 +425,6 @@ def _run_victim_ort_sahi(frame: np.ndarray) -> tuple[list[dict], float]:
         logger.info(f"[ort-sahi] skipping tiles — full-frame conf={max(all_scores):.2f} >= {SAHI_SKIP_CONF}")
     else:
         # Pass 2…N — NxN tile grid with 25% overlap (sequential — DirectML is single-threaded)
-        n      = SAHI_TILES
         tile_w = fw // n
         tile_h = fh // n
         ovl_x  = int(tile_w * 0.25)
@@ -438,11 +474,8 @@ def _run_coco_assist_ort(frame: np.ndarray) -> list[dict] | None:
     if sess is None:
         return None
     try:
-        size = sess.get_inputs()[0].shape[2]
-        size = int(size) if isinstance(size, int) else COCO_ASSIST_IMGSZ
-        padded, scale, pad_x, pad_y = _letterbox(frame, size)
-        blob = (padded.astype(np.float32) / 255.0).transpose(2, 0, 1)[np.newaxis].copy()
-        raw = sess.run(None, {sess.get_inputs()[0].name: blob})[0][0]   # [84, N]
+        blob, scale, pad_x, pad_y = _blob(frame, _input_hw(sess, COCO_ASSIST_IMGSZ))
+        raw = ort_run(sess, blob)[0][0]   # [84, N]
     except Exception as exc:
         logger.warning(f"[detect] COCO assist ORT failed: {exc}")
         return None
@@ -472,6 +505,51 @@ def _run_coco_assist_ort(frame: np.ndarray) -> list[dict] | None:
             "confidence": round(float(conf[i]), 3),
             "bbox":       {"x": x, "y": y, "w": min(fw - x, w), "h": min(fh - y, h)},
         })
+    return out
+
+
+def _run_hazards(frame: np.ndarray) -> list[dict]:
+    """
+    Fire and smoke boxes from the D-Fire detector, or [] when it isn't loaded.
+
+    Output is [1, 4 + nc, N] like the COCO graph, with nc=2. Classes are NMS'd
+    separately: smoke rises out of the flame, so a smoke box that overlaps a
+    fire box is a second finding, not a duplicate of the first.
+    """
+    sess = get_fire_ort_session()
+    if sess is None:
+        return []
+    try:
+        blob, scale, pad_x, pad_y = _blob(frame, _input_hw(sess, 640))
+        raw = ort_run(sess, blob)[0][0]   # [4+nc, N]
+    except Exception as exc:
+        logger.warning(f"[detect] fire ORT failed: {exc}")
+        return []
+
+    names = get_fire_ort_names()
+    fh, fw = frame.shape[:2]
+    out: list[dict] = []
+    for cls_id, name in enumerate(names):
+        scores = raw[4 + cls_id]
+        keep = scores >= FIRE_CONF
+        if not keep.any():
+            continue
+        cx, cy, bw, bh = raw[0][keep], raw[1][keep], raw[2][keep], raw[3][keep]
+        conf = scores[keep]
+        boxes = np.stack([
+            ((cx - bw / 2) - pad_x) / scale, ((cy - bh / 2) - pad_y) / scale,
+            ((cx + bw / 2) - pad_x) / scale, ((cy + bh / 2) - pad_y) / scale,
+        ], axis=1)
+        for i in _nms(boxes, conf):
+            x, y = max(0, int(boxes[i][0])), max(0, int(boxes[i][1]))
+            w, h = min(fw, int(boxes[i][2])) - x, min(fh, int(boxes[i][3])) - y
+            if w <= 0 or h <= 0:
+                continue
+            out.append({
+                "class":      name,
+                "confidence": round(float(conf[i]), 3),
+                "bbox":       {"x": x, "y": y, "w": w, "h": h},
+            })
     return out
 
 
@@ -527,11 +605,8 @@ def _run_pose_assist_ort(frame: np.ndarray) -> list[dict] | None:
     if sess is None:
         return None
     try:
-        size = sess.get_inputs()[0].shape[2]
-        size = int(size) if isinstance(size, int) else COCO_ASSIST_IMGSZ
-        padded, scale, pad_x, pad_y = _letterbox(frame, size)
-        blob = (padded.astype(np.float32) / 255.0).transpose(2, 0, 1)[np.newaxis].copy()
-        raw = sess.run(None, {sess.get_inputs()[0].name: blob})[0][0]   # [56, N]
+        blob, scale, pad_x, pad_y = _blob(frame, _input_hw(sess, COCO_ASSIST_IMGSZ))
+        raw = ort_run(sess, blob)[0][0]   # [56, N]
     except Exception as exc:
         logger.warning(f"[detect] pose assist ORT failed: {exc}")
         return None
@@ -679,7 +754,12 @@ def _run_victim(frame: np.ndarray) -> tuple[list[dict], float, list[dict]]:
     detections, elapsed = _run_victim_primary(frame)
 
     poses = _run_pose_assist(frame)
-    assist = poses if poses else _run_coco_assist(frame)
+    # Fall back to the plain COCO pass only when there is no pose model — not
+    # when the pose model looked and found nobody. Both detect COCO class 0 at
+    # the same threshold, so a second look at an empty frame finds nothing new,
+    # and it cost ~95ms on exactly the frames a search flight is mostly made of.
+    pose_loaded = get_pose_ort_session() is not None or get_pose_assist() is not None
+    assist = poses if pose_loaded else _run_coco_assist(frame)
     if assist:
         detections = _merge_detections(detections, assist)
         elapsed = (time.perf_counter() - t_all) * 1000
@@ -740,122 +820,184 @@ def _run_victim_primary(frame: np.ndarray) -> tuple[list[dict], float]:
     return detections, round(elapsed_ms, 1)
 
 
-@router.post("")
-async def detect_objects(payload: dict = Body(...)):
-    b64 = payload.get("frame", "")
-    if not b64:
-        raise HTTPException(422, "'frame' field with base64 JPEG is required")
-    try:
-        frame = _decode_frame(b64)
-    except Exception as exc:
-        raise HTTPException(422, f"Could not decode frame: {exc}")
+# ── Per-stream state ──────────────────────────────────────────────────────────
+# Track ids, camera motion and stillness history only mean something within one
+# video. They used to be single module-level objects, so with two feeds open
+# the tracker matched feed 1's boxes against feed 2's, and egomotion measured
+# "camera motion" between frames of different videos — which corrupted exactly
+# the stillness signal the casualty gate leans on.
+@dataclass
+class StreamState:
+    tracker:   Sort
+    egomotion: EgoMotionEstimator
+    stillness: casualty_gate.StillnessMonitor
+    # One pass at a time per stream: tracking and stillness are sequential by
+    # nature, and two overlapping passes would feed the tracker out of order.
+    lock:      threading.Lock = field(default_factory=threading.Lock)
+    scene:     dict | None = None
+    scene_at:  float = float("-inf")
+
+
+# Plain /detect callers with no stream key keep the module-level objects, so
+# existing clients (and the test fixtures that reset _tracker) are unchanged.
+_default_stream = StreamState(_tracker, _egomotion, casualty_gate.monitor())
+_streams: dict[str, StreamState] = {}
+_streams_lock = threading.Lock()
+
+
+def stream_state(key: str | None) -> StreamState:
+    if not key:
+        return _default_stream
+    with _streams_lock:
+        st = _streams.get(key)
+        if st is None:
+            st = _streams[key] = StreamState(
+                Sort(max_age=4, min_hits=1, iou_threshold=0.20),
+                EgoMotionEstimator(),
+                casualty_gate.StillnessMonitor(),
+            )
+        return st
+
+
+def drop_stream(key: str) -> None:
+    """Forget a closed feed's tracks, so a later feed never inherits them."""
+    with _streams_lock:
+        _streams.pop(key, None)
+
+
+# Inference runs off the event loop. Done inline, a ~150ms pass froze every
+# other request for its duration — including the MJPEG generators, so all
+# four feeds stuttered whenever any one of them was being analysed. Two
+# workers let one stream's CPU work (decode, egomotion, NMS, gate) overlap
+# another's GPU work; GPU calls themselves are serialised by GPU_LOCK.
+DETECT_WORKERS = int(os.getenv("DETECT_WORKERS", "2"))
+_pool = ThreadPoolExecutor(max_workers=DETECT_WORKERS, thread_name_prefix="detect")
+
+# The scene label is a whole-frame judgement that changes over seconds, not
+# frames; classifying it on every pass of every feed was paying for the same
+# answer again. Fire/smoke boxes are NOT throttled: the drone moves, so a box
+# cached for even a second would sit on the wrong patch of ground.
+SCENE_INTERVAL_S = float(os.getenv("SCENE_INTERVAL_S", "1.0"))
+
+
+def _decode_jpeg(raw: bytes) -> np.ndarray:
+    """JPEG bytes -> RGB array. cv2 decodes a 1280x720 frame in a third of PIL's time."""
+    arr = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if arr is None:
+        # Not something cv2 can read; PIL gives a useful error message for it.
+        return np.array(Image.open(io.BytesIO(raw)).convert("RGB"))
+    return cv2.cvtColor(arr, cv2.COLOR_BGR2RGB)
+
+
+def _analyse(jpeg: bytes, stream: StreamState, want_annotation: bool,
+             force_mode: str | None) -> dict:
+    """Everything that costs time. Runs on a worker thread; touches no shared stores."""
+    frame = _decode_jpeg(jpeg)
 
     # ── Dual-technology mode selection ────────────────────────────────────────
     brightness = _measure_brightness(frame)
-    # Callers that draw their own overlay (Live Monitoring renders the MJPEG
-    # stream with positioned boxes) don't need the annotated JPEG, and building
-    # it costs ~60ms a frame — thermal colouring of the full frame plus a JPEG
-    # encode. Opting out is what lets the detection loop run at a cadence that
-    # keeps the box on the casualty.
-    want_annotation = bool(payload.get("annotate", True))
-    force_mode = payload.get("force_mode")  # "visual" | "thermal" | null
     if force_mode in ("visual", "thermal"):
         mode = force_mode
     else:
         mode = "thermal" if brightness < DARK_THRESHOLD else "visual"
 
-    if mode == "thermal":
-        # Thermal/life-sensor mode: display as infrared colormap, run YOLO on
-        # the original RGB (the colouring is display-only). The class stays
-        # "casualty" — thermal vs visual is reported in `mode`, so it does not
-        # need a second name for the same subject.
-        display_frame                   = _apply_thermal(frame) if want_annotation else frame
-        detections, inference_ms, poses = _run_victim(frame)
-    else:
-        display_frame                   = frame
+    # Thermal/life-sensor mode: display as infrared colormap, run YOLO on the
+    # original RGB (the colouring is display-only). The class stays "casualty"
+    # — thermal vs visual is reported in `mode`, so it does not need a second
+    # name for the same subject.
+    display_frame = _apply_thermal(frame) if (mode == "thermal" and want_annotation) else frame
+
+    with stream.lock:
         detections, inference_ms, poses = _run_victim(frame)
 
-    # ── SORT tracking — assign persistent IDs via Kalman filter ─────────────
-    if detections:
-        det_arr = np.array([
-            [d["bbox"]["x"], d["bbox"]["y"],
-             d["bbox"]["x"] + d["bbox"]["w"],
-             d["bbox"]["y"] + d["bbox"]["h"],
-             d["confidence"]]
-            for d in detections
-        ], dtype=np.float32)
-        tracked = _tracker.update(det_arr)  # [M, 6]: x1,y1,x2,y2,score,track_id
-        detections = []
-        for row in tracked:
-            x1, y1, x2, y2, score, tid = row
-            fh, fw = frame.shape[:2]
-            detections.append({
-                # Still a person here. The casualty verdict is assigned below,
-                # once posture, stillness and responder context are in hand —
-                # this used to hardcode "casualty" for every tracked box.
-                "class":      "person",
-                "confidence": round(float(score), 3),
-                "track_id":   int(tid),
-                "bbox":       {
-                    "x": max(0, int(x1)), "y": max(0, int(y1)),
-                    "w": min(fw - max(0, int(x1)), int(x2 - x1)),
-                    "h": min(fh - max(0, int(y1)), int(y2 - y1)),
-                },
+        # ── SORT tracking — assign persistent IDs via Kalman filter ─────────
+        fh, fw = frame.shape[:2]
+        if detections:
+            det_arr = np.array([
+                [d["bbox"]["x"], d["bbox"]["y"],
+                 d["bbox"]["x"] + d["bbox"]["w"],
+                 d["bbox"]["y"] + d["bbox"]["h"],
+                 d["confidence"]]
+                for d in detections
+            ], dtype=np.float32)
+            tracked = stream.tracker.update(det_arr)  # [M, 6]: x1,y1,x2,y2,score,track_id
+            detections = []
+            for row in tracked:
+                x1, y1, x2, y2, score, tid = row
+                detections.append({
+                    # Still a person here. The casualty verdict is assigned
+                    # below, once posture, stillness and responder context are
+                    # in hand — this used to hardcode "casualty" for every box.
+                    "class":      "person",
+                    "confidence": round(float(score), 3),
+                    "track_id":   int(tid),
+                    "bbox":       {
+                        "x": max(0, int(x1)), "y": max(0, int(y1)),
+                        "w": min(fw - max(0, int(x1)), int(x2 - x1)),
+                        "h": min(fh - max(0, int(y1)), int(y2 - y1)),
+                    },
+                })
+        else:
+            stream.tracker.update(np.empty((0, 5), dtype=np.float32))
+
+        frame_id  = str(uuid.uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # One position for the whole frame: every casualty visible in this
+        # frame is on the ground beneath the drone at this instant. Sampling a
+        # fresh random coordinate per detection (the previous behaviour)
+        # scattered casualties from a single frame kilometres apart on the map.
+        lat, lng = drone_position()
+
+        # Each subject gets its own ground coordinate where the geometry allows
+        # it, falling back to the drone's. `subject_located` records which
+        # happened — the responder veto below must not act on a position that
+        # is really the aircraft's, or a drone hovering near one rescuer would
+        # suppress every casualty in the frame.
+        state = drone_state()
+        annotated = []
+        for i, d in enumerate(detections):
+            fix = georef.locate_detection(
+                d["bbox"], fw, fh, lat, lng,
+                state.altitude_m, state.heading_deg, state.gimbal_pitch_deg,
+            )
+            annotated.append({
+                **d,
+                "id": f"{frame_id[:8]}-{i}",
+                "timestamp": timestamp,
+                "lat": round(fix[0], 6) if fix else lat,
+                "lng": round(fix[1], 6) if fix else lng,
+                "subject_located": fix is not None,
             })
-    else:
-        _tracker.update(np.empty((0, 5), dtype=np.float32))
 
-    frame_id  = str(uuid.uuid4())
-    timestamp = datetime.now(timezone.utc).isoformat()
+        # ── Casualty gate — which of these people are casualties ────────────
+        # Runs after the position stamp, because the responder veto is a
+        # question about where the detection is, and after tracking, because
+        # stillness is a property of a track rather than of a box.
+        camera_motion = stream.egomotion.estimate(frame, exclude=annotated)
+        stream.stillness.advance_camera(camera_motion, frame.shape)
+        # Camera pitch decides how posture is measured at all — straight down,
+        # the angle of a torso means the opposite of what it means from the side.
+        pitch_deg = drone_pitch()
+        for det in annotated:
+            verdict = casualty_gate.judge(det, _keypoints_for(det["bbox"], poses),
+                                          frame.shape, pitch_deg, monitor=stream.stillness)
+            det["class"] = "casualty" if verdict.is_casualty else "person"
+            det.update(verdict.as_fields())
+            det["camera_motion_known"] = camera_motion.ok
 
-    if inference_ms > LATENCY_WARN_MS:
-        logger.warning(
-            f"[detect] LATENCY EXCEEDED: {inference_ms:.0f}ms > {LATENCY_WARN_MS:.0f}ms"
-        )
-
-    # One position for the whole frame: every casualty visible in this frame is
-    # on the ground beneath the drone at this instant. Sampling a fresh random
-    # coordinate per detection (the previous behaviour) scattered casualties
-    # from a single frame kilometres apart on the map.
-    lat, lng = drone_position()
-
-    # Each subject gets its own ground coordinate where the geometry allows it,
-    # falling back to the drone's. `subject_located` records which happened —
-    # the responder veto below must not act on a position that is really the
-    # aircraft's, or a drone hovering near one rescuer would suppress every
-    # casualty in the frame.
-    state = drone_state()
-    fh, fw = frame.shape[0], frame.shape[1]
-    annotated = []
-    for i, d in enumerate(detections):
-        fix = georef.locate_detection(
-            d["bbox"], fw, fh, lat, lng,
-            state.altitude_m, state.heading_deg, state.gimbal_pitch_deg,
-        )
-        annotated.append({
-            **d,
-            "id": f"{frame_id[:8]}-{i}",
-            "timestamp": timestamp,
-            "lat": round(fix[0], 6) if fix else lat,
-            "lng": round(fix[1], 6) if fix else lng,
-            "subject_located": fix is not None,
-        })
-
-    # ── Casualty gate — which of these people are casualties ────────────────
-    # Runs after the position stamp, because the responder veto is a question
-    # about where the detection is, and after tracking, because stillness is a
-    # property of a track rather than of a box.
-    camera_motion = _egomotion.estimate(frame, exclude=annotated)
-    casualty_gate.monitor().advance_camera(camera_motion, frame.shape)
-    # Camera pitch decides how posture is measured at all — straight down, the
-    # angle of a torso means the opposite of what it means from the side.
-    pitch_deg = drone_pitch()
-    for det in annotated:
-        verdict = casualty_gate.judge(det, _keypoints_for(det["bbox"], poses),
-                                      frame.shape, pitch_deg)
-        det["class"] = "casualty" if verdict.is_casualty else "person"
-        det.update(verdict.as_fields())
-        det["camera_motion_known"] = camera_motion.ok
+        # ── Hazards — where the fire is, and what the scene is ──────────────
+        # Run on the original frame, never the thermal display copy: both
+        # models were trained on colour, and flame is the one thing the
+        # inferno LUT would make look like everything else.
+        hazards = _run_hazards(frame)
+        if SCENE_CLASSIFY and time.monotonic() - stream.scene_at >= SCENE_INTERVAL_S:
+            try:
+                stream.scene = classify_frame(frame)
+                stream.scene_at = time.monotonic()
+            except Exception as exc:
+                logger.warning(f"[detect] scene classification failed: {exc}")
+        scene = stream.scene if SCENE_CLASSIFY else None
 
     casualties = [d for d in annotated if d["class"] == "casualty"]
 
@@ -867,30 +1009,57 @@ async def detect_objects(payload: dict = Body(...)):
     # Set REPORT_NON_CASUALTIES=true to see the people the gate rejected, which
     # is useful when tuning thresholds and noise the rest of the time.
     emitted = annotated if REPORT_NON_CASUALTIES else casualties
-    suppressed = len(annotated) - len(emitted)
 
-    add_detections(emitted, inference_ms,
-                   frame_width=frame.shape[1], frame_height=frame.shape[0],
-                   frame=frame)
-
+    # Callers that draw their own overlay (Live Monitoring renders the MJPEG
+    # stream with positioned boxes) opt out of the annotated JPEG, which costs
+    # ~60ms a frame — thermal colouring of the full frame plus a JPEG encode.
     annotated_frame = (_annotate_frame(display_frame, emitted)
                        if emitted and want_annotation else None)
-
     # In thermal mode always return the thermal frame so the UI can show it
     if want_annotation and mode == "thermal" and annotated_frame is None:
         buf = io.BytesIO()
         Image.fromarray(display_frame).save(buf, format="JPEG", quality=55)
         annotated_frame = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
-    # Persist to inference log
+    return {
+        "frame": frame, "annotated": annotated, "casualties": casualties,
+        "emitted": emitted, "hazards": hazards, "scene": scene, "poses": poses,
+        "camera_motion_ok": camera_motion.ok, "inference_ms": inference_ms,
+        "frame_id": frame_id, "annotated_frame": annotated_frame,
+        "mode": mode, "brightness": brightness,
+    }
+
+
+async def run_detection(jpeg: bytes, stream_key: str | None = None,
+                        annotate: bool = True, force_mode: str | None = None) -> dict:
+    """
+    One detection pass over a JPEG frame. The heavy work runs on the detect
+    pool; the store, log and alerts are written back here on the event loop,
+    which is the only place they are read from.
+    """
+    loop = asyncio.get_running_loop()
+    r = await loop.run_in_executor(
+        _pool, _analyse, jpeg, stream_state(stream_key), annotate, force_mode)
+
+    frame, emitted, casualties = r["frame"], r["emitted"], r["casualties"]
+    inference_ms = r["inference_ms"]
+    suppressed = len(r["annotated"]) - len(emitted)
+
+    if inference_ms > LATENCY_WARN_MS:
+        logger.warning(f"[detect] LATENCY EXCEEDED: {inference_ms:.0f}ms > {LATENCY_WARN_MS:.0f}ms")
+
+    add_detections(emitted, inference_ms,
+                   frame_width=frame.shape[1], frame_height=frame.shape[0],
+                   frame=frame)
+
     append_log({
-        "frame_id":        frame_id,
+        "frame_id":        r["frame_id"],
         "detection_count": len(emitted),
         "casualty_count":  len(casualties),
-        "people_seen":     len(annotated),
+        "people_seen":     len(r["annotated"]),
         "inference_ms":    inference_ms,
         "model_version":   victim_state().version,
-        "mode":            mode,
+        "mode":            r["mode"],
     })
 
     # Bridge high-confidence detections to Node.js /incidents + ntfy push
@@ -901,12 +1070,13 @@ async def detect_objects(payload: dict = Body(...)):
         asyncio.create_task(_maybe_create_incident(det))
         asyncio.create_task(_send_ntfy_alert(det))
 
+    scene = r["scene"]
     logger.info(
-        f"[detect] mode={mode} brightness={brightness:.0f} "
-        f"people={len(annotated)} casualties={len(casualties)} suppressed={suppressed} "
-        f"pose={'yes' if poses else 'no'} ego={'ok' if camera_motion.ok else 'unknown'} "
-        f"inference={inference_ms:.0f}ms "
-        f"model={victim_state().version}"
+        f"[detect] stream={stream_key or '-'} mode={r['mode']} brightness={r['brightness']:.0f} "
+        f"people={len(r['annotated'])} casualties={len(casualties)} suppressed={suppressed} "
+        f"hazards={len(r['hazards'])} scene={scene['label'] if scene else '-'} "
+        f"pose={'yes' if r['poses'] else 'no'} ego={'ok' if r['camera_motion_ok'] else 'unknown'} "
+        f"inference={inference_ms:.0f}ms model={victim_state().version}"
     )
 
     return {
@@ -915,12 +1085,37 @@ async def detect_objects(payload: dict = Body(...)):
         # People seen in this frame, and how many of them the gate withheld as
         # not casualties. Reported so "nothing found" can be told apart from
         # "found three people, none of them casualties".
-        "person_count":      len(annotated),
+        "person_count":      len(r["annotated"]),
         "suppressed_count":  suppressed,
+        # Fire/smoke boxes in the same pixel space as `detections`, and the
+        # damage classifier's label for the whole frame (null when disabled).
+        "hazards":           r["hazards"],
+        "scene":             scene,
         "inference_time_ms": inference_ms,
-        "frame_id":          frame_id,
+        "frame_id":          r["frame_id"],
         "model_version":     victim_state().version,
-        "annotated_frame":   annotated_frame,
-        "mode":              mode,
-        "brightness":        round(brightness, 1),
+        "annotated_frame":   r["annotated_frame"],
+        "mode":              r["mode"],
+        "brightness":        round(r["brightness"], 1),
+        # Boxes are in this frame's pixel space; an overlay needs it to scale.
+        "frameWidth":        int(frame.shape[1]),
+        "frameHeight":       int(frame.shape[0]),
     }
+
+
+@router.post("")
+async def detect_objects(payload: dict = Body(...)):
+    b64 = payload.get("frame", "")
+    if not b64:
+        raise HTTPException(422, "'frame' field with base64 JPEG is required")
+    if "," in b64:
+        b64 = b64.split(",", 1)[1]
+    try:
+        jpeg = base64.b64decode(b64)
+        return await run_detection(jpeg,
+                                   stream_key=payload.get("stream"),
+                                   annotate=bool(payload.get("annotate", True)),
+                                   force_mode=payload.get("force_mode"))
+    except (ValueError, OSError) as exc:
+        # binascii.Error is a ValueError; PIL's UnidentifiedImageError is an OSError.
+        raise HTTPException(422, f"Could not decode frame: {exc}")

@@ -43,8 +43,19 @@ export interface DetectionBox {
   track_id?: number
 }
 
+/** Whole-frame damage label from the classifier (api/routers/classify.py). */
+export interface SceneLabel {
+  label: 'fire_damage' | 'flood_damage' | 'structural_damage' | 'no_damage'
+  confidence: number
+  severity: 'CRITICAL' | 'MODERATE' | 'MINOR' | 'CLEAR'
+  suggested_action: string
+}
+
 interface DetectResponse {
   detections: DetectionBox[]
+  /** Fire/smoke boxes, same pixel space as `detections`. Never tracked. */
+  hazards?: DetectionBox[]
+  scene?: SceneLabel | null
   inference_time_ms: number
   model_version: string
   brightness: number
@@ -130,6 +141,8 @@ export const mediaLabel = (media: StoredMedia) => media.original_name
 
 export interface DetectionState {
   boxes: DetectionBox[]
+  hazards: DetectionBox[]
+  scene: SceneLabel | null
   /** Natural size of the frame the boxes were measured against. */
   frameWidth: number
   frameHeight: number
@@ -141,6 +154,8 @@ export interface DetectionState {
 
 const EMPTY: DetectionState = {
   boxes: [],
+  hazards: [],
+  scene: null,
   frameWidth: 0,
   frameHeight: 0,
   inferenceMs: null,
@@ -178,6 +193,8 @@ export function useFeedDetection(feedId: string | null, enabled: boolean, interv
         if (cancelled.current) return
         setState({
           boxes: result.detections ?? [],
+          hazards: result.hazards ?? [],
+          scene: result.scene ?? null,
           frameWidth: result.frameWidth ?? 0,
           frameHeight: result.frameHeight ?? 0,
           inferenceMs: result.inference_time_ms ?? null,
