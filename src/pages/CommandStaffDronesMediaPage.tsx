@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Sparkles, ArrowRight, CheckCircle2, Plus, Wifi } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
@@ -15,6 +15,7 @@ import {
   EMPTY_MEDIA_FILTERS,
   hasActiveFilters,
 } from '../data/components/media'
+import { UploadedFeedsSection } from '../data/components/media/UploadedFeedsSection'
 import type { MediaFilters } from '../data/components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
@@ -64,6 +65,9 @@ export function CommandStaffDronesMediaPage() {
   const captureFrame = useCaptureFrame()
   const deleteMedia = useDeleteMedia()
   const monitorMedia = useMonitorMedia()
+  // Recorded clips play here, in their own section — Live Monitoring is live feeds only.
+  const uploadedFeedsRef = useRef<HTMLDivElement>(null)
+  const showUploadedFeeds = () => uploadedFeedsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   const addFeed = useAddFeed()
 
   // Memoised so the `reviewing` lookup below has a stable dependency; a bare
@@ -257,20 +261,16 @@ export function CommandStaffDronesMediaPage() {
           setUploadedName(stored.original_name)
           setDetectionCreated(true)
           handleCloseFeedModal()
-          // Open it as a feed straight away and hand off to Live Monitoring —
-          // an uploaded clip is only useful once the AI is running on it.
-          monitorMedia.mutate(stored.id, {
-            onSuccess: () => navigate(ROUTES.commandStaffLiveMonitoring),
-          })
+          // Open it as a feed straight away — an uploaded clip is only useful
+          // once the AI is running on it — and play it in Uploaded Feeds below.
+          monitorMedia.mutate(stored.id, { onSuccess: showUploadedFeeds })
         },
       },
     )
   }
 
   function handleMonitor(media: StoredMedia) {
-    monitorMedia.mutate(media.id, {
-      onSuccess: () => navigate(ROUTES.commandStaffLiveMonitoring),
-    })
+    monitorMedia.mutate(media.id, { onSuccess: showUploadedFeeds })
   }
 
   function handleCaptureFrame(tSec: number) {
@@ -357,6 +357,10 @@ export function CommandStaffDronesMediaPage() {
             </Link>
           </div>
         ) : null}
+
+        <Reveal delayMs={100}>
+          <UploadedFeedsSection ref={uploadedFeedsRef} />
+        </Reveal>
 
         <Reveal delayMs={100}>
           <StoredMediaTable

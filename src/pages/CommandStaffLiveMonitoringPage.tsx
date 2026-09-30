@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MonitorPlay, Sparkles, ArrowRight, ServerCrash, Zap, ZapOff } from 'lucide-react'
+import { Radio, ServerCrash, Zap, ZapOff } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { Panel, EmptyState, Button, LoadingState } from '../data/components/ui'
@@ -9,29 +9,22 @@ import { ResponderExclusionPanel } from '../data/components/command-staff'
 import { PossibleCasualtyCard } from '../data/components/detections'
 import { useCommandStaffData } from '../features/command-staff'
 import { useFeeds, useCloseFeed } from '../features/media/useFeeds'
-import type { Feed } from '../features/media/useFeeds'
 import { ROUTES } from '../routes/paths'
 
 export function CommandStaffLiveMonitoringPage() {
-  const { drones, detections, captureMedia, verifyDetection } = useCommandStaffData()
+  const { detections, verifyDetection } = useCommandStaffData()
   const navigate = useNavigate()
-  const [detectionCreated, setDetectionCreated] = useState(false)
   const [detectEnabled, setDetectEnabled] = useState(true)
 
   const feedsQuery = useFeeds()
   const closeFeed = useCloseFeed()
 
-  const feeds = feedsQuery.data?.feeds ?? []
+  // Live drone feeds only. Uploaded clips play in their own section on Drones
+  // & Media: a replayed recording on this wall reads as something happening now.
+  const feeds = (feedsQuery.data?.feeds ?? []).filter((feed) => feed.kind === 'live')
   // The API suggests a cadence based on how many panels are open, so four
   // feeds don't all hammer /detect at the single-feed rate.
   const intervalMs = feedsQuery.data?.suggestedDetectIntervalMs ?? 350
-
-  /** Records the moment as an in-app media asset, as the mock flow always did. */
-  function handleSaveToHistory(feed: Feed) {
-    const drone = drones.find((d) => feed.label.includes(d.name))
-    captureMedia('LIVE_FEED', drone?.id)
-    setDetectionCreated(true)
-  }
 
   // Same card as Detection Review, surfaced here so a casualty spotted on the
   // feed can be actioned without leaving the screen the operator is watching.
@@ -51,43 +44,14 @@ export function CommandStaffLiveMonitoringPage() {
     <>
       <PageHeader
         title="Live Monitoring"
-        description="Every feed currently in progress, full-size, with AI detection running over it."
+        description="Live drone feeds, full-size, with AI detection running over them."
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        {detectionCreated ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-accent-border bg-accent-subtle px-3 py-2 text-sm text-foreground">
-            <span className="flex items-center gap-2">
-              <Sparkles className="size-4 shrink-0 text-accent" />
-              AI processed the new media and produced a detection — pending review.
-            </span>
-            <Link
-              to={ROUTES.commandStaffDetections}
-              className="flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-            >
-              Review it
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-        ) : null}
-
-        {pendingCasualty ? (
-          <PossibleCasualtyCard
-            detection={pendingCasualty}
-            onVerify={(id) => {
-              verifyDetection(id, 'MEDIUM', '')
-              // Verifying opens an incident; Detection Review is where its
-              // priority is set and the follow-up happens, so go there with
-              // the casualty already selected.
-              navigate(ROUTES.commandStaffDetections, { state: { selectDetectionId: id } })
-            }}
-          />
-        ) : null}
-
         {feeds.length > 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-foreground-secondary">
-              {feeds.length} of {feedsQuery.data?.max ?? 4} feeds running
+              {feeds.length} live feed{feeds.length === 1 ? '' : 's'} running
             </p>
             <Button
               variant={detectEnabled ? 'outline' : 'secondary'}
@@ -121,9 +85,9 @@ export function CommandStaffLiveMonitoringPage() {
           ) : feeds.length === 0 ? (
             <Panel title="Live Feeds">
               <EmptyState
-                icon={MonitorPlay}
-                title="No feeds running right now"
-                description="Upload recorded footage in Drones & Media and choose Monitor to watch it here with AI detection."
+                icon={Radio}
+                title="No live drone feeds right now"
+                description="Connect a drone in Drones & Media to see its live feed here. Uploaded recordings play in Drones & Media, not on this screen."
                 action={
                   <Link to={ROUTES.commandStaffMedia}>
                     <Button size="sm">Go to Drones & Media</Button>
@@ -140,12 +104,26 @@ export function CommandStaffLiveMonitoringPage() {
                   detectEnabled={detectEnabled}
                   intervalMs={intervalMs}
                   onClose={(id) => closeFeed.mutate(id)}
-                  onSaveToHistory={handleSaveToHistory}
                 />
               ))}
             </div>
           )}
         </Reveal>
+
+        {/* Incident details sit below all feeds: the feeds are what an operator
+            watches, and the casualty awaiting a decision is what they act on next. */}
+        {pendingCasualty ? (
+          <PossibleCasualtyCard
+            detection={pendingCasualty}
+            onVerify={(id) => {
+              verifyDetection(id, 'MEDIUM', '')
+              // Verifying opens an incident; Detection Review is where its
+              // priority is set and the follow-up happens, so go there with
+              // the casualty already selected.
+              navigate(ROUTES.commandStaffDetections, { state: { selectDetectionId: id } })
+            }}
+          />
+        ) : null}
 
         {/* Sits under the feeds, where an operator looks after seeing a
             detection: it answers "is the system currently ignoring any of my
