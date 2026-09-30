@@ -9,6 +9,7 @@ import { useAuth } from '../auth'
 import { useMissionStore } from '../../state/MissionStore'
 import { useStaffDatabase } from '../../hooks/useStaffDatabase'
 import type { DbStaffUser } from '../../hooks/useStaffDatabase'
+import { useTeamDatabase } from '../../hooks/useTeamDatabase'
 
 export type CreatableUserRole = Extract<UserRole, 'COMMAND_STAFF' | 'FIELD_RESPONDER'>
 
@@ -41,8 +42,26 @@ export interface IncidentHistoryItem {
   completedAt?: string
 }
 
+/** A response team. Only the Agency Admin creates teams and changes who is on them. */
+export interface Team {
+  id: string
+  name: string
+  leaderUserId?: string
+}
+
+/** Every team action resolves to an error message to show, or null on success. */
+type TeamAction<A extends unknown[]> = (...args: A) => Promise<string | null>
+
 interface AgencyAdminDataContextValue {
   agencyUsers: MockUser[]
+  teams: Team[]
+  /** False until migration 03_teams.sql has been run; teamsError then says so. */
+  teamsAvailable: boolean
+  teamsError: string | null
+  createTeam: TeamAction<[name: string]>
+  deleteTeam: TeamAction<[teamId: string]>
+  setTeamLeader: TeamAction<[teamId: string, userId: string | null]>
+  setUserTeam: TeamAction<[userId: string, teamId: string | null]>
   incidentHistory: IncidentHistoryItem[]
   isLoading: boolean
   createUser: (input: CreateUserInput) => Promise<CreateUserResult>
@@ -61,6 +80,7 @@ function mapDbStaffToMockUser(dbUser: DbStaffUser): MockUser {
     agencyId: String(dbUser.agencyId),
     accountStatus: dbUser.active ? 'ACTIVE' : 'INACTIVE',
     createdAt: dbUser.createdAt,
+    teamId: dbUser.teamId != null ? String(dbUser.teamId) : undefined,
     // Real accounts authenticate against Supabase's passwordHash, not this field.
     password: '',
   }
@@ -75,11 +95,15 @@ function mapDbStaffToMockUser(dbUser: DbStaffUser): MockUser {
  */
 export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
-  const { getAgencyStaff, createStaffUser, setStaffActive } = useStaffDatabase()
+  const { getAgencyStaff, createStaffUser, setStaffActive, setStaffTeam } = useStaffDatabase()
+  const teamDb = useTeamDatabase()
   const { missions } = useMissionStore()
 
   const agencyId = session?.agencyId
   const [agencyUsers, setAgencyUsers] = useState<MockUser[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [teamsAvailable, setTeamsAvailable] = useState(false)
+  const [teamsError, setTeamsError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
@@ -89,8 +113,28 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
       return
     }
     setIsLoading(true)
-    const staff = await getAgencyStaff(Number(agencyId))
+    const dbAgencyId = Number(agencyId)
+    // Demo logins carry ids like "agency-1": there is no database organization
+    // behind them, so say so instead of surfacing the query's type error.
+    if (!Number.isInteger(dbAgencyId)) {
+      setAgencyUsers([])
+      setTeams([])
+      setTeamsAvailable(false)
+      setTeamsError('Teams require a real organization account — demo accounts have no personnel or teams to manage.')
+      setIsLoading(false)
+      return
+    }
+    const [staff, teamRows] = await Promise.all([getAgencyStaff(dbAgencyId), teamDb.getTeams(dbAgencyId)])
     setAgencyUsers(staff.map(mapDbStaffToMockUser))
+    setTeamsAvailable(teamRows.available)
+    setTeamsError(teamRows.available ? null : teamRows.error)
+    setTeams(
+      teamRows.teams.map((t) => ({
+        id: String(t.id),
+        name: t.name,
+        leaderUserId: t.leaderUserId != null ? String(t.leaderUserId) : undefined,
+      })),
+    )
     setIsLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencyId])
@@ -153,9 +197,48 @@ export function AgencyAdminDataProvider({ children }: { children: ReactNode }) {
     await refresh()
   }
 
+  /** Runs a team write, then reloads so every screen shows the same roster. */
+  async function withRefresh(write: () => Promise<string | null>): Promise<string | null> {
+    if (!Number.isInteger(Number(agencyId))) return 'Teams require a real organization account — demo accounts cannot manage teams.'
+    const error = await write()
+    await refresh()
+    return error
+  }
+
+  const createTeam: AgencyAdminDataContextValue['createTeam'] = (name) =>
+    withRefresh(() => teamDb.createTeam(Number(agencyId), name))
+  const deleteTeam: AgencyAdminDataContextValue['deleteTeam'] = (teamId) =>
+    withRefresh(() => teamDb.deleteTeam(Number(teamId)))
+  const setTeamLeader: AgencyAdminDataContextValue['setTeamLeader'] = (teamId, userId) =>
+    withRefresh(() => teamDb.setTeamLeader(Number(teamId), userId ? Number(userId) : null))
+  const setUserTeam: AgencyAdminDataContextValue['setUserTeam'] = (userId, teamId) =>
+    withRefresh(async () => {
+      // A leader moved off their team stops leading it; otherwise the team
+      // would name a leader who is no longer a member.
+      const leading = teams.find((t) => t.leaderUserId === userId && t.id !== teamId)
+      if (leading) {
+        const err = await teamDb.setTeamLeader(Number(leading.id), null)
+        if (err) return err
+      }
+      return setStaffTeam(Number(userId), teamId ? Number(teamId) : null)
+    })
+
   return (
     <AgencyAdminDataContext.Provider
-      value={{ agencyUsers, incidentHistory, isLoading, createUser, setUserStatus }}
+      value={{
+        agencyUsers,
+        teams,
+        teamsAvailable,
+        teamsError,
+        createTeam,
+        deleteTeam,
+        setTeamLeader,
+        setUserTeam,
+        incidentHistory,
+        isLoading,
+        createUser,
+        setUserStatus,
+      }}
     >
       {children}
     </AgencyAdminDataContext.Provider>

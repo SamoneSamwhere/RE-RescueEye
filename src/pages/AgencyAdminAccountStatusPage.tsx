@@ -1,17 +1,33 @@
-import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { Search, UserPlus } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
-import { Panel } from '../data/components/ui'
+import { Button, Input, Panel } from '../data/components/ui'
 import { UserStatusTable } from '../data/components/agency-admin'
 import { useAgencyAdminData } from '../features/agency-admin'
+import { ROUTES } from '../routes/paths'
+import type { UserRole } from '../types/user'
 
+type RoleFilter = 'ALL' | Extract<UserRole, 'COMMAND_STAFF' | 'FIELD_RESPONDER'>
+
+const selectClasses =
+  'h-9 rounded-md border border-border-strong bg-surface px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus'
+
+/**
+ * Manage Personnel / Staff — the one place an Agency Admin sees everyone in
+ * their organization: add staff, activate or deactivate accounts, and put
+ * people on teams. (Previously "Account Status", which only toggled accounts.)
+ */
 export function AgencyAdminAccountStatusPage() {
-  const { agencyUsers, setUserStatus } = useAgencyAdminData()
+  const { agencyUsers, setUserStatus, teams, teamsAvailable, setUserTeam } = useAgencyAdminData()
   const location = useLocation()
   const [highlightUserId, setHighlightUserId] = useState<string | undefined>(
     (location.state as { highlightUserId?: string } | null)?.highlightUserId,
   )
+  const [query, setQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
+  const [teamError, setTeamError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!highlightUserId) return
@@ -20,17 +36,80 @@ export function AgencyAdminAccountStatusPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const visibleUsers = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return agencyUsers.filter(
+      (u) =>
+        (roleFilter === 'ALL' || u.role === roleFilter) &&
+        (!q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
+    )
+  }, [agencyUsers, query, roleFilter])
+
+  async function handleSetTeam(userId: string, teamId: string | null) {
+    setTeamError(null)
+    const error = await setUserTeam(userId, teamId)
+    if (error) setTeamError(error)
+  }
+
   return (
     <>
       <PageHeader
-        title="Account Status Management"
-        description="Activate or deactivate your agency's Command Staff and Field Responder accounts."
+        title="Manage Personnel / Staff"
+        description="Add staff, activate or deactivate accounts, and assign your Command Staff and Field Responders to teams."
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
         <Reveal>
-          <Panel title={`Users (${agencyUsers.length})`}>
-            <UserStatusTable users={agencyUsers} onSetStatus={setUserStatus} highlightUserId={highlightUserId} />
+          <Panel
+            title={`Personnel (${visibleUsers.length})`}
+            actions={
+              <Link to={ROUTES.agencyAdminUserCreation}>
+                <Button size="sm">
+                  <UserPlus className="size-3.5" />
+                  Add Staff
+                </Button>
+              </Link>
+            }
+          >
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-56 flex-1">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-foreground-muted" />
+                  <Input
+                    aria-label="Search personnel"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search by name or email"
+                    className="pl-8"
+                  />
+                </div>
+                <select
+                  aria-label="Filter by role"
+                  value={roleFilter}
+                  onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
+                  className={selectClasses}
+                >
+                  <option value="ALL">All roles</option>
+                  <option value="COMMAND_STAFF">Command Staff</option>
+                  <option value="FIELD_RESPONDER">Field Responders</option>
+                </select>
+              </div>
+
+              {teamError ? (
+                <p role="alert" className="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+                  {teamError}
+                </p>
+              ) : null}
+
+              <UserStatusTable
+                users={visibleUsers}
+                onSetStatus={setUserStatus}
+                highlightUserId={highlightUserId}
+                // The Team column appears once teams exist in the database.
+                teams={teamsAvailable ? teams : undefined}
+                onSetTeam={teamsAvailable ? handleSetTeam : undefined}
+              />
+            </div>
           </Panel>
         </Reveal>
       </div>

@@ -1,86 +1,55 @@
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  Bot,
-  History,
-  Siren,
-  UserCheck,
-  UserPlus,
-  Users,
-} from 'lucide-react'
+import { ArrowRight, History, Users, UsersRound } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Card, Badge } from '../data/components/ui'
 import { Reveal } from '../data/components/landing/Reveal'
-import { StatTile } from '../data/components/dashboard'
 import { useAuth } from '../features/auth'
 import { useAgencyAdminData } from '../features/agency-admin'
-import { mockIncidents } from '../data/mockIncidents'
-import { mockDrones } from '../data/mockDrones'
 import { formatDateTime } from '../lib/formatDateTime'
 import { USER_ROLE_LABEL } from '../lib/labels'
 import { ROUTES } from '../routes/paths'
 
 const ACTIONS = [
   {
-    href: ROUTES.agencyAdminUserCreation,
-    icon: UserPlus,
-    title: 'Create Personnel',
-    description: 'Add Command Staff or Field Responder accounts to your agency.',
-  },
-  {
     href: ROUTES.agencyAdminAccountStatus,
     icon: Users,
-    title: 'Account Status Management',
-    description: 'Activate or deactivate your agency’s user accounts.',
+    title: 'Manage Personnel / Staff',
+    description: 'Add staff, and activate or deactivate your organization’s accounts.',
+  },
+  {
+    href: ROUTES.agencyAdminTeams,
+    icon: UsersRound,
+    title: 'Teams',
+    description: 'Group personnel into response teams and choose each team’s leader.',
   },
   {
     href: ROUTES.agencyAdminIncidentHistory,
     icon: History,
     title: 'Incident History',
-    description: 'Review incidents your agency’s responders have handled.',
+    description: 'Review incidents your organization’s responders have handled.',
   },
 ]
 
+/**
+ * The Agency Admin's job is people — who is in the organization and which
+ * team they are on. The stat tiles that used to lead this page (personnel
+ * count, active accounts, open incidents, drones online) were analytics for a
+ * role that acts on none of them, so the page is now just the admin's tasks.
+ */
 export function AgencyAdminDashboardPage() {
   const { session } = useAuth()
   const { agencyUsers } = useAgencyAdminData()
 
   if (!session) return null
 
-  const agencyId = session.agencyId
-  const agencyIncidents = mockIncidents.filter((incident) => incident.agencyId === agencyId)
-  const agencyDrones = mockDrones.filter((drone) => drone.agencyId === agencyId)
-
-  const activeCount = agencyUsers.filter((u) => u.accountStatus === 'ACTIVE').length
-
-  const openIncidentCount = agencyIncidents.filter((incident) => incident.status !== 'CLOSED').length
-  const dronesOnlineCount = agencyDrones.filter((drone) => drone.connectionStatus === 'CONNECTED').length
-
   const recentPersonnel = [...agencyUsers].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5)
 
   return (
     <>
-      <PageHeader
-        title="Agency Dashboard"
-        description={`Administration for ${session.agencyName ?? 'your agency'}`}
-      />
+      <PageHeader title="Dashboard" description={`Administration for ${session.agencyName ?? 'your organization'}`} />
 
       <div className="flex flex-col gap-4 px-4 py-4">
         <Reveal>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="Agency Personnel" value={agencyUsers.length} icon={Users} tone="info" />
-            <StatTile label="Active Accounts" value={activeCount} icon={UserCheck} tone="success" />
-            <StatTile label="Open Incidents" value={openIncidentCount} icon={Siren} tone="warning" />
-            <StatTile
-              label="Drones Online"
-              value={dronesOnlineCount}
-              icon={Bot}
-              tone={dronesOnlineCount === agencyDrones.length ? 'success' : 'warning'}
-            />
-          </div>
-        </Reveal>
-
-        <Reveal delayMs={100}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {ACTIONS.map((action) => (
               <Link key={action.href} to={action.href}>
@@ -102,23 +71,20 @@ export function AgencyAdminDashboardPage() {
           </div>
         </Reveal>
 
-        <Reveal delayMs={200}>
+        <Reveal delayMs={100}>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-                Recently Added Personnel
+                Recently Added Staff
               </p>
-              <Link
-                to={ROUTES.agencyAdminAccountStatus}
-                className="flex items-center gap-1 text-xs font-medium text-accent"
-              >
-                View all ({agencyUsers.length})
+              <Link to={ROUTES.agencyAdminAccountStatus} className="flex items-center gap-1 text-xs font-medium text-accent">
+                Manage personnel
                 <ArrowRight className="size-3.5" />
               </Link>
             </div>
             {recentPersonnel.length === 0 ? (
               <Card className="px-4 py-6 text-center text-sm text-foreground-muted">
-                No personnel added yet. Create your first Command Staff or Field Responder account.
+                No staff added yet. Use Add Staff on the Manage Personnel page to create your first account.
               </Card>
             ) : (
               recentPersonnel.map((user) => (

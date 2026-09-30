@@ -24,6 +24,7 @@ import { FieldResponderMissionDetailPage } from '../pages/FieldResponderMissionD
 import { AgencyAdminDashboardPage } from '../pages/AgencyAdminDashboardPage'
 import { AgencyAdminUserCreationPage } from '../pages/AgencyAdminUserCreationPage'
 import { AgencyAdminAccountStatusPage } from '../pages/AgencyAdminAccountStatusPage'
+import { AgencyAdminTeamsPage } from '../pages/AgencyAdminTeamsPage'
 import { AgencyAdminIncidentHistoryPage } from '../pages/AgencyAdminIncidentHistoryPage'
 import { AgencyAdminSettingsPage } from '../pages/AgencyAdminSettingsPage'
 import { ProtectedRoute, RootRedirect } from '../features/auth'
@@ -83,6 +84,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.agencyAdmin, element: <AgencyAdminDashboardPage /> },
           { path: ROUTES.agencyAdminUserCreation, element: <AgencyAdminUserCreationPage /> },
           { path: ROUTES.agencyAdminAccountStatus, element: <AgencyAdminAccountStatusPage /> },
+          { path: ROUTES.agencyAdminTeams, element: <AgencyAdminTeamsPage /> },
           { path: ROUTES.agencyAdminIncidentHistory, element: <AgencyAdminIncidentHistoryPage /> },
           { path: ROUTES.agencyAdminSettings, element: <AgencyAdminSettingsPage /> },
         ],
