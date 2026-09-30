@@ -1,4 +1,5 @@
 export { StatTile } from './StatTile'
+export { BreakdownBar, BarList } from './MetricBars'
 export { IncidentPrioritySummary } from './IncidentPrioritySummary'
 export { PendingDetectionsPanel } from './PendingDetectionsPanel'
 export { RecentDetectionsPanel } from './RecentDetectionsPanel'
