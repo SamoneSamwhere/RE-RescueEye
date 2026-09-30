@@ -11,7 +11,7 @@ export function RegistrationStepper({ steps, currentStep }: RegistrationStepperP
   const fillPercent = steps.length > 1 ? (currentStep / (steps.length - 1)) * 100 : 0
 
   return (
-    <div className="relative mb-8">
+    <div className="relative mb-6">
       <div className="absolute left-0 right-0 top-3.5 h-px bg-border" aria-hidden="true" />
       <div
         className="absolute left-0 top-3.5 h-px bg-accent transition-all duration-500 ease-out"

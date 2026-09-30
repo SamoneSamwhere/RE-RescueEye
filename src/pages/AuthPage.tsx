@@ -331,10 +331,12 @@ export function AuthPage() {
     setSubmitted(true)
   }
 
-  // Sign in and registration share one fixed card size — neither mode grows or shrinks the frame
-  // itself; only the columns inside it change (see the two form slots and the accent sliver below).
+  // Sign in is always the same two fields, so it keeps one small fixed height. Registration's
+  // tallest step (Documents, with up to six upload slots) doesn't fit that same height no matter
+  // how tight the spacing gets, so signup gets a taller card instead — capped against the
+  // viewport so it never grows past the visible screen.
   const cardWidthClass = 'max-w-2xl'
-  const cardHeightClass = 'h-[520px]'
+  const cardHeightClass = mode === 'signup' ? 'h-[min(800px,90vh)]' : 'h-[520px]'
 
   return (
     <AuthPageShell>
@@ -419,13 +421,13 @@ export function AuthPage() {
                 when sign in is active. */}
             <div
               className={cn(
-                '@container hidden flex-1 overflow-x-hidden overflow-y-auto py-6 sm:py-7 lg:block lg:min-w-0 motion-safe:transition-[flex-grow,opacity,transform] motion-safe:duration-500 motion-safe:ease-out',
+                '@container hidden flex-1 overflow-x-hidden overflow-y-auto py-6 sm:py-7 lg:flex lg:min-w-0 lg:flex-col lg:justify-center motion-safe:transition-[flex-grow,opacity,transform] motion-safe:duration-500 motion-safe:ease-out',
                 mode === 'signup' ? 'translate-x-0 px-6 opacity-100 sm:px-10 lg:pl-20' : 'lg:flex-none lg:basis-0 lg:-translate-x-3 lg:px-0 lg:opacity-0',
               )}
               inert={mode === 'signin' ? true : undefined}
             >
               {submitted ? (
-                <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 py-8 text-center">
                   <CheckCircle2 className="size-10 text-success" />
                   <h2 className="text-base font-semibold text-foreground">Registration submitted</h2>
                   <p className="text-sm leading-relaxed text-foreground-secondary">
@@ -438,8 +440,8 @@ export function AuthPage() {
                   </Button>
                 </div>
               ) : (
-                <>
-                  <h2 className="text-center text-2xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
+                <div className="mx-auto w-full max-w-lg">
+                  <h2 className="mb-5 text-center text-2xl font-semibold text-foreground">{STEP_LABELS[currentStep]} Information</h2>
                   <RegistrationStepper steps={STEP_LABELS} currentStep={currentStep} />
 
                   <form className="flex flex-col gap-4" onSubmit={handleSignupSubmit}>
@@ -483,7 +485,7 @@ export function AuthPage() {
                       </p>
                     ) : null}
 
-                    <div className="flex items-center justify-end gap-3">
+                    <div className="flex shrink-0 items-center justify-end gap-3 pt-1">
                       {currentStep > 0 ? (
                         <Button type="button" variant="outline" onClick={goToPreviousStep} disabled={isCreatingAgency}>
                           Back
@@ -500,7 +502,7 @@ export function AuthPage() {
                       )}
                     </div>
                   </form>
-                </>
+                </div>
               )}
             </div>
 

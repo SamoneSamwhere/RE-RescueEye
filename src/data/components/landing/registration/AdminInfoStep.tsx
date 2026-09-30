@@ -54,8 +54,8 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-        <Field label="Position / Designation" htmlFor="admin-position">
+      <div className="grid grid-cols-1 gap-3 @md:grid-cols-3">
+        <Field label="Position / Designation" htmlFor="admin-position" className="@md:col-span-3">
           <select
             id="admin-position"
             value={values.position}
@@ -79,7 +79,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
         </Field>
 
         {values.position === OTHER_POSITION ? (
-          <Field label="Your Position" htmlFor="admin-position-other">
+          <Field label="Your Position" htmlFor="admin-position-other" className="@md:col-span-3">
             <Input
               id="admin-position-other"
               value={values.positionOther}
@@ -90,7 +90,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
           </Field>
         ) : null}
 
-        <Field label="Email Address" htmlFor="admin-email">
+        <Field label="Email Address" htmlFor="admin-email" className="@md:col-span-2">
           <Input
             id="admin-email"
             type="email"

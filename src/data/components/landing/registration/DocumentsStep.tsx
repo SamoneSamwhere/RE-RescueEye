@@ -11,15 +11,6 @@ interface DocumentsStepProps {
   onTermsChange: (checked: boolean) => void
 }
 
-const INTRO: Record<OrganizationCategory, string> = {
-  government:
-    'Government offices are not SEC-registered, so we ask for proof that you are authorized to act for your office instead.',
-  registered:
-    'Upload your certificate of registration so a System Admin can confirm your organization is legally registered.',
-  volunteer:
-    'Volunteer groups do not need to be registered. Upload your ID and at least one supporting document you already have — any of the ones below.',
-}
-
 export function DocumentsStep({
   category,
   files,
@@ -48,11 +39,6 @@ export function DocumentsStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
-        <p className="text-xs font-medium text-accent">Document verification</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">{INTRO[category]}</p>
-      </div>
-
       <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
         {required.map((d) => renderField(d.id, true))}
       </div>
