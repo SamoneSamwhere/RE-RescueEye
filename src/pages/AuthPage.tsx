@@ -7,7 +7,8 @@ import { Field, Input, Button } from '../data/components/ui'
 import { AuthPageShell, Reveal } from '../data/components/landing'
 import {
   RegistrationStepper,
-  AgencyInfoStep,
+  OrganizationDetailsStep,
+  AddressStep,
   AdminInfoStep,
   DocumentsStep,
   DOCUMENT_CATALOGUE,
@@ -34,42 +35,38 @@ import { cn } from '../lib/cn'
 
 type AuthMode = 'signin' | 'signup'
 
-const STEP_LABELS = ['Organization', 'Admin', 'Documents']
+const STEP_LABELS = ['Organization', 'Address', 'Admin', 'Documents']
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 /** Letters (any script, so ñ and accented names pass), spaces, hyphens, apostrophes and periods. */
 const NAME_PATTERN = /^[\p{L}][\p{L}\s.'-]*$/u
 /** Philippine ZIP codes are four digits. */
 const ZIP_PATTERN = /^\d{4}$/
-/** A barangay or city name: letters, digits (e.g. "Barangay 176"), and common punctuation. */
-const PLACE_PATTERN = /^[\p{L}\d][\p{L}\d\s.,'()-]*$/u
 
-function validateAgencyStep(values: AgencyInfoValues): string | null {
-  if (
-    !values.agencyName.trim() ||
-    !values.agencyType ||
-    !values.addressBarangay.trim() ||
-    !values.addressCity.trim() ||
-    !values.addressProvince ||
-    !values.addressZip.trim() ||
-    !values.agencyPhone.trim() ||
-    !values.agencyEmail.trim()
-  ) {
+function validateOrganizationStep(values: AgencyInfoValues): string | null {
+  if (!values.agencyName.trim() || !values.agencyType || !values.agencyPhone.trim() || !values.agencyEmail.trim()) {
     return 'Please fill in all required organization fields.'
-  }
-  if (!PLACE_PATTERN.test(values.addressBarangay.trim()) || values.addressBarangay.trim().length < 2) {
-    return 'Enter a valid barangay name.'
-  }
-  if (!PLACE_PATTERN.test(values.addressCity.trim()) || values.addressCity.trim().length < 2) {
-    return 'Enter a valid city or municipality.'
-  }
-  if (!ZIP_PATTERN.test(values.addressZip.trim())) {
-    return 'ZIP code must be 4 digits (e.g. 6000 for Cebu City).'
   }
   const orgPhone = parsePhPhone(values.agencyPhone)
   if (!orgPhone.ok) return orgPhone.error
   if (!EMAIL_PATTERN.test(values.agencyEmail)) {
     return 'Enter a valid official email address.'
+  }
+  return null
+}
+
+function validateAddressStep(values: AgencyInfoValues): string | null {
+  // City and barangay are only selectable once their parents (region, and
+  // province where applicable) are chosen, so having both codes set already
+  // guarantees the whole chain above them was picked too.
+  if (!values.addressCityCode || !values.addressBarangayCode) {
+    return 'Please select your region, province, city/municipality, and barangay.'
+  }
+  if (!values.addressZip.trim()) {
+    return 'Please enter a ZIP code.'
+  }
+  if (!ZIP_PATTERN.test(values.addressZip.trim())) {
+    return 'ZIP code must be 4 digits (e.g. 6000 for Cebu City).'
   }
   return null
 }
@@ -154,9 +151,14 @@ export function AuthPage() {
     agencyName: '',
     agencyType: '',
     addressStreet: '',
-    addressBarangay: '',
-    addressCity: '',
+    addressRegionCode: '',
+    addressRegionName: '',
+    addressProvinceCode: '',
     addressProvince: '',
+    addressCityCode: '',
+    addressCity: '',
+    addressBarangayCode: '',
+    addressBarangay: '',
     addressZip: '',
     agencyPhone: '',
     agencyEmail: '',
@@ -221,7 +223,12 @@ export function AuthPage() {
   }
 
   function goToNextStep() {
-    const stepError = currentStep === 0 ? validateAgencyStep(agency) : validateAdminStep(admin)
+    const stepError =
+      currentStep === 0
+        ? validateOrganizationStep(agency)
+        : currentStep === 1
+          ? validateAddressStep(agency)
+          : validateAdminStep(admin)
     if (stepError) {
       setSignupError(stepError)
       return
@@ -253,6 +260,10 @@ export function AuthPage() {
         agencyName: agency.agencyName,
         agencyType: agency.agencyType,
         agencyAddress: address,
+        agencyAddressRegionCode: agency.addressRegionCode,
+        agencyAddressProvinceCode: agency.addressProvinceCode,
+        agencyAddressCityCode: agency.addressCityCode,
+        agencyAddressBarangayCode: agency.addressBarangayCode,
         agencyPhone: formatPhPhone(agency.agencyPhone),
         agencyEmail: agency.agencyEmail,
         agencyWebsite: agency.agencyWebsite,
@@ -276,7 +287,7 @@ export function AuthPage() {
       setSignupError(result.error || 'Failed to register your organization. Please try again.')
       // The email lives on the Admin step; land the user where they can fix it
       // instead of leaving them on Documents with nothing to change.
-      if (result.field === 'adminEmail') setCurrentStep(1)
+      if (result.field === 'adminEmail') setCurrentStep(2)
       return
     }
 
@@ -332,30 +343,30 @@ export function AuthPage() {
       <Reveal className="flex w-full flex-col">
         <div className={cn('mx-auto w-full motion-safe:transition-[max-width,height] motion-safe:duration-300 motion-safe:ease-in-out', cardWidthClass, cardHeightClass)}>
           <div className="relative h-full overflow-hidden rounded-2xl border border-border bg-surface shadow-modal">
-          <div className="flex h-full flex-col lg:flex-row">
+          <div className="relative flex h-full flex-col lg:flex-row">
             {/* Sign in slot — always shown on mobile, where it's the only slot in the row.
                 On desktop it collapses to zero width in signup mode (mirroring the sign-up slot below) since
                 both slots now share one fixed-size card — whichever mode is active gets the full row width,
                 minus the accent sliver on the right. */}
             <div
               className={cn(
-                'flex w-full flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-6 py-6 sm:px-10 sm:py-7 lg:min-w-0 motion-safe:transition-[flex-grow,opacity] motion-safe:duration-500 motion-safe:ease-in-out',
-                mode === 'signup' && 'lg:flex-none lg:basis-0 lg:opacity-0 lg:px-0',
+                'flex w-full flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-6 py-6 sm:px-10 sm:py-7 lg:min-w-0 lg:pr-20 motion-safe:transition-[flex-grow,opacity,transform] motion-safe:duration-500 motion-safe:ease-out',
+                mode === 'signup' && 'lg:flex-none lg:basis-0 lg:translate-x-3 lg:opacity-0 lg:px-0',
               )}
               inert={mode === 'signup' ? true : undefined}
             >
-              <div className="max-w-md">
+              <div className="mx-auto w-full max-w-md">
                 <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
 
-              <div className="mt-4 max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
+              <div className="mx-auto mt-5 w-full max-w-md rounded-md border border-accent-border bg-accent-subtle px-3 py-2.5">
                 <p className="text-xs font-medium text-accent">Secure responder access</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">
                   Your agency administrator provides your account and role permissions.
                 </p>
               </div>
 
-              <form className="mt-5 flex max-w-md flex-col gap-3" onSubmit={handleLoginSubmit}>
+              <form className="mx-auto mt-6 flex w-full max-w-md flex-col gap-4" onSubmit={handleLoginSubmit}>
                 <Field
                   label="Email"
                   htmlFor="email"
@@ -408,8 +419,8 @@ export function AuthPage() {
                 when sign in is active. */}
             <div
               className={cn(
-                '@container hidden flex-1 overflow-x-hidden overflow-y-auto py-6 sm:py-7 lg:block lg:min-w-0 motion-safe:transition-[flex-grow,opacity] motion-safe:duration-500 motion-safe:ease-in-out',
-                mode === 'signup' ? 'px-6 opacity-100 sm:px-10' : 'lg:flex-none lg:basis-0 lg:px-0 lg:opacity-0',
+                '@container hidden flex-1 overflow-x-hidden overflow-y-auto py-6 sm:py-7 lg:block lg:min-w-0 motion-safe:transition-[flex-grow,opacity,transform] motion-safe:duration-500 motion-safe:ease-out',
+                mode === 'signup' ? 'translate-x-0 px-6 opacity-100 sm:px-10 lg:pl-20' : 'lg:flex-none lg:basis-0 lg:-translate-x-3 lg:px-0 lg:opacity-0',
               )}
               inert={mode === 'signin' ? true : undefined}
             >
@@ -434,18 +445,24 @@ export function AuthPage() {
                   <form className="flex flex-col gap-4" onSubmit={handleSignupSubmit}>
                     <div key={currentStep} className="motion-safe:animate-step-in">
                       {currentStep === 0 ? (
-                        <AgencyInfoStep
+                        <OrganizationDetailsStep
                           values={agency}
                           onChange={(patch) => setAgency((prev) => ({ ...prev, ...patch }))}
                         />
                       ) : null}
                       {currentStep === 1 ? (
+                        <AddressStep
+                          values={agency}
+                          onChange={(patch) => setAgency((prev) => ({ ...prev, ...patch }))}
+                        />
+                      ) : null}
+                      {currentStep === 2 ? (
                         <AdminInfoStep
                           values={admin}
                           onChange={(patch) => setAdmin((prev) => ({ ...prev, ...patch }))}
                         />
                       ) : null}
-                      {currentStep === 2 ? (
+                      {currentStep === 3 ? (
                         <DocumentsStep
                           category={category}
                           files={documents}
@@ -487,15 +504,15 @@ export function AuthPage() {
               )}
             </div>
 
-            {/* Accent sliver — desktop only, constant width; it never grows since sign in and sign up share the
-                same fixed card. It's a real flex sibling (not an absolute overlay) so the active slot's flex-1
-                correctly gets the row width minus this 80px, instead of the sliver painting over the content.
-                It sits on whichever side the active slot's own trigger would naturally read as "back to X":
-                right of the sign-in form (Register, forward), left of the registration form (Sign In, back). */}
+            {/* Accent sliver — desktop only, constant width (w-20) in both modes; it never grows. Absolutely
+                positioned within the relative row above so it can slide on `left` (an animatable property —
+                unlike `order`, which browsers snap instead of tweening) from docked-right in sign in to
+                docked-left in sign up, sweeping across and briefly covering the card like a sliding door. The
+                two content slots reserve lg:pr-20 / lg:pl-20 so it doesn't overlap them once at rest. */}
             <div
               className={cn(
-                'relative hidden w-20 shrink-0 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#172554] via-[#0f1f46] to-[#08152f] text-center lg:flex',
-                mode === 'signup' && 'lg:order-first',
+                'absolute inset-y-0 z-10 hidden w-20 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#172554] via-[#0f1f46] to-[#08152f] text-center motion-safe:transition-[left] motion-safe:duration-500 motion-safe:ease-in-out lg:flex',
+                mode === 'signup' ? 'left-0' : 'left-[calc(100%-5rem)]',
               )}
             >
               <div
@@ -513,7 +530,10 @@ export function AuthPage() {
                 aria-label={mode === 'signin' ? 'Register organization' : 'Sign in'}
                 className="pointer-events-auto relative flex h-full w-full flex-col items-center justify-center gap-3 text-foreground-inverse transition-colors hover:bg-white/10"
               >
-                <span key={mode} className="relative flex flex-col items-center gap-3 motion-safe:animate-step-in">
+                <span
+                  key={mode}
+                  className="relative flex flex-col items-center gap-3 motion-safe:animate-step-in"
+                >
                   {mode === 'signin' ? (
                     <Building2 className="size-5 shrink-0" />
                   ) : (

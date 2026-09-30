@@ -1,6 +1,7 @@
 export { RegistrationStepper } from './RegistrationStepper'
 export { DocumentUploadField } from './DocumentUploadField'
-export { AgencyInfoStep } from './AgencyInfoStep'
+export { OrganizationDetailsStep } from './OrganizationDetailsStep'
+export { AddressStep } from './AddressStep'
 export { AdminInfoStep } from './AdminInfoStep'
 export { DocumentsStep } from './DocumentsStep'
 export {

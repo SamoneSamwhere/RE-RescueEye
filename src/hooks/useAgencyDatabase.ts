@@ -5,6 +5,11 @@ interface CreateAgencyInput {
   agencyName: string
   agencyType: string
   agencyAddress: string
+  /** PSGC codes for the office address — see prisma/migrations/04_address_psgc_codes.sql. */
+  agencyAddressRegionCode?: string
+  agencyAddressProvinceCode?: string
+  agencyAddressCityCode?: string
+  agencyAddressBarangayCode?: string
   agencyPhone: string
   agencyEmail: string
   agencyWebsite?: string
@@ -22,6 +27,10 @@ export interface DbAgency {
   name: string
   agencyType: string | null
   address: string | null
+  addressRegionCode?: string | null
+  addressProvinceCode?: string | null
+  addressCityCode?: string | null
+  addressBarangayCode?: string | null
   website: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -143,6 +152,10 @@ export function useAgencyDatabase() {
           name: input.agencyName.trim(),
           agencyType: input.agencyType,
           address: input.agencyAddress.trim(),
+          addressRegionCode: input.agencyAddressRegionCode || null,
+          addressProvinceCode: input.agencyAddressProvinceCode || null,
+          addressCityCode: input.agencyAddressCityCode || null,
+          addressBarangayCode: input.agencyAddressBarangayCode || null,
           website: input.agencyWebsite?.trim() || null,
           contactEmail: input.agencyEmail.trim(),
           contactPhone: input.agencyPhone.trim(),
@@ -152,7 +165,7 @@ export function useAgencyDatabase() {
           createdBy: userData.id,
           createdAt: new Date().toISOString(),
         },
-        [],
+        ['addressRegionCode', 'addressProvinceCode', 'addressCityCode', 'addressBarangayCode'],
       )
 
       if (agencyError) throw agencyError

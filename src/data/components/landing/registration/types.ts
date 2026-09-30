@@ -3,9 +3,15 @@ export interface AgencyInfoValues {
   agencyType: string
   /** House/building no. and street. Optional: many barangays have no street address. */
   addressStreet: string
-  addressBarangay: string
-  addressCity: string
+  /** PSGC codes are the source of truth for the address; the *Name fields are display copies kept in step with them by PhilippineAddressFields. */
+  addressRegionCode: string
+  addressRegionName: string
+  addressProvinceCode: string
   addressProvince: string
+  addressCityCode: string
+  addressCity: string
+  addressBarangayCode: string
+  addressBarangay: string
   addressZip: string
   agencyPhone: string
   agencyEmail: string
@@ -73,25 +79,9 @@ export function categoryForType(type: string): OrganizationCategory {
 // Kept, because the reviewer needs it to verify the organization exists and
 // where it operates: NDRRMC accreditation of volunteer organizations asks for
 // proof of a physical office, and an organization's jurisdiction is set by the
-// LGU it sits in. Structured rather than one free-text line so each part can
-// be validated, and a province is picked rather than typed.
-
-/** Philippine provinces (82) plus Metro Manila, which has no province. */
-export const PH_PROVINCES = [
-  'Metro Manila (NCR)',
-  'Abra', 'Agusan del Norte', 'Agusan del Sur', 'Aklan', 'Albay', 'Antique', 'Apayao', 'Aurora',
-  'Basilan', 'Bataan', 'Batanes', 'Batangas', 'Benguet', 'Biliran', 'Bohol', 'Bukidnon', 'Bulacan',
-  'Cagayan', 'Camarines Norte', 'Camarines Sur', 'Camiguin', 'Capiz', 'Catanduanes', 'Cavite', 'Cebu',
-  'Cotabato', 'Davao de Oro', 'Davao del Norte', 'Davao del Sur', 'Davao Occidental', 'Davao Oriental',
-  'Dinagat Islands', 'Eastern Samar', 'Guimaras', 'Ifugao', 'Ilocos Norte', 'Ilocos Sur', 'Iloilo',
-  'Isabela', 'Kalinga', 'La Union', 'Laguna', 'Lanao del Norte', 'Lanao del Sur', 'Leyte',
-  'Maguindanao del Norte', 'Maguindanao del Sur', 'Marinduque', 'Masbate', 'Misamis Occidental',
-  'Misamis Oriental', 'Mountain Province', 'Negros Occidental', 'Negros Oriental', 'Northern Samar',
-  'Nueva Ecija', 'Nueva Vizcaya', 'Occidental Mindoro', 'Oriental Mindoro', 'Palawan', 'Pampanga',
-  'Pangasinan', 'Quezon', 'Quirino', 'Rizal', 'Romblon', 'Samar', 'Sarangani', 'Siquijor', 'Sorsogon',
-  'South Cotabato', 'Southern Leyte', 'Sultan Kudarat', 'Sulu', 'Surigao del Norte', 'Surigao del Sur',
-  'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay',
-] as const
+// LGU it sits in. Region/Province/City/Barangay are picked from the official
+// PSGC via cascading dropdowns (see PhilippineAddressFields) rather than
+// typed, so every stored address resolves to a real, unambiguous place.
 
 /** One line for the existing `address` column: "Street, Brgy. X, City, Province 6000". */
 export function formatAddress(v: AgencyInfoValues): string {
