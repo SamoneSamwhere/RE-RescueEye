@@ -9,9 +9,12 @@ numpy==1.26.4
 opencv-python-headless==4.10.0.84
 
 # AI / training
-torch
-torchvision
+# torch<2.6 required: 2.6+ defaults torch.load(weights_only=True), which
+# ultralytics 8.2.56's model loading is not compatible with.
+torch<2.6
+torchvision<0.21
 ultralytics==8.2.56
+filterpy==1.4.5
 
 # Dataset utilities
 scikit-learn
