@@ -10,7 +10,13 @@ import {
   AgencyInfoStep,
   AdminInfoStep,
   DocumentsStep,
-  REQUIRED_DOCUMENTS,
+  DOCUMENT_CATALOGUE,
+  OTHER_POSITION,
+  categoryForType,
+  documentsFor,
+  emptyDocumentRecord,
+  formatAddress,
+  resolvedPosition,
 } from '../data/components/landing/registration'
 import type {
   AgencyInfoValues,
@@ -18,6 +24,7 @@ import type {
   DocumentFiles,
   DocumentErrors,
   DocumentId,
+  OrganizationCategory,
 } from '../data/components/landing/registration'
 import { useAgencyStore } from '../state/AgencyStore'
 import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
@@ -26,19 +33,37 @@ import { cn } from '../lib/cn'
 
 type AuthMode = 'signin' | 'signup'
 
-const STEP_LABELS = ['Agency', 'Admin', 'Documents']
+const STEP_LABELS = ['Organization', 'Admin', 'Documents']
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** Letters (any script, so ñ and accented names pass), spaces, hyphens, apostrophes and periods. */
+const NAME_PATTERN = /^[\p{L}][\p{L}\s.'-]*$/u
+/** Philippine ZIP codes are four digits. */
+const ZIP_PATTERN = /^\d{4}$/
+/** A barangay or city name: letters, digits (e.g. "Barangay 176"), and common punctuation. */
+const PLACE_PATTERN = /^[\p{L}\d][\p{L}\d\s.,'()-]*$/u
 
 function validateAgencyStep(values: AgencyInfoValues): string | null {
   if (
     !values.agencyName.trim() ||
     !values.agencyType ||
-    !values.agencyAddress.trim() ||
+    !values.addressBarangay.trim() ||
+    !values.addressCity.trim() ||
+    !values.addressProvince ||
+    !values.addressZip.trim() ||
     !values.agencyPhone.trim() ||
     !values.agencyEmail.trim()
   ) {
-    return 'Please fill in all required agency fields.'
+    return 'Please fill in all required organization fields.'
+  }
+  if (!PLACE_PATTERN.test(values.addressBarangay.trim()) || values.addressBarangay.trim().length < 2) {
+    return 'Enter a valid barangay name.'
+  }
+  if (!PLACE_PATTERN.test(values.addressCity.trim()) || values.addressCity.trim().length < 2) {
+    return 'Enter a valid city or municipality.'
+  }
+  if (!ZIP_PATTERN.test(values.addressZip.trim())) {
+    return 'ZIP code must be 4 digits (e.g. 6000 for Cebu City).'
   }
   if (!EMAIL_PATTERN.test(values.agencyEmail)) {
     return 'Enter a valid official email address.'
@@ -49,14 +74,25 @@ function validateAgencyStep(values: AgencyInfoValues): string | null {
 function validateAdminStep(values: AdminInfoValues): string | null {
   if (
     !values.firstName.trim() ||
+    !values.middleName.trim() ||
     !values.lastName.trim() ||
-    !values.position.trim() ||
+    !values.position ||
     !values.email.trim() ||
     !values.phone.trim() ||
     !values.password ||
     !values.confirmPassword
   ) {
-    return 'Please fill in all required admin fields.'
+    return 'Please fill in all required admin fields, including your middle name.'
+  }
+  for (const [label, value] of [
+    ['First name', values.firstName],
+    ['Middle name', values.middleName],
+    ['Last name', values.lastName],
+  ] as const) {
+    if (!NAME_PATTERN.test(value.trim())) return `${label} can only contain letters, spaces, hyphens, and apostrophes.`
+  }
+  if (values.position === OTHER_POSITION && !values.positionOther.trim()) {
+    return 'Enter your position.'
   }
   if (!EMAIL_PATTERN.test(values.email)) {
     return 'Enter a valid email address.'
@@ -71,15 +107,21 @@ function validateAdminStep(values: AdminInfoValues): string | null {
 }
 
 function validateDocumentsStep(
+  category: OrganizationCategory,
   files: DocumentFiles,
   errors: DocumentErrors,
   agreedToTerms: boolean,
 ): string | null {
-  const missing = REQUIRED_DOCUMENTS.filter((doc) => doc.required && !files[doc.id])
+  const docs = documentsFor(category)
+  const missing = docs.filter((doc) => doc.requirement === 'required' && !files[doc.id])
   if (missing.length > 0) {
-    return `Please upload: ${missing.map((doc) => doc.label).join(', ')}.`
+    return `Please upload: ${missing.map((doc) => DOCUMENT_CATALOGUE[doc.id].label).join(', ')}.`
   }
-  if (Object.values(errors).some(Boolean)) {
+  const oneOf = docs.filter((doc) => doc.requirement === 'oneOf')
+  if (oneOf.length > 0 && !oneOf.some((doc) => files[doc.id])) {
+    return 'Upload at least one supporting document — any of the ones listed is enough.'
+  }
+  if (docs.some((doc) => errors[doc.id])) {
     return 'Resolve the file errors above before continuing.'
   }
   if (!agreedToTerms) {
@@ -106,32 +148,29 @@ export function AuthPage() {
   const [agency, setAgency] = useState<AgencyInfoValues>({
     agencyName: '',
     agencyType: '',
-    agencyAddress: '',
+    addressStreet: '',
+    addressBarangay: '',
+    addressCity: '',
+    addressProvince: '',
+    addressZip: '',
     agencyPhone: '',
     agencyEmail: '',
     agencyWebsite: '',
   })
   const [admin, setAdmin] = useState<AdminInfoValues>({
     firstName: '',
+    middleName: '',
     lastName: '',
     position: '',
+    positionOther: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
   })
-  const [documents, setDocuments] = useState<DocumentFiles>({
-    registration: null,
-    adminId: null,
-    proofOfAddress: null,
-    accreditation: null,
-  })
-  const [documentErrors, setDocumentErrors] = useState<DocumentErrors>({
-    registration: null,
-    adminId: null,
-    proofOfAddress: null,
-    accreditation: null,
-  })
+  const [documents, setDocuments] = useState<DocumentFiles>(() => emptyDocumentRecord<File | null>(null))
+  const [documentErrors, setDocumentErrors] = useState<DocumentErrors>(() => emptyDocumentRecord<string | null>(null))
+  const category = categoryForType(agency.agencyType)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [signupError, setSignupError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -193,25 +232,29 @@ export function AuthPage() {
 
   async function handleSignupSubmit(event: FormEvent) {
     event.preventDefault()
-    const stepError = validateDocumentsStep(documents, documentErrors, agreedToTerms)
+    const stepError = validateDocumentsStep(category, documents, documentErrors, agreedToTerms)
     if (stepError) {
       setSignupError(stepError)
       return
     }
     setSignupError(null)
 
+    const address = formatAddress(agency)
+    const position = resolvedPosition(admin)
+
     let result: Awaited<ReturnType<typeof createAgencyInDb>>
     try {
       result = await createAgencyInDb({
         agencyName: agency.agencyName,
         agencyType: agency.agencyType,
-        agencyAddress: agency.agencyAddress,
+        agencyAddress: address,
         agencyPhone: agency.agencyPhone,
         agencyEmail: agency.agencyEmail,
         agencyWebsite: agency.agencyWebsite,
         adminFirstName: admin.firstName,
+        adminMiddleName: admin.middleName,
         adminLastName: admin.lastName,
-        adminPosition: admin.position,
+        adminPosition: position,
         adminEmail: admin.email,
         adminPhone: admin.phone,
         adminPassword: admin.password,
@@ -225,7 +268,7 @@ export function AuthPage() {
     }
 
     if (!result.success) {
-      setSignupError(result.error || 'Failed to create agency. Please try again.')
+      setSignupError(result.error || 'Failed to register your organization. Please try again.')
       // The email lives on the Admin step; land the user where they can fix it
       // instead of leaving them on Documents with nothing to change.
       if (result.field === 'adminEmail') setCurrentStep(1)
@@ -237,17 +280,33 @@ export function AuthPage() {
       id: `agency-${result.agencyId}`,
       name: agency.agencyName,
       agencyType: agency.agencyType,
-      address: agency.agencyAddress,
+      address,
       contactPhone: agency.agencyPhone,
       contactEmail: agency.agencyEmail,
       website: agency.agencyWebsite || undefined,
       agencyAdmin: {
-        fullName: `${admin.firstName} ${admin.lastName}`.trim(),
-        position: admin.position,
+        fullName: [admin.firstName, admin.middleName, admin.lastName].map((n) => n.trim()).join(' '),
+        position,
         email: admin.email,
         phone: admin.phone,
       },
-      documents: [],
+      // The files the reviewer will look at. These were dropped before — the
+      // record went out with no documents at all, so the System Admin had
+      // nothing to verify against. Held as object URLs for this session.
+      documents: documentsFor(category)
+        .filter(({ id }) => documents[id])
+        .map(({ id, requirement }) => {
+          const file = documents[id] as File
+          return {
+            id,
+            label: DOCUMENT_CATALOGUE[id].label,
+            required: requirement === 'required',
+            fileName: file.name,
+            fileType: file.type === 'application/pdf' ? ('pdf' as const) : ('image' as const),
+            url: URL.createObjectURL(file),
+            uploadedAt: now().toISOString(),
+          }
+        }),
       registrationStatus: 'PENDING',
       accountStatus: 'INACTIVE',
       registeredAt: now().toISOString(),
@@ -335,9 +394,9 @@ export function AuthPage() {
                   <CheckCircle2 className="size-10 text-success" />
                   <h2 className="text-base font-semibold text-foreground">Registration submitted</h2>
                   <p className="text-sm leading-relaxed text-foreground-secondary">
-                    {agency.agencyName.trim() || 'Your agency'} has been submitted for review. A System Admin
-                    will verify your documents and approve or reject the registration. This is a demo build, so
-                    nothing was actually uploaded or stored — use one of the demo accounts to explore RescueEye.
+                    {agency.agencyName.trim() || 'Your organization'} has been submitted for review. A System Admin
+                    will verify your documents and approve or reject the registration — you can sign in once it is
+                    approved.
                   </p>
                   <Button className="mt-2 w-full" onClick={() => switchMode('signin')}>
                     Go to sign in
@@ -364,6 +423,7 @@ export function AuthPage() {
                       ) : null}
                       {currentStep === 2 ? (
                         <DocumentsStep
+                          category={category}
                           files={documents}
                           errors={documentErrors}
                           onDocumentChange={handleDocumentChange}
@@ -421,16 +481,16 @@ export function AuthPage() {
             />
             {mode === 'signin' ? (
               <>
-                <h2 className="relative text-2xl font-semibold text-foreground-inverse">New Agency?</h2>
+                <h2 className="relative text-2xl font-semibold text-foreground-inverse">New Organization?</h2>
                 <p className="relative text-sm text-foreground-inverse/80">
-                  Register your agency to start coordinating disaster response operations.
+                  Register your organization — agency, NGO, or volunteer group — to start coordinating disaster response operations.
                 </p>
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
                   className="pointer-events-auto relative cursor-pointer rounded-md border border-white/60 px-4 py-2 text-sm font-medium text-foreground-inverse transition-colors hover:bg-white/10"
                 >
-                  Register Agency
+                  Register Organization
                 </button>
               </>
             ) : (

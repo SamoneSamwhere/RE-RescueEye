@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, PlayCircle } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { ROUTES } from '../../../routes/paths'
 import { Button } from '../ui'
 import { cn } from '../../../lib/cn'
@@ -101,21 +101,8 @@ export function HeroSection() {
             className="inline-block transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
           >
             <Button size="lg" className="gap-2 px-6">
-              Register Agency
+              Register Organization
               <ArrowRight className="size-4" />
-            </Button>
-          </Link>
-          <Link
-            to={ROUTES.login}
-            className="inline-block transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 border-white/25 px-6 text-foreground-inverse hover:bg-white/10"
-            >
-              <PlayCircle className="size-4" />
-              Log in
             </Button>
           </Link>
         </div>

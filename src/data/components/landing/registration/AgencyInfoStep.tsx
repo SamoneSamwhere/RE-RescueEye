@@ -1,5 +1,5 @@
 import { Field, Input } from '../../ui'
-import { AGENCY_TYPES } from './types'
+import { ORGANIZATION_TYPES, PH_PROVINCES } from './types'
 import type { AgencyInfoValues } from './types'
 
 const selectClasses =
@@ -10,20 +10,29 @@ interface AgencyInfoStepProps {
   onChange: (patch: Partial<AgencyInfoValues>) => void
 }
 
+/**
+ * Step 1 — the organization. "Organization" rather than "agency" throughout:
+ * volunteer rescue groups and NGOs register here too, and none of them is an
+ * agency.
+ */
 export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
   return (
     <div className="flex flex-col gap-3">
-      <Field label="Agency Name" htmlFor="agency-name">
+      <Field label="Organization Name" htmlFor="agency-name">
         <Input
           id="agency-name"
           value={values.agencyName}
           onChange={(event) => onChange({ agencyName: event.target.value })}
-          placeholder="Metro Search & Rescue"
+          placeholder="Cebu City Rescue Volunteers"
           required
         />
       </Field>
 
-      <Field label="Agency Type" htmlFor="agency-type">
+      <Field
+        label="Organization Type"
+        htmlFor="agency-type"
+        hint="Decides which documents you will be asked for."
+      >
         <select
           id="agency-type"
           value={values.agencyType}
@@ -33,23 +42,80 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
           <option value="" disabled>
             Select a type
           </option>
-          {AGENCY_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
+          {ORGANIZATION_TYPES.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.value}
             </option>
           ))}
         </select>
       </Field>
 
-      <Field label="Agency Address" htmlFor="agency-address">
-        <Input
-          id="agency-address"
-          value={values.agencyAddress}
-          onChange={(event) => onChange({ agencyAddress: event.target.value })}
-          placeholder="Street, city, state/province, postal code"
-          required
-        />
-      </Field>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-xs font-medium uppercase tracking-wide text-foreground-secondary">
+          Office Address
+        </legend>
+        <Field label="House / Building No. and Street" htmlFor="address-street" hint="Optional.">
+          <Input
+            id="address-street"
+            autoComplete="address-line1"
+            value={values.addressStreet}
+            onChange={(event) => onChange({ addressStreet: event.target.value })}
+            placeholder="2F City Hall Annex, Osmeña Blvd."
+          />
+        </Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Barangay" htmlFor="address-barangay">
+            <Input
+              id="address-barangay"
+              value={values.addressBarangay}
+              onChange={(event) => onChange({ addressBarangay: event.target.value })}
+              placeholder="Kamputhaw"
+              required
+            />
+          </Field>
+          <Field label="City / Municipality" htmlFor="address-city">
+            <Input
+              id="address-city"
+              autoComplete="address-level2"
+              value={values.addressCity}
+              onChange={(event) => onChange({ addressCity: event.target.value })}
+              placeholder="Cebu City"
+              required
+            />
+          </Field>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+          <Field label="Province" htmlFor="address-province">
+            <select
+              id="address-province"
+              value={values.addressProvince}
+              onChange={(event) => onChange({ addressProvince: event.target.value })}
+              className={selectClasses}
+            >
+              <option value="" disabled>
+                Select a province
+              </option>
+              {PH_PROVINCES.map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="ZIP Code" htmlFor="address-zip">
+            <Input
+              id="address-zip"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength={4}
+              value={values.addressZip}
+              onChange={(event) => onChange({ addressZip: event.target.value.replace(/\D/g, '') })}
+              placeholder="6000"
+              required
+            />
+          </Field>
+        </div>
+      </fieldset>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Contact Number" htmlFor="agency-phone">
@@ -58,6 +124,7 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
             type="tel"
             value={values.agencyPhone}
             onChange={(event) => onChange({ agencyPhone: event.target.value })}
+            placeholder="0917 123 4567 or (032) 123 4567"
             required
           />
         </Field>
@@ -68,7 +135,7 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
             type="email"
             value={values.agencyEmail}
             onChange={(event) => onChange({ agencyEmail: event.target.value })}
-            placeholder="ops@youragency.org"
+            placeholder="ops@yourorganization.org"
             required
           />
         </Field>

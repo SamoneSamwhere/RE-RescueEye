@@ -9,6 +9,7 @@ interface CreateAgencyInput {
   agencyEmail: string
   agencyWebsite?: string
   adminFirstName: string
+  adminMiddleName: string
   adminLastName: string
   adminPosition: string
   adminEmail: string
@@ -47,6 +48,30 @@ async function rollback(agencyId: number | null, userId: number | null): Promise
   if (userId != null) {
     const { error } = await supabase.from('user').delete().eq('id', userId)
     if (error) console.error('Registration rollback: could not remove user', userId, error)
+  }
+}
+
+/**
+ * Insert a row that carries columns added by prisma/migrations/02_registration_fields.sql.
+ *
+ * Until that migration has been run, PostgREST rejects an unknown column
+ * (PGRST204). Registration must keep working in the meantime, so a rejected
+ * new column is dropped and the insert retried — with a console warning, so
+ * the missing migration is visible rather than silently losing the field.
+ */
+async function insertWithNewColumns(table: string, row: Record<string, unknown>, newColumns: string[]) {
+  let current = { ...row }
+  for (;;) {
+    const result = await supabase.from(table).insert([current]).select().single()
+    const missing =
+      result.error?.code === 'PGRST204'
+        ? newColumns.find((col) => col in current && result.error!.message.includes(col))
+        : undefined
+    if (!missing) return result
+    console.warn(`${table}.${missing} column missing — run migration 02_registration_fields.sql. Saving without it.`)
+    const { [missing]: _dropped, ...rest } = current
+    void _dropped
+    current = rest
   }
 }
 
@@ -92,49 +117,43 @@ export function useAgencyDatabase() {
       // Step 1: Create admin user account (inactive until agency is approved)
       const passwordHash = await hashPassword(input.adminPassword)
 
-      const { data: userData, error: userError } = await supabase
-        .from('user')
-        .insert([
-          {
-            email: adminEmail,
-            passwordHash: passwordHash,
-            firstName: input.adminFirstName.trim(),
-            lastName: input.adminLastName.trim(),
-            position: input.adminPosition.trim(),
-            phone: input.adminPhone.trim(),
-            role: 'AGENCY_ADMIN',
-            agencyId: null, // Will be set after agency creation
-            active: false, // Inactive until approved
-            createdAt: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      const userRow = {
+        email: adminEmail,
+        passwordHash: passwordHash,
+        firstName: input.adminFirstName.trim(),
+        middleName: input.adminMiddleName.trim(),
+        lastName: input.adminLastName.trim(),
+        position: input.adminPosition.trim(),
+        phone: input.adminPhone.trim(),
+        role: 'AGENCY_ADMIN',
+        agencyId: null, // Will be set after agency creation
+        active: false, // Inactive until approved
+        createdAt: new Date().toISOString(),
+      }
+      const { data: userData, error: userError } = await insertWithNewColumns('user', userRow, ['middleName'])
 
       if (userError) throw userError
       if (!userData) throw new Error('Failed to create user')
       createdUserId = userData.id
 
       // Step 2: Create agency with the user as creator
-      const { data: agencyData, error: agencyError } = await supabase
-        .from('agency')
-        .insert([
-          {
-            name: input.agencyName.trim(),
-            agencyType: input.agencyType,
-            address: input.agencyAddress.trim(),
-            website: input.agencyWebsite?.trim() || null,
-            contactEmail: input.agencyEmail.trim(),
-            contactPhone: input.agencyPhone.trim(),
-            registrationStatus: 'PENDING',
-            accountStatus: 'INACTIVE',
-            subscriptionStatus: 'ACTIVE',
-            createdBy: userData.id,
-            createdAt: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      const { data: agencyData, error: agencyError } = await insertWithNewColumns(
+        'agency',
+        {
+          name: input.agencyName.trim(),
+          agencyType: input.agencyType,
+          address: input.agencyAddress.trim(),
+          website: input.agencyWebsite?.trim() || null,
+          contactEmail: input.agencyEmail.trim(),
+          contactPhone: input.agencyPhone.trim(),
+          registrationStatus: 'PENDING',
+          accountStatus: 'INACTIVE',
+          subscriptionStatus: 'ACTIVE',
+          createdBy: userData.id,
+          createdAt: new Date().toISOString(),
+        },
+        [],
+      )
 
       if (agencyError) throw agencyError
       if (!agencyData) throw new Error('Failed to create agency')

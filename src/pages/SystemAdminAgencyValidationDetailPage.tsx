@@ -22,7 +22,7 @@ import { Reveal } from '../data/components/landing/Reveal'
 import { Badge, Button, DetailField, EmptyState, Modal, Panel } from '../data/components/ui'
 import { AgencyDocumentCard, AgencyDocumentViewer } from '../data/components/system-admin'
 import { useSystemAdminData } from '../features/system-admin'
-import { REQUIRED_DOCUMENTS } from '../data/components/landing/registration/types'
+import { DOCUMENT_CATALOGUE, categoryForType, documentsFor } from '../data/components/landing/registration/types'
 import { formatDateTime } from '../lib/formatDateTime'
 import { AGENCY_REGISTRATION_STATUS_LABEL, AGENCY_REGISTRATION_STATUS_TONE } from '../lib/labels'
 import { ROUTES } from '../routes/paths'
@@ -79,6 +79,17 @@ export function SystemAdminAgencyValidationDetailPage() {
   }
 
   const documentsById = new Map(agency.documents.map((doc) => [doc.id, doc] as const))
+  // The slots this organization type is asked for, then anything else it
+  // uploaded. A volunteer group proves itself with whatever it has on hand, so
+  // a fixed list of slots would show it as "missing" documents it was never
+  // required to have.
+  const expected = documentsFor(categoryForType(agency.agencyType))
+  const documentSlots = [
+    ...expected.map(({ id, requirement }) => ({ id, required: requirement === 'required' })),
+    ...agency.documents
+      .filter((doc) => !expected.some((e) => e.id === doc.id))
+      .map((doc) => ({ id: doc.id, required: false })),
+  ].filter((slot) => slot.required || documentsById.has(slot.id))
 
   return (
     <>
@@ -126,7 +137,7 @@ export function SystemAdminAgencyValidationDetailPage() {
           <Panel title="Agency Information">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <DetailField icon={Building2} label="Agency Name" value={agency.name} />
-              <DetailField icon={Tag} label="Agency Type" value={agency.agencyType} />
+              <DetailField icon={Tag} label="Organization Type" value={agency.agencyType} />
               <DetailField icon={Mail} label="Official Email" value={agency.contactEmail} />
               <DetailField icon={Phone} label="Contact Number" value={agency.contactPhone ?? 'Not provided'} />
               <DetailField icon={MapPin} label="Address" value={agency.address} />
@@ -147,12 +158,12 @@ export function SystemAdminAgencyValidationDetailPage() {
         <Reveal delayMs={200}>
           <Panel title="Verification Documents">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {REQUIRED_DOCUMENTS.map((meta) => {
+              {documentSlots.map((meta) => {
                 const doc = documentsById.get(meta.id)
                 return (
                   <AgencyDocumentCard
                     key={meta.id}
-                    label={meta.label}
+                    label={DOCUMENT_CATALOGUE[meta.id].label}
                     required={meta.required}
                     document={doc}
                     onView={

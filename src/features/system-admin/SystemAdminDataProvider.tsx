@@ -21,6 +21,7 @@ const SystemAdminDataContext = createContext<SystemAdminDataContextValue | undef
 
 interface CreatorInfo {
   firstName: string | null
+  middleName?: string | null
   lastName: string | null
   position: string | null
   email: string
@@ -37,7 +38,9 @@ function mapDbAgencyToAgency(dbAgency: DbAgency, creator: CreatorInfo | undefine
     contactEmail: dbAgency.contactEmail || '',
     contactPhone: dbAgency.contactPhone || undefined,
     agencyAdmin: {
-      fullName: creator ? `${creator.firstName || ''} ${creator.lastName || ''}`.trim() : '',
+      fullName: creator
+        ? [creator.firstName, creator.middleName, creator.lastName].filter(Boolean).join(' ')
+        : '',
       position: creator?.position || '',
       email: creator?.email || '',
       phone: creator?.phone || '',
@@ -70,13 +73,20 @@ export function SystemAdminDataProvider({ children }: { children: ReactNode }) {
     const creatorIds = Array.from(new Set(dbAgencies.map((a) => a.createdBy)))
     let creatorsById = new Map<number, CreatorInfo>()
     if (creatorIds.length > 0) {
-      const { data: creators, error: creatorsError } = await supabase
-        .from('user')
-        .select('id, firstName, lastName, position, email, phone')
-        .in('id', creatorIds)
+      const fetchCreators = (columns: string) => supabase.from('user').select(columns).in('id', creatorIds)
+      // middleName exists only once migration 02 has run; without it the
+      // select fails outright, so fall back rather than lose every admin name.
+      let { data: creators, error: creatorsError } = await fetchCreators(
+        'id, firstName, middleName, lastName, position, email, phone',
+      )
+      if (creatorsError) {
+        ;({ data: creators, error: creatorsError } = await fetchCreators('id, firstName, lastName, position, email, phone'))
+      }
 
       if (!creatorsError && creators) {
-        creatorsById = new Map(creators.map((c) => [c.id, c]))
+        creatorsById = new Map(
+          (creators as unknown as Array<CreatorInfo & { id: number }>).map((c) => [c.id, c]),
+        )
       }
     }
 
