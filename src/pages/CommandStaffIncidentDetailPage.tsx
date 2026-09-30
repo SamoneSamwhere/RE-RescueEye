@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock, Flame } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock, Flame, Users } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
-import { Panel, Button, Modal, PriorityBadge, Badge, DetectionStatusBadge, EmptyState, DetailField } from '../data/components/ui'
+import { Panel, Button, PriorityBadge, Badge, DetectionStatusBadge, MissionStatusBadge, EmptyState, DetailField } from '../data/components/ui'
 import { DetectionMediaPreview } from '../data/components/detections'
 import { IncidentTimeline } from '../data/components/incidents'
 import { DamageMapPreview } from '../data/components/map'
-import { ResponderSelectionPanel } from '../data/components/responders'
-import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
-import { useResponderCandidates } from '../hooks/useResponderCandidates'
 import { useIncidentTimeline } from '../hooks/useIncidentTimeline'
 import { mockDrones } from '../data/mockDrones'
+import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
 import { formatDateTime } from '../lib/formatDateTime'
 import {
@@ -47,28 +45,16 @@ import type { IncidentPriority } from '../types/incident'
 const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 
 export function CommandStaffIncidentDetailPage() {
-  const { session } = useAuth()
   const { incidentId } = useParams<{ incidentId: string }>()
-  const { incidents, detections, missions, mediaAssets, updateIncidentPriority, dispatchIncident, closeIncident } =
-    useCommandStaffData()
+  const { incidents, detections, missions, mediaAssets, updateIncidentPriority, closeIncident } = useCommandStaffData()
 
   const incident = incidents.find((i) => i.id === incidentId) ?? null
   const detection = incident ? (detections.find((d) => d.id === incident.detectionId) ?? null) : null
 
   const [pendingPriority, setPendingPriority] = useState<IncidentPriority | null>(incident?.priority ?? null)
-  const [selectedResponderId, setSelectedResponderId] = useState<string | null>(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [dispatchSuccess, setDispatchSuccess] = useState<{ responderName: string } | null>(null)
-
-  useEffect(() => {
-    setSelectedResponderId(null)
-    setConfirmOpen(false)
-    setDispatchSuccess(null)
-  }, [incidentId])
 
   const sourceLabel = detection ? sourceLabelFor(detection.mediaAssetId, mediaAssets, mockDrones) : ''
   const timelineEvents = useIncidentTimeline(incident, detection, missions, sourceLabel)
-  const responderCandidates = useResponderCandidates(detection, session?.agencyId, incidents, missions)
 
   if (!incident || !detection) {
     return (
@@ -81,24 +67,17 @@ export function CommandStaffIncidentDetailPage() {
     )
   }
 
-  const selectedCandidate = responderCandidates.find((candidate) => candidate.id === selectedResponderId) ?? null
   const hasCompletedMission = missions.some((m) => m.incidentId === incident.id && m.status === 'COMPLETED')
-  const hasActiveMission = missions.some(
-    (m) => m.incidentId === incident.id && ACTIVE_MISSION_STATUSES.has(m.status),
-  )
+  // Most recent mission first — a declined mission on this incident is
+  // reassigned from Detection Review, which then shows up here as a second row.
+  const incidentMissions = [...missions]
+    .filter((m) => m.incidentId === incident.id)
+    .sort((a, b) => b.dispatchedAt.localeCompare(a.dispatchedAt))
+  const currentMission = incidentMissions.find((m) => ACTIVE_MISSION_STATUSES.has(m.status)) ?? incidentMissions[0]
 
   function handleUpdatePriority() {
     if (!incident || !pendingPriority || pendingPriority === incident.priority) return
     updateIncidentPriority(incident.id, pendingPriority)
-  }
-
-  function handleConfirmDispatch() {
-    if (!incident || !selectedCandidate) return
-    const mission = dispatchIncident(incident.id, selectedCandidate.id)
-    if (!mission) return
-    setDispatchSuccess({ responderName: selectedCandidate.name })
-    setConfirmOpen(false)
-    setSelectedResponderId(null)
   }
 
   function handleCloseIncident() {
@@ -169,7 +148,8 @@ export function CommandStaffIncidentDetailPage() {
             <Panel title="Incident Priority">
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-foreground-secondary">
-                  Set or update this incident's priority. Dispatch is handled separately.
+                  Change this incident's priority if it needs revisiting. Responder assignment happens on Detection
+                  Review, not here.
                 </p>
                 <div className="flex items-center gap-2">
                   <select
@@ -205,33 +185,59 @@ export function CommandStaffIncidentDetailPage() {
           </div>
         </Reveal>
 
-        {/* Side by side on a wide screen: choosing who to send on the left,
-            what has happened so far on the right. Stacked on a narrow one. */}
+        {/* Side by side on a wide screen: who's assigned on the left, what has
+            happened so far on the right. Stacked on a narrow one. Assignment
+            itself happens on Detection Review, not here — see the panel below. */}
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
-          <Reveal delayMs={200} className="flex flex-col gap-4">
-            {dispatchSuccess ? (
-              <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-                <Send className="size-4 shrink-0" />
-                Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
-              </div>
-            ) : null}
-
-            {hasActiveMission ? (
-              <Panel title="Select Field Responder to Notify">
+          <Reveal delayMs={200}>
+            <Panel title="Responder Assignment">
+              {currentMission ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                        <Users className="size-4 text-foreground-muted" />
+                        {mockUsers.find((u) => u.id === currentMission.responderUserId)?.name ?? 'Unknown responder'}
+                      </p>
+                      <p className="mt-0.5 text-xs text-foreground-muted">
+                        Dispatched {formatDateTime(currentMission.dispatchedAt)}
+                      </p>
+                    </div>
+                    <MissionStatusBadge status={currentMission.status} />
+                  </div>
+                  {!ACTIVE_MISSION_STATUSES.has(currentMission.status) ? (
+                    <p className="text-xs text-foreground-muted">
+                      No active mission right now — reassign from Detection Review if this incident still needs a
+                      responder.
+                    </p>
+                  ) : null}
+                  <Link
+                    to={ROUTES.commandStaffDetections}
+                    state={{ selectDetectionId: incident.detectionId }}
+                    className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                  >
+                    <Send className="size-3.5" />
+                    Reassign from Detection Review
+                  </Link>
+                </div>
+              ) : (
                 <EmptyState
                   icon={Send}
-                  title="A mission is already in progress"
-                  description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
+                  title="No responder assigned yet"
+                  description="Assign a nearby, available Field Responder to this incident from Detection Review."
+                  action={
+                    <Link
+                      to={ROUTES.commandStaffDetections}
+                      state={{ selectDetectionId: incident.detectionId }}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                    >
+                      <Send className="size-3.5" />
+                      Go to Detection Review
+                    </Link>
+                  }
                 />
-              </Panel>
-            ) : (
-              <ResponderSelectionPanel
-                candidates={responderCandidates}
-                selectedId={selectedResponderId}
-                onSelect={setSelectedResponderId}
-                onNotify={() => setConfirmOpen(true)}
-              />
-            )}
+              )}
+            </Panel>
           </Reveal>
 
           <Reveal delayMs={300}>
@@ -241,34 +247,6 @@ export function CommandStaffIncidentDetailPage() {
           </Reveal>
         </div>
       </div>
-
-      <Modal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        title="Confirm Dispatch"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmDispatch}>Confirm Dispatch</Button>
-          </>
-        }
-      >
-        {selectedCandidate ? (
-          <div className="flex flex-col gap-2">
-            <p>
-              Dispatch this incident to <strong>{selectedCandidate.name}</strong>?
-            </p>
-            <p className="text-foreground-secondary">
-              {selectedCandidate.distanceKm !== null
-                ? `They are ${selectedCandidate.distanceKm.toFixed(1)} km from the incident location.`
-                : 'Their distance from the incident is unknown.'}{' '}
-              They will receive a mock SMS mission notification, and the mission will begin in <strong>PENDING</strong> status.
-            </p>
-          </div>
-        ) : null}
-      </Modal>
     </>
   )
 }

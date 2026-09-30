@@ -17,4 +17,6 @@ export interface ResponderCandidate {
   missionStatus?: MissionStatus
   missionIncidentPriority?: IncidentPriority
   isAvailable: boolean
+  /** The response team this person belongs to, if any — grouping only; dispatch is still to this one person. */
+  teamName?: string
 }

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
+import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, CheckCircle2, XCircle, ArrowRight, Flag } from 'lucide-react'
 import { Panel, Button, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } from '../ui'
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
+import { suggestPriority } from '../../../lib/priority'
 import { DetectionMediaPreview } from './DetectionMediaPreview'
 import type { IncidentPriority } from '../../../types/incident'
 import type { EnrichedDetection } from './types'
@@ -23,7 +24,10 @@ interface DetectionDetailPanelProps {
 const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 
 export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, onVerify, onReject }: DetectionDetailPanelProps) {
-  const [priority, setPriority] = useState<IncidentPriority>('MEDIUM')
+  // Seeded from the AI's own suggestion (see suggestPriority) rather than a
+  // fixed default — Command Staff edits it here, and only their choice at the
+  // moment of Verify ever becomes the Incident's actual priority.
+  const [priority, setPriority] = useState<IncidentPriority>(() => (detection ? suggestPriority(detection) : 'MEDIUM'))
   const [notes, setNotes] = useState('')
 
   if (!detection) {
@@ -35,6 +39,7 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
   }
 
   const isPending = detection.validationStatus === 'PENDING'
+  const suggestedPriority = suggestPriority(detection)
 
   return (
     <Panel title="Detection Detail">
@@ -72,6 +77,15 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
               label="Location"
               value={`${detection.location.lat.toFixed(4)}, ${detection.location.lng.toFixed(4)}`}
             />
+            <div className="flex items-start gap-2">
+              <Flag className="mt-0.5 size-4 shrink-0 text-foreground-muted" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-foreground-muted">
+                  {isPending ? 'Suggested Priority' : 'Priority At Verification'}
+                </p>
+                <PriorityBadge priority={isPending ? suggestedPriority : (linkedIncident?.priority ?? suggestedPriority)} className="mt-0.5" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -100,7 +114,7 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
 
               <div>
                 <label htmlFor="incident-priority" className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground-secondary">
-                  Incident Priority (if verified)
+                  Incident Priority
                 </label>
                 <select
                   id="incident-priority"
@@ -114,6 +128,10 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-foreground-muted">
+                  Prefilled from the AI's assessment of this detection — change it if it looks wrong. This only takes
+                  effect once you click Verify.
+                </p>
               </div>
 
               <div className="flex items-center gap-2">

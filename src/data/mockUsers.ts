@@ -69,6 +69,7 @@ export const mockUsers: MockUser[] = [
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T14:00:00Z',
     currentLocation: { lat: 10.3215, lng: 123.901026 },
+    teamId: 'team-alpha',
   },
   {
     id: 'usr-field-responder-2',
@@ -83,6 +84,7 @@ export const mockUsers: MockUser[] = [
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T13:20:00Z',
     currentLocation: { lat: 10.3105, lng: 123.887368 },
+    teamId: 'team-alpha',
   },
   {
     id: 'usr-field-responder-3',
@@ -111,6 +113,7 @@ export const mockUsers: MockUser[] = [
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T14:05:00Z',
     currentLocation: { lat: 10.3245, lng: 123.905846 },
+    teamId: 'team-bravo',
   },
   {
     id: 'usr-field-responder-5',
@@ -125,6 +128,7 @@ export const mockUsers: MockUser[] = [
     createdByUserId: 'usr-agency-admin-1',
     lastLoginAt: '2026-08-20T12:55:00Z',
     currentLocation: { lat: 10.2995, lng: 123.884154 },
+    teamId: 'team-bravo',
   },
   {
     id: 'usr-field-responder-6',
