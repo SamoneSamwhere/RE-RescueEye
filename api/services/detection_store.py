@@ -41,6 +41,11 @@ class StoredDetection:
     # verdict with no reasoning behind it is just a number to take on faith.
     casualty_score: float | None = None
     casualty_reasons: list[str] | None = None
+    # What the damage classifier made of the whole frame this subject was seen
+    # in — {"label", "confidence", "severity"}, e.g. fire_damage / CRITICAL.
+    # A casualty in a burning building and one in an open field are different
+    # rescues, and the incident is the only place that difference survives.
+    scene: dict | None = None
     # A JPEG crop of the subject, kept in memory alongside the record so the
     # review screen can show what the model actually saw. It rides the same
     # bounded deque, so old crops are evicted with their detection and nothing
@@ -96,7 +101,11 @@ def random_coord() -> tuple[float, float]:
 
 def add_detections(detections: list[dict], inference_time_ms: float,
                    frame_width: int = 0, frame_height: int = 0,
-                   frame=None) -> None:
+                   frame=None, scene: dict | None = None) -> None:
+    """`scene` is the frame's damage classification, stamped on every detection in it."""
+    scene_fields = (
+        {k: scene[k] for k in ("label", "confidence", "severity") if k in scene} if scene else None
+    )
     for det in detections:
         # Reuse the coordinate already assigned to the detection (so the
         # incident lands at the same spot), falling back to a fresh one.
@@ -120,6 +129,7 @@ def add_detections(detections: list[dict], inference_time_ms: float,
                 track_id=det.get("track_id"),
                 casualty_score=det.get("casualty_score"),
                 casualty_reasons=det.get("casualty_reasons"),
+                scene=scene_fields,
             )
         )
 
@@ -142,6 +152,7 @@ def get_recent(limit: int = 20) -> list[dict]:
             "track_id": d.track_id,
             "casualty_score": d.casualty_score,
             "casualty_reasons": d.casualty_reasons,
+            "scene": d.scene,
         }
         for d in reversed(items)
     ]

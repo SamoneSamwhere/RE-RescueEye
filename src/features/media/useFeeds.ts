@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, apiUrl, ApiError } from '../../lib/apiClient'
 import type { StoredMedia } from '../../types/media'
+import type { SceneDamage } from '../../types/detection'
 
 const FEEDS_KEY = 'feeds'
 
@@ -44,10 +45,7 @@ export interface DetectionBox {
 }
 
 /** Whole-frame damage label from the classifier (api/routers/classify.py). */
-export interface SceneLabel {
-  label: 'fire_damage' | 'flood_damage' | 'structural_damage' | 'no_damage'
-  confidence: number
-  severity: 'CRITICAL' | 'MODERATE' | 'MINOR' | 'CLEAR'
+export interface SceneLabel extends SceneDamage {
   suggested_action: string
 }
 

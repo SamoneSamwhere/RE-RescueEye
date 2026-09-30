@@ -23,6 +23,7 @@ import type {
   DamageClassification,
   Detection,
   DetectionCategory,
+  SceneDamage,
 } from '../../types/detection'
 
 /** One detection as the API stores it — pixel bbox, drone lat/lng. */
@@ -46,6 +47,8 @@ export interface ApiDetection {
   casualty_reasons?: string[]
   /** Set when the detection was vetoed as one of our own responders. */
   matched_responder?: string
+  /** The damage classifier's verdict on the frame this detection came from; null if unclassified. */
+  scene?: SceneDamage | null
 }
 
 /** JPEG crop of the subject, served straight from the API. */
@@ -119,6 +122,7 @@ export function toDetection(d: ApiDetection, mediaAssetId: string): Detection {
     snapshotUrl: d.has_snapshot ? detectionSnapshotUrl(d.id) : undefined,
     casualtyScore: d.casualty_score,
     casualtyReasons: d.casualty_reasons,
+    sceneDamage: d.scene ?? undefined,
   }
 }
 
@@ -284,6 +288,8 @@ export function useLiveDetections({
           // these out pinned the card to whatever the first sighting knew.
           casualtyScore: next.casualtyScore,
           casualtyReasons: next.casualtyReasons,
+          // The scene travels with the frame it was judged on, for the same reason.
+          sceneDamage: next.sceneDamage,
         })
       }
     }

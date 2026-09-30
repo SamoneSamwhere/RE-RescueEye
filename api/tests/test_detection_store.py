@@ -155,3 +155,17 @@ def test_recent_carries_the_casualty_verdict():
     assert row["casualty_score"] == 0.93
     assert row["casualty_reasons"] == ["posture_from_pose_nadir", "stillness_measured"]
     ds._store.clear()
+
+
+def test_scene_label_is_stamped_on_every_detection_in_the_frame():
+    scene = {"label": "fire_damage", "confidence": 0.97, "severity": "CRITICAL",
+             "suggested_action": "Deploy fire suppression", "timestamp": "t", "model_version": "custom_v1"}
+    ds.add_detections([_det(det_id="a"), _det(det_id="b")], inference_time_ms=1.0, scene=scene)
+    recent = ds.get_recent(limit=10)
+    # Only what an incident needs travels with the detection.
+    assert [d["scene"] for d in recent] == [{"label": "fire_damage", "confidence": 0.97, "severity": "CRITICAL"}] * 2
+
+
+def test_scene_is_none_when_the_frame_was_not_classified():
+    ds.add_detections([_det()], inference_time_ms=1.0)
+    assert ds.get_recent(limit=1)[0]["scene"] is None

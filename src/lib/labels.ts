@@ -1,4 +1,9 @@
-import type { DetectionCategory, DamageClassification } from '../types/detection'
+import type {
+  DetectionCategory,
+  DamageClassification,
+  SceneDamageLabel,
+  SceneDamageSeverity,
+} from '../types/detection'
 import type { IncidentPriority, IncidentStatus } from '../types/incident'
 import type { UserRole } from '../types/user'
 import type { AgencyRegistrationStatus } from '../types/agency'
@@ -8,6 +13,20 @@ import type { AgencyRegistrationStatus } from '../types/agency'
 export const DETECTION_CATEGORY_LABEL: Record<DetectionCategory, string> = {
   CASUALTY: 'Casualty',
   DAMAGE: 'Damage',
+}
+
+export const SCENE_DAMAGE_LABEL: Record<SceneDamageLabel, string> = {
+  fire_damage: 'Fire damage',
+  flood_damage: 'Flood damage',
+  structural_damage: 'Structural damage',
+  no_damage: 'No damage',
+}
+
+export const SCENE_SEVERITY_LABEL: Record<SceneDamageSeverity, string> = {
+  CRITICAL: 'Critical',
+  MODERATE: 'Moderate',
+  MINOR: 'Minor',
+  CLEAR: 'Clear',
 }
 
 export const DAMAGE_CLASSIFICATION_LABEL: Record<DamageClassification, string> = {

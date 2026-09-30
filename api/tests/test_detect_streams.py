@@ -119,3 +119,12 @@ def test_blob_matches_the_letterbox_geometry(frame):
     # Padding is Ultralytics' grey 114, scaled like the image.
     assert abs(float(blob[0, 0, 0, 0]) - 114 / 255) < 1e-6
     assert float(blob.max()) <= 1.0
+
+
+def test_stored_casualty_carries_the_scene_it_was_seen_in(client, prone_victim, bright_frame_b64, monkeypatch):
+    monkeypatch.setattr(detect, "classify_frame",
+                        lambda f: {"label": "flood_damage", "confidence": 0.9, "severity": "CRITICAL",
+                                   "suggested_action": ""})
+    client.post("/detect", json={"frame": bright_frame_b64, "stream": "feedA"})
+    stored = client.get("/detections/recent?limit=5").json()["detections"]
+    assert stored and stored[0]["scene"]["label"] == "flood_damage"

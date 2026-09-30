@@ -13,6 +13,17 @@ export type DetectionCategory = 'CASUALTY' | 'DAMAGE'
 /** Only meaningful when category is DAMAGE — a finer-grained AI classification of the damage. */
 export type DamageClassification = 'STRUCTURAL' | 'UTILITY' | 'PROPERTY'
 
+/** The damage classifier's own classes (api/routers/classify.py), kept as-is so fire and flood stay distinct. */
+export type SceneDamageLabel = 'fire_damage' | 'flood_damage' | 'structural_damage' | 'no_damage'
+export type SceneDamageSeverity = 'CRITICAL' | 'MODERATE' | 'MINOR' | 'CLEAR'
+
+/** What the damage classifier made of the whole frame a detection was seen in. */
+export interface SceneDamage {
+  label: SceneDamageLabel
+  confidence: number
+  severity: SceneDamageSeverity
+}
+
 /** Normalized (0-100) box within the source frame, as produced by the AI model. */
 export interface BoundingBox {
   x: number
@@ -54,6 +65,12 @@ export interface Detection {
    */
   casualtyScore?: number
   casualtyReasons?: string[]
+  /**
+   * The scene around the subject when it was detected — a casualty in a
+   * burning building is a different rescue from one in an open field. Only on
+   * detections ingested from the API; absent means the frame was not classified.
+   */
+  sceneDamage?: SceneDamage
   reviewedByUserId?: string
   reviewedAt?: string
   reviewerNotes?: string

@@ -1050,7 +1050,7 @@ async def run_detection(jpeg: bytes, stream_key: str | None = None,
 
     add_detections(emitted, inference_ms,
                    frame_width=frame.shape[1], frame_height=frame.shape[0],
-                   frame=frame)
+                   frame=frame, scene=r["scene"])
 
     append_log({
         "frame_id":        r["frame_id"],

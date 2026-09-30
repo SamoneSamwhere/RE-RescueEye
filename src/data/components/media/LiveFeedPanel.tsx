@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Building2, Camera, Film, Flame, RefreshCw, Scan, ShieldCheck, Waves, X, Zap } from 'lucide-react'
 import { Panel, Button, Badge } from '../ui'
 import { cn } from '../../../lib/cn'
+import { SCENE_DAMAGE_LABEL } from '../../../lib/labels'
 import { feedMjpegUrl, useFeedDetection } from '../../../features/media/useFeeds'
 import type { DetectionBox, Feed, SceneLabel } from '../../../features/media/useFeeds'
 
@@ -28,13 +29,6 @@ const BOX_COLORS: Record<string, string> = {
   structural_damage: '#f97316',
   fire: '#ff7700',
   smoke: '#cbd5e1',
-}
-
-const SCENE_LABEL: Record<SceneLabel['label'], string> = {
-  fire_damage: 'Fire damage',
-  flood_damage: 'Flood damage',
-  structural_damage: 'Structural damage',
-  no_damage: 'No damage',
 }
 
 const SCENE_ICON: Record<SceneLabel['label'], typeof Flame> = {
@@ -213,7 +207,7 @@ export function LiveFeedPanel({
               )}
             >
               <SceneIcon className="size-3" />
-              {SCENE_LABEL[scene.label]} · {scene.severity.toLowerCase()} · {Math.round(scene.confidence * 100)}%
+              {SCENE_DAMAGE_LABEL[scene.label]} · {scene.severity.toLowerCase()} · {Math.round(scene.confidence * 100)}%
             </span>
           ) : null}
 

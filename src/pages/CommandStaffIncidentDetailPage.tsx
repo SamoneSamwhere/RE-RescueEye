@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock, Flame } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
 import { Panel, Button, Modal, PriorityBadge, Badge, DetectionStatusBadge, EmptyState, DetailField } from '../data/components/ui'
@@ -15,7 +15,31 @@ import { useIncidentTimeline } from '../hooks/useIncidentTimeline'
 import { mockDrones } from '../data/mockDrones'
 import { sourceLabelFor } from '../lib/sourceLabel'
 import { formatDateTime } from '../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, INCIDENT_STATUS_LABEL } from '../lib/labels'
+import {
+  DAMAGE_CLASSIFICATION_LABEL,
+  DETECTION_CATEGORY_LABEL,
+  INCIDENT_STATUS_LABEL,
+  SCENE_DAMAGE_LABEL,
+  SCENE_SEVERITY_LABEL,
+} from '../lib/labels'
+import type { Detection } from '../types/detection'
+
+/**
+ * The damage classifier's verdict on the scene, e.g. "Fire damage · Critical (97%)".
+ * Mock/older damage detections carry only the coarse DamageClassification, so
+ * that is shown when there is no scene label rather than claiming nothing.
+ */
+function sceneDamageText(detection: Detection): string {
+  const scene = detection.sceneDamage
+  if (scene) {
+    const pct = `${Math.round(scene.confidence * 100)}%`
+    return scene.label === 'no_damage'
+      ? `${SCENE_DAMAGE_LABEL[scene.label]} (${pct})`
+      : `${SCENE_DAMAGE_LABEL[scene.label]} · ${SCENE_SEVERITY_LABEL[scene.severity]} (${pct})`
+  }
+  if (detection.damageClassification) return DAMAGE_CLASSIFICATION_LABEL[detection.damageClassification]
+  return 'Not recorded'
+}
 import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
 import { ROUTES } from '../routes/paths'
 import type { IncidentPriority } from '../types/incident'
@@ -133,6 +157,7 @@ export function CommandStaffIncidentDetailPage() {
                 <DetailField icon={Gauge} label="Confidence Score" value={`${Math.round(detection.confidence * 100)}%`} />
                 <DetailField icon={Clock} label="Detected" value={formatDateTime(detection.detectedAt)} />
                 <DetailField icon={CheckCircle2} label="Verification Status" value={detection.validationStatus} />
+                <DetailField icon={Flame} label="Scene / Damage" value={sceneDamageText(detection)} />
               </div>
               {detection.reviewerNotes ? (
                 <p className="rounded-md bg-surface-secondary px-3 py-2 text-sm text-foreground">{detection.reviewerNotes}</p>
