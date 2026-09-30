@@ -6,6 +6,7 @@ import { Field } from '../ui/Field'
 import { Input } from '../ui/Input'
 import { useUserStore } from '../../../state/UserStore'
 import { useProfileDatabase } from '../../../hooks/useProfileDatabase'
+import { parsePhPhone } from '../../../lib/phone'
 
 interface ProfileEditFormProps {
   user: MockUser
@@ -51,20 +52,27 @@ export function ProfileEditForm({ user, isRealAccount, onSuccess }: ProfileEditF
       if (!formData.email.trim()) {
         throw new Error('Email is required')
       }
+      // Optional, but a number that is entered must be a PH mobile the app can page.
+      let phone: string | undefined
+      if (formData.phone.trim()) {
+        const parsed = parsePhPhone(formData.phone, ['mobile'])
+        if (!parsed.ok) throw new Error(parsed.error)
+        phone = parsed.formatted
+      }
 
       if (isRealAccount) {
         const ok = await updateProfile(Number(user.id), {
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
-          phone: formData.phone.trim() || undefined,
+          phone,
         })
         if (!ok) throw new Error('Failed to update profile')
       } else {
         updateUser(user.id, {
           name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
           email: formData.email.trim(),
-          phone: formData.phone.trim() || undefined,
+          phone,
         })
       }
 
@@ -123,14 +131,14 @@ export function ProfileEditForm({ user, isRealAccount, onSuccess }: ProfileEditF
           />
         </Field>
 
-        <Field label="Phone Number (Optional)" htmlFor="phone" hint="Include country code if outside US">
+        <Field label="Mobile Number (Optional)" htmlFor="phone" hint="PH mobile, e.g. 0917 123 4567.">
           <Input
             id="phone"
             name="phone"
             type="tel"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="+1-555-0000"
+            placeholder="0917 123 4567"
             disabled={isSaving}
           />
         </Field>

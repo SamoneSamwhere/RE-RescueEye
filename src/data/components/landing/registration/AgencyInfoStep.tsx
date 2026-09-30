@@ -1,4 +1,5 @@
 import { Field, Input } from '../../ui'
+import { formatPhPhone } from '../../../../lib/phone'
 import { ORGANIZATION_TYPES, PH_PROVINCES } from './types'
 import type { AgencyInfoValues } from './types'
 
@@ -118,13 +119,14 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
       </fieldset>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Contact Number" htmlFor="agency-phone">
+        <Field label="Contact Number" htmlFor="agency-phone" hint="PH mobile or landline.">
           <Input
             id="agency-phone"
             type="tel"
             value={values.agencyPhone}
             onChange={(event) => onChange({ agencyPhone: event.target.value })}
-            placeholder="0917 123 4567 or (032) 123 4567"
+            onBlur={() => onChange({ agencyPhone: formatPhPhone(values.agencyPhone) })}
+            placeholder="0917 123 4567 or (032) 234 5678"
             required
           />
         </Field>

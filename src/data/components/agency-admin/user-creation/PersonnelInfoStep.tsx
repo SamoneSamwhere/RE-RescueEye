@@ -1,5 +1,6 @@
 import { UserRound } from 'lucide-react'
 import { Field, Input } from '../../ui'
+import { formatPhPhone } from '../../../../lib/phone'
 import type { PersonnelInfoValues } from './types'
 
 interface PersonnelInfoStepProps {
@@ -58,14 +59,15 @@ export function PersonnelInfoStep({ values, onChange }: PersonnelInfoStepProps) 
           />
         </Field>
 
-        <Field label="Contact Number" htmlFor="personnel-phone">
+        <Field label="Mobile Number" htmlFor="personnel-phone" hint="PH mobile — mission alerts are sent by SMS.">
           <Input
             id="personnel-phone"
             type="tel"
             autoComplete="tel"
             value={values.phone}
             onChange={(event) => onChange({ phone: event.target.value })}
-            placeholder="+1-555-0100"
+            onBlur={() => onChange({ phone: formatPhPhone(values.phone, ['mobile']) })}
+            placeholder="0917 123 4567"
             required
           />
         </Field>

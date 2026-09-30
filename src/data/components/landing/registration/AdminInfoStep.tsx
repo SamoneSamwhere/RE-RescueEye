@@ -1,4 +1,5 @@
 import { Field, Input } from '../../ui'
+import { formatPhPhone } from '../../../../lib/phone'
 import { OTHER_POSITION, SAR_POSITIONS } from './types'
 import type { AdminInfoValues } from './types'
 
@@ -100,13 +101,14 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
           />
         </Field>
 
-        <Field label="Contact Number" htmlFor="admin-phone">
+        <Field label="Mobile Number" htmlFor="admin-phone" hint="PH mobile number.">
           <Input
             id="admin-phone"
             type="tel"
             autoComplete="tel"
             value={values.phone}
             onChange={(event) => onChange({ phone: event.target.value })}
+            onBlur={() => onChange({ phone: formatPhPhone(values.phone, ['mobile']) })}
             placeholder="0917 123 4567"
             required
           />

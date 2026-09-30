@@ -19,6 +19,7 @@ import { useAgencyAdminData } from '../features/agency-admin'
 import type { CreatableUserRole } from '../features/agency-admin'
 import { ROUTES } from '../routes/paths'
 import { cn } from '../lib/cn'
+import { formatPhPhone, parsePhPhone } from '../lib/phone'
 
 const STEP_LABELS = ['Personnel', 'Role', 'Account', 'Review']
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -30,6 +31,8 @@ function validatePersonnelStep(values: PersonnelInfoValues): string | null {
   if (!EMAIL_PATTERN.test(values.email)) {
     return 'Enter a valid email address.'
   }
+  const phone = parsePhPhone(values.phone, ['mobile'])
+  if (!phone.ok) return phone.error
   return null
 }
 
@@ -110,7 +113,7 @@ export function AgencyAdminUserCreationPage() {
         firstName: personnel.firstName,
         lastName: personnel.lastName,
         email: personnel.email,
-        phone: personnel.phone,
+        phone: formatPhPhone(personnel.phone, ['mobile']),
         password: account.password,
         role,
       })

@@ -29,6 +29,7 @@ import type {
 import { useAgencyStore } from '../state/AgencyStore'
 import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
 import { now } from '../lib/now'
+import { formatPhPhone, parsePhPhone } from '../lib/phone'
 import { cn } from '../lib/cn'
 
 type AuthMode = 'signin' | 'signup'
@@ -65,6 +66,8 @@ function validateAgencyStep(values: AgencyInfoValues): string | null {
   if (!ZIP_PATTERN.test(values.addressZip.trim())) {
     return 'ZIP code must be 4 digits (e.g. 6000 for Cebu City).'
   }
+  const orgPhone = parsePhPhone(values.agencyPhone)
+  if (!orgPhone.ok) return orgPhone.error
   if (!EMAIL_PATTERN.test(values.agencyEmail)) {
     return 'Enter a valid official email address.'
   }
@@ -97,6 +100,8 @@ function validateAdminStep(values: AdminInfoValues): string | null {
   if (!EMAIL_PATTERN.test(values.email)) {
     return 'Enter a valid email address.'
   }
+  const adminPhone = parsePhPhone(values.phone, ['mobile'])
+  if (!adminPhone.ok) return adminPhone.error
   if (values.password.length < 8) {
     return 'Password must be at least 8 characters.'
   }
@@ -248,7 +253,7 @@ export function AuthPage() {
         agencyName: agency.agencyName,
         agencyType: agency.agencyType,
         agencyAddress: address,
-        agencyPhone: agency.agencyPhone,
+        agencyPhone: formatPhPhone(agency.agencyPhone),
         agencyEmail: agency.agencyEmail,
         agencyWebsite: agency.agencyWebsite,
         adminFirstName: admin.firstName,
@@ -256,7 +261,7 @@ export function AuthPage() {
         adminLastName: admin.lastName,
         adminPosition: position,
         adminEmail: admin.email,
-        adminPhone: admin.phone,
+        adminPhone: formatPhPhone(admin.phone, ['mobile']),
         adminPassword: admin.password,
       })
     } catch (err) {
@@ -281,14 +286,14 @@ export function AuthPage() {
       name: agency.agencyName,
       agencyType: agency.agencyType,
       address,
-      contactPhone: agency.agencyPhone,
+      contactPhone: formatPhPhone(agency.agencyPhone),
       contactEmail: agency.agencyEmail,
       website: agency.agencyWebsite || undefined,
       agencyAdmin: {
         fullName: [admin.firstName, admin.middleName, admin.lastName].map((n) => n.trim()).join(' '),
         position,
         email: admin.email,
-        phone: admin.phone,
+        phone: formatPhPhone(admin.phone, ['mobile']),
       },
       // The files the reviewer will look at. These were dropped before — the
       // record went out with no documents at all, so the System Admin had
