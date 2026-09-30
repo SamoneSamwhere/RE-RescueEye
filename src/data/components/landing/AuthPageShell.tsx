@@ -34,7 +34,9 @@ function AuthPageShellContent({ children }: AuthPageShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 items-start justify-center px-4 pb-6 pt-2 sm:px-6 sm:pt-4 lg:px-8 lg:pt-1">
+      {/* items-center (not items-stretch) so the auth card's own height governs it — the small login
+          card gets to be short and vertically centered instead of stretching to fill the page. */}
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-6 pt-2 sm:px-6 sm:pt-4 lg:px-8 lg:pt-1">
         {children}
       </main>
     </div>

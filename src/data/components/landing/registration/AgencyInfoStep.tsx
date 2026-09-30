@@ -64,7 +64,7 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
             placeholder="2F City Hall Annex, Osmeña Blvd."
           />
         </Field>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
           <Field label="Barangay" htmlFor="address-barangay">
             <Input
               id="address-barangay"
@@ -85,7 +85,7 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
             />
           </Field>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-[minmax(0,1fr)_8rem]">
           <Field label="Province" htmlFor="address-province">
             <select
               id="address-province"
@@ -118,7 +118,7 @@ export function AgencyInfoStep({ values, onChange }: AgencyInfoStepProps) {
         </div>
       </fieldset>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
         <Field label="Contact Number" htmlFor="agency-phone" hint="PH mobile or landline.">
           <Input
             id="agency-phone"

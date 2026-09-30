@@ -22,7 +22,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 @md:grid-cols-3">
         <Field label="First Name" htmlFor="admin-first-name">
           <Input
             id="admin-first-name"
@@ -54,7 +54,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
         <Field label="Position / Designation" htmlFor="admin-position">
           <select
             id="admin-position"
@@ -115,7 +115,7 @@ export function AdminInfoStep({ values, onChange }: AdminInfoStepProps) {
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
         <Field label="Password" htmlFor="admin-password" hint="At least 8 characters.">
           <Input
             id="admin-password"

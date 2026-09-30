@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { CheckCircle2 } from 'lucide-react'
+import { Building2, CheckCircle2, LogIn } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
 import { Field, Input, Button } from '../data/components/ui'
 import { AuthPageShell, Reveal } from '../data/components/landing'
@@ -320,16 +320,30 @@ export function AuthPage() {
     setSubmitted(true)
   }
 
+  // Sign in and registration share one fixed card size — neither mode grows or shrinks the frame
+  // itself; only the columns inside it change (see the two form slots and the accent sliver below).
+  const cardWidthClass = 'max-w-2xl'
+  const cardHeightClass = 'h-[520px]'
+
   return (
     <AuthPageShell>
-      <Reveal className={cn('w-full', mode === 'signup' && currentStep === 2 ? 'max-w-6xl' : 'max-w-4xl')}>
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-surface shadow-modal">
-          <div className="flex flex-col lg:flex-row">
-            {/* Sign in slot — always shown on mobile; field responders sign in with credentials their agency admin created.
-                inert when the sign-up slot is active on desktop: the sliding overlay only covers it visually
-                (it's pointer-events-none so its own CTA button stays clickable), so without inert its fields would
-                still be reachable by click/tab underneath. */}
-            <div className="w-full px-6 py-6 sm:px-10 sm:py-7 lg:w-1/2" inert={mode === 'signup' ? true : undefined}>
+      {/* Reveal owns the slow scroll-in transition (1200ms); the resize below is a separate, snappier
+          transition on its own element so the two durations don't collide on the same class list. */}
+      <Reveal className="flex w-full flex-col">
+        <div className={cn('mx-auto w-full motion-safe:transition-[max-width,height] motion-safe:duration-300 motion-safe:ease-in-out', cardWidthClass, cardHeightClass)}>
+          <div className="relative h-full overflow-hidden rounded-2xl border border-border bg-surface shadow-modal">
+          <div className="flex h-full flex-col lg:flex-row">
+            {/* Sign in slot — always shown on mobile, where it's the only slot in the row.
+                On desktop it collapses to zero width in signup mode (mirroring the sign-up slot below) since
+                both slots now share one fixed-size card — whichever mode is active gets the full row width,
+                minus the accent sliver on the right. */}
+            <div
+              className={cn(
+                'flex w-full flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-6 py-6 sm:px-10 sm:py-7 lg:min-w-0 motion-safe:transition-[flex-grow,opacity] motion-safe:duration-500 motion-safe:ease-in-out',
+                mode === 'signup' && 'lg:flex-none lg:basis-0 lg:opacity-0 lg:px-0',
+              )}
+              inert={mode === 'signup' ? true : undefined}
+            >
               <div className="max-w-md">
                 <h2 className="text-center text-2xl font-semibold text-foreground">Sign In</h2>
               </div>
@@ -389,9 +403,14 @@ export function AuthPage() {
             </div>
 
             {/* Sign up slot — desktop only; agency registration is not part of the mobile field-responder app.
-                inert when covered by the overlay on the signin side, for the same reason as the sign-in slot above. */}
+                Same fixed card as sign in, so this slot takes the full row width (minus the accent sliver)
+                when active, and collapses to zero width — rather than just being hidden behind an overlay —
+                when sign in is active. */}
             <div
-              className="hidden w-full px-6 py-6 sm:px-10 sm:py-7 lg:block lg:w-1/2"
+              className={cn(
+                '@container hidden flex-1 overflow-x-hidden overflow-y-auto py-6 sm:py-7 lg:block lg:min-w-0 motion-safe:transition-[flex-grow,opacity] motion-safe:duration-500 motion-safe:ease-in-out',
+                mode === 'signup' ? 'px-6 opacity-100 sm:px-10' : 'lg:flex-none lg:basis-0 lg:px-0 lg:opacity-0',
+              )}
               inert={mode === 'signin' ? true : undefined}
             >
               {submitted ? (
@@ -467,53 +486,47 @@ export function AuthPage() {
                 </>
               )}
             </div>
-          </div>
 
-          {/* Sliding accent overlay — desktop only; slides between covering the inactive slot */}
-          <div
-            className={cn(
-              'pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 flex-col items-center justify-center gap-4 overflow-hidden bg-gradient-to-br from-[#172554] via-[#0f1f46] to-[#08152f] px-10 text-center motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-in-out lg:flex',
-              mode === 'signup' && 'lg:-translate-x-full',
-            )}
-          >
+            {/* Accent sliver — desktop only, constant width; it never grows since sign in and sign up share the
+                same fixed card. It's a real flex sibling (not an absolute overlay) so the active slot's flex-1
+                correctly gets the row width minus this 80px, instead of the sliver painting over the content.
+                It sits on whichever side the active slot's own trigger would naturally read as "back to X":
+                right of the sign-in form (Register, forward), left of the registration form (Sign In, back). */}
             <div
-              aria-hidden="true"
-              className="absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(45deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.32),transparent_62%)]"
-            />
-            {mode === 'signin' ? (
-              <>
-                <h2 className="relative text-2xl font-semibold text-foreground-inverse">New Organization?</h2>
-                <p className="relative text-sm text-foreground-inverse/80">
-                  Register your organization — agency, NGO, or volunteer group — to start coordinating disaster response operations.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signup')}
-                  className="pointer-events-auto relative cursor-pointer rounded-md border border-white/60 px-4 py-2 text-sm font-medium text-foreground-inverse transition-colors hover:bg-white/10"
-                >
-                  Register Organization
-                </button>
-              </>
-            ) : (
-              <>
-                <h2 className="relative text-2xl font-semibold text-foreground-inverse">Welcome Back</h2>
-                <p className="relative text-sm text-foreground-inverse/80">
-                  Already registered? Sign in to access your dashboard.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className="pointer-events-auto relative cursor-pointer rounded-md border border-white/60 px-4 py-2 text-sm font-medium text-foreground-inverse transition-colors hover:bg-white/10"
-                >
-                  Sign In
-                </button>
-              </>
-            )}
+              className={cn(
+                'relative hidden w-20 shrink-0 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#172554] via-[#0f1f46] to-[#08152f] text-center lg:flex',
+                mode === 'signup' && 'lg:order-first',
+              )}
+            >
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(45deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.32),transparent_62%)]"
+              />
+
+              <button
+                type="button"
+                onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
+                aria-label={mode === 'signin' ? 'Register organization' : 'Sign in'}
+                className="pointer-events-auto relative flex h-full w-full flex-col items-center justify-center gap-3 text-foreground-inverse transition-colors hover:bg-white/10"
+              >
+                <span key={mode} className="relative flex flex-col items-center gap-3 motion-safe:animate-step-in">
+                  {mode === 'signin' ? (
+                    <Building2 className="size-5 shrink-0" />
+                  ) : (
+                    <LogIn className="size-5 shrink-0" />
+                  )}
+                  <span className="text-[11px] font-medium tracking-wide [writing-mode:vertical-rl]">
+                    {mode === 'signin' ? 'Register' : 'Sign In'}
+                  </span>
+                </span>
+              </button>
+            </div>
           </div>
+        </div>
         </div>
       </Reveal>
     </AuthPageShell>

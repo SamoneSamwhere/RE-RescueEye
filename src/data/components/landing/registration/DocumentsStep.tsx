@@ -53,7 +53,7 @@ export function DocumentsStep({
         <p className="mt-0.5 text-xs leading-relaxed text-foreground-secondary">{INTRO[category]}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
         {required.map((d) => renderField(d.id, true))}
       </div>
 
@@ -63,7 +63,7 @@ export function DocumentsStep({
             Supporting documents <span className="text-danger">*</span>
             <span className="ml-1 normal-case text-foreground-muted">— at least one</span>
           </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
             {/* Shown as optional one by one: no single one of these is required. */}
             {oneOf.map((d) => renderField(d.id, false))}
           </div>
@@ -71,7 +71,7 @@ export function DocumentsStep({
       ) : null}
 
       {optional.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{optional.map((d) => renderField(d.id, false))}</div>
+        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">{optional.map((d) => renderField(d.id, false))}</div>
       ) : null}
 
       <label htmlFor="terms" className="flex items-start gap-2 text-xs text-foreground-secondary">
