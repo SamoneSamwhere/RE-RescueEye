@@ -92,7 +92,7 @@ export function CommandStaffDroneRegistrationPage() {
   }
 
   function handleBackToDrones() {
-    navigate(ROUTES.commandStaffMedia)
+    navigate(ROUTES.commandStaffDrones)
   }
 
   if (!session) return null
@@ -121,14 +121,14 @@ export function CommandStaffDroneRegistrationPage() {
 
               <div className="flex flex-col gap-2 w-full pt-4">
                 <Button variant="primary" onClick={handleBackToDrones} className="w-full">
-                  Back to Drones & Media
+                  Back to Drones
                 </Button>
               </div>
             </Card>
           ) : (
             <>
               <div className="mb-6 flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.commandStaffMedia)} className="p-0">
+                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.commandStaffDrones)} className="p-0">
                   <ArrowLeft className="size-4" />
                 </Button>
               </div>

@@ -8,6 +8,8 @@ export interface AddVideoModalProps {
   onClose: () => void
   /** Drones available to attribute the clip to. May be empty — attribution is optional. */
   drones: Drone[]
+  /** Clips already stored, used to warn when the chosen file looks like one of them. */
+  existingClips?: Array<{ name: string; sizeBytes: number }>
   onUpload: (file: File, droneId: string | undefined) => void
   uploading: boolean
   progress: number
@@ -27,6 +29,7 @@ export function AddVideoModal({
   open,
   onClose,
   drones,
+  existingClips = [],
   onUpload,
   uploading,
   progress,
@@ -36,6 +39,8 @@ export function AddVideoModal({
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [droneId, setDroneId] = useState<string>('')
+
+  const isDuplicate = file ? existingClips.some((c) => c.name === file.name && c.sizeBytes === file.size) : false
 
   function handleClose() {
     if (uploading) return
@@ -99,6 +104,12 @@ export function AddVideoModal({
           </select>
         </label>
 
+        {isDuplicate && !uploading ? (
+          <p className="rounded-md border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-fg">
+            A clip with this name and size is already in the library. Uploading it again will store a second copy.
+          </p>
+        ) : null}
+
         {uploading ? (
           <div className="flex flex-col gap-1.5">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-secondary">
@@ -130,7 +141,7 @@ export function AddVideoModal({
             onClick={() => file && onUpload(file, droneId || undefined)}
           >
             <Upload className="size-4" />
-            Upload
+            {isDuplicate ? 'Upload anyway' : 'Upload'}
           </Button>
         </div>
       </div>

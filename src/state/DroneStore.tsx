@@ -17,7 +17,7 @@ const DroneStoreContext = createContext<DroneStoreContextValue | undefined>(unde
 /**
  * Single shared source of truth for Drone records and which of them
  * currently have an active live-feed session, mounted at the app root.
- * A feed started from Drones & Media is watched on the separate Live
+ * A feed started from Drones is watched on the separate Live
  * Monitoring screen — if this lived as local state on one page, it would
  * reset the moment the user navigated away from it.
  */

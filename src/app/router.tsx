@@ -7,7 +7,8 @@ import { SystemAdminAgencyValidationDetailPage } from '../pages/SystemAdminAgenc
 import { SystemAdminAgencyStatusPage } from '../pages/SystemAdminAgencyStatusPage'
 import { SystemAdminSettingsPage } from '../pages/SystemAdminSettingsPage'
 import { CommandStaffDashboardPage } from '../pages/CommandStaffDashboardPage'
-import { CommandStaffDronesMediaPage } from '../pages/CommandStaffDronesMediaPage'
+import { CommandStaffDronesPage } from '../pages/CommandStaffDronesPage'
+import { CommandStaffMediaLibraryPage } from '../pages/CommandStaffMediaLibraryPage'
 import { CommandStaffLiveMonitoringPage } from '../pages/CommandStaffLiveMonitoringPage'
 import { CommandStaffDetectionReviewPage } from '../pages/CommandStaffDetectionReviewPage'
 import { CommandStaffLogsPage } from '../pages/CommandStaffClassificationLogPage'
@@ -99,7 +100,8 @@ export const router = createBrowserRouter([
         ),
         children: [
           { path: ROUTES.commandStaff, element: <CommandStaffDashboardPage /> },
-          { path: ROUTES.commandStaffMedia, element: <CommandStaffDronesMediaPage /> },
+          { path: ROUTES.commandStaffDrones, element: <CommandStaffDronesPage /> },
+          { path: ROUTES.commandStaffMediaLibrary, element: <CommandStaffMediaLibraryPage /> },
           { path: ROUTES.commandStaffDroneRegistration, element: <CommandStaffDroneRegistrationPage /> },
           { path: ROUTES.commandStaffLiveMonitoring, element: <CommandStaffLiveMonitoringPage /> },
           { path: ROUTES.commandStaffDetections, element: <CommandStaffDetectionReviewPage /> },

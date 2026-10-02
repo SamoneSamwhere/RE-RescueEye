@@ -11,7 +11,7 @@ interface DroneCardProps {
   isConnecting: boolean
   isLive: boolean
   onConnect: (droneId: string) => void
-  onSelectFeedSource: (droneId: string) => void
+  onStartLiveFeed: (droneId: string) => void
   onViewLive: () => void
 }
 
@@ -20,7 +20,7 @@ export function DroneCard({
   isConnecting,
   isLive,
   onConnect,
-  onSelectFeedSource,
+  onStartLiveFeed,
   onViewLive,
 }: DroneCardProps) {
   const isConnected = drone.connectionStatus === 'CONNECTED'
@@ -62,7 +62,7 @@ export function DroneCard({
             size="sm"
             className="w-full"
             variant={isLive ? 'secondary' : 'primary'}
-            onClick={() => (isLive ? onViewLive() : onSelectFeedSource(drone.id))}
+            onClick={() => (isLive ? onViewLive() : onStartLiveFeed(drone.id))}
           >
             {isLive ? (
               <>
@@ -72,7 +72,7 @@ export function DroneCard({
             ) : (
               <>
                 <Video className="size-3.5" />
-                Select Feed Source
+                Start Live Feed
               </>
             )}
           </Button>

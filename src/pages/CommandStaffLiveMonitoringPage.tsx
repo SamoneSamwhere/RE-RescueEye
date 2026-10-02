@@ -87,10 +87,10 @@ export function CommandStaffLiveMonitoringPage() {
               <EmptyState
                 icon={Radio}
                 title="No live drone feeds right now"
-                description="Connect a drone in Drones & Media to see its live feed here. Uploaded recordings play in Drones & Media, not on this screen."
+                description="Connect a drone and start its live feed from the Drones page to see it here. Uploaded recordings play in the Media Library, not on this screen."
                 action={
-                  <Link to={ROUTES.commandStaffMedia}>
-                    <Button size="sm">Go to Drones & Media</Button>
+                  <Link to={ROUTES.commandStaffDrones}>
+                    <Button size="sm">Go to Drones</Button>
                   </Link>
                 }
               />

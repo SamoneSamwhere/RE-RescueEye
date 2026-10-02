@@ -8,7 +8,7 @@ interface DroneListProps {
   connectingDroneId: string | null
   liveDroneIds: string[]
   onConnect: (droneId: string) => void
-  onSelectFeedSource: (droneId: string) => void
+  onStartLiveFeed: (droneId: string) => void
   onViewLive: () => void
   onRegisterClick: () => void
   onAddDemoDrone: () => void
@@ -19,7 +19,7 @@ export function DroneList({
   connectingDroneId,
   liveDroneIds,
   onConnect,
-  onSelectFeedSource,
+  onStartLiveFeed,
   onViewLive,
   onRegisterClick,
   onAddDemoDrone,
@@ -65,7 +65,7 @@ export function DroneList({
               isConnecting={connectingDroneId === drone.id}
               isLive={liveDroneIds.includes(drone.id)}
               onConnect={onConnect}
-              onSelectFeedSource={onSelectFeedSource}
+              onStartLiveFeed={onStartLiveFeed}
               onViewLive={onViewLive}
             />
           ))}

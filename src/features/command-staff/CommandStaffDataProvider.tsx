@@ -208,7 +208,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   /**
    * Media -> AI Detection. A drone feed frame or an uploaded video is handed
    * to the mock AI service, which always produces exactly one PENDING
-   * Detection — the connective step between the Drones & Media workflow and
+   * Detection — the connective step between the Media Library workflow and
    * Detection Review. No real inference; see lib/mockAiService.
    */
   function captureMedia(
