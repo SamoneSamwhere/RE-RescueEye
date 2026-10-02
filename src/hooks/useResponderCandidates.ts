@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { mockUsers } from '../data/mockUsers'
-import { mockTeams } from '../data/mockTeams'
 import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
 import { distanceKm } from '../lib/geo'
 import type { ResponderCandidate } from '../data/components/responders'
@@ -40,7 +39,6 @@ export function useResponderCandidates(
           missionStatus: activeMission?.status,
           missionIncidentPriority: missionIncident?.priority,
           isAvailable: responder.accountStatus === 'ACTIVE' && !activeMission,
-          teamName: mockTeams.find((t) => t.id === responder.teamId)?.name,
         }
       })
       .sort((a, b) => {

@@ -14,8 +14,6 @@ export interface DbStaffUser {
   agencyId: number
   active: boolean
   createdAt: string
-  /** Null when unassigned, or when migration 03_teams.sql has not been run. */
-  teamId?: number | null
 }
 
 export interface CreateStaffInput {
@@ -38,23 +36,15 @@ export function useStaffDatabase() {
   const getAgencyStaff = async (agencyId: number): Promise<DbStaffUser[]> => {
     setIsLoading(true)
     try {
-      const fetchStaff = (columns: string) =>
-        supabase
-          .from('user')
-          .select(columns)
-          .eq('agencyId', agencyId)
-          .in('role', ['COMMAND_STAFF', 'FIELD_RESPONDER'])
-          .order('createdAt', { ascending: false })
-
-      const base = 'id, email, firstName, lastName, phone, role, agencyId, active, createdAt'
-      // teamId arrives with migration 03_teams.sql. Asking for a column that
-      // does not exist fails the whole query, so fall back rather than show an
-      // empty personnel list to an admin whose database is one migration behind.
-      let { data, error: dbError } = await fetchStaff(`${base}, teamId`)
-      if (dbError) ({ data, error: dbError } = await fetchStaff(base))
+      const { data, error: dbError } = await supabase
+        .from('user')
+        .select('id, email, firstName, lastName, phone, role, agencyId, active, createdAt')
+        .eq('agencyId', agencyId)
+        .in('role', ['COMMAND_STAFF', 'FIELD_RESPONDER'])
+        .order('createdAt', { ascending: false })
 
       if (dbError) throw dbError
-      return (data as unknown as DbStaffUser[]) || []
+      return (data as DbStaffUser[]) || []
     } catch (err) {
       console.error('Get agency staff error:', err)
       return []
@@ -115,13 +105,5 @@ export function useStaffDatabase() {
     return !dbError
   }
 
-  /** Puts a person on a team, or takes them off one (null). Returns an error message, or null on success. */
-  const setStaffTeam = async (userId: number, teamId: number | null): Promise<string | null> => {
-    const { error: dbError } = await supabase.from('user').update({ teamId }).eq('id', userId)
-    if (!dbError) return null
-    console.error('Set staff team error:', dbError)
-    return handleDatabaseError(dbError)
-  }
-
-  return { getAgencyStaff, createStaffUser, setStaffActive, setStaffTeam, isLoading }
+  return { getAgencyStaff, createStaffUser, setStaffActive, isLoading }
 }

@@ -16,18 +16,17 @@ const selectClasses =
 
 /**
  * Manage Personnel / Staff — the one place an Agency Admin sees everyone in
- * their organization: add staff, activate or deactivate accounts, and put
- * people on teams. (Previously "Account Status", which only toggled accounts.)
+ * their organization: add staff, and activate or deactivate accounts.
+ * Response teams are not managed here — Command Staff form them at dispatch.
  */
 export function AgencyAdminAccountStatusPage() {
-  const { agencyUsers, setUserStatus, teams, teamsAvailable, setUserTeam } = useAgencyAdminData()
+  const { agencyUsers, setUserStatus } = useAgencyAdminData()
   const location = useLocation()
   const [highlightUserId, setHighlightUserId] = useState<string | undefined>(
     (location.state as { highlightUserId?: string } | null)?.highlightUserId,
   )
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
-  const [teamError, setTeamError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!highlightUserId) return
@@ -45,17 +44,11 @@ export function AgencyAdminAccountStatusPage() {
     )
   }, [agencyUsers, query, roleFilter])
 
-  async function handleSetTeam(userId: string, teamId: string | null) {
-    setTeamError(null)
-    const error = await setUserTeam(userId, teamId)
-    if (error) setTeamError(error)
-  }
-
   return (
     <>
       <PageHeader
         title="Manage Personnel / Staff"
-        description="Add staff, activate or deactivate accounts, and assign your Command Staff and Field Responders to teams."
+        description="Add staff, and activate or deactivate your Command Staff and Field Responder accounts."
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
@@ -95,20 +88,7 @@ export function AgencyAdminAccountStatusPage() {
                 </select>
               </div>
 
-              {teamError ? (
-                <p role="alert" className="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger-fg">
-                  {teamError}
-                </p>
-              ) : null}
-
-              <UserStatusTable
-                users={visibleUsers}
-                onSetStatus={setUserStatus}
-                highlightUserId={highlightUserId}
-                // The Team column appears once teams exist in the database.
-                teams={teamsAvailable ? teams : undefined}
-                onSetTeam={teamsAvailable ? handleSetTeam : undefined}
-              />
+              <UserStatusTable users={visibleUsers} onSetStatus={setUserStatus} highlightUserId={highlightUserId} />
             </div>
           </Panel>
         </Reveal>

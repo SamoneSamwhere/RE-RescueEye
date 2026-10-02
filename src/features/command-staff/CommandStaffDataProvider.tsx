@@ -39,7 +39,8 @@ interface CommandStaffDataContextValue {
   verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => void
   rejectDetection: (detectionId: string, notes: string) => void
   updateIncidentPriority: (incidentId: string, priority: IncidentPriority) => void
-  dispatchIncident: (incidentId: string, responderUserId: string) => Mission | null
+  /** Alerts the selected responders; together they form (or join) the incident's response team. */
+  dispatchResponders: (incidentId: string, responderUserIds: string[]) => Mission[]
   closeIncident: (incidentId: string) => void
   captureMedia: (
     sourceType: MediaSourceType,
@@ -320,46 +321,53 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   }
 
   /**
-   * Confirmed Incident -> Notify nearest Field Responder -> mock SMS.
-   * Creates a PENDING Mission and a MISSION_DISPATCH (or MISSION_REASSIGNED,
-   * if a prior mission on this incident was declined) Notification, and
-   * escalates the incident from OPEN to DISPATCHED. No real SMS, no backend.
-   * Returns null (no-op) if the incident already has an active mission —
-   * an incident should never have two responders working it at once.
+   * Confirmed Incident -> Command Staff selects responders -> mock SMS to each.
+   * Creates one PENDING Mission and one MISSION_DISPATCH (or MISSION_REASSIGNED,
+   * if someone on this incident already declined) Notification per responder,
+   * and escalates the incident from OPEN to DISPATCHED. No real SMS, no backend.
+   *
+   * The responders dispatched to an incident are its response team (see
+   * lib/responseTeams.ts): the first dispatch forms the team, and dispatching
+   * more responders later adds them to it. Anyone already on an active mission
+   * is skipped, so nobody is working two incidents at once.
    */
-  function dispatchIncident(incidentId: string, responderUserId: string): Mission | null {
-    const alreadyActive = allMissions.some(
-      (mission) => mission.incidentId === incidentId && ACTIVE_MISSION_STATUSES.has(mission.status),
+  function dispatchResponders(incidentId: string, responderUserIds: string[]): Mission[] {
+    const busy = new Set(
+      allMissions.filter((m) => ACTIVE_MISSION_STATUSES.has(m.status)).map((m) => m.responderUserId),
     )
-    if (alreadyActive) return null
+    const toDispatch = [...new Set(responderUserIds)].filter((id) => !busy.has(id))
+    if (toDispatch.length === 0) return []
 
     const nowIso = now().toISOString()
-
-    const newMission: Mission = {
-      id: generateId('mission'),
-      incidentId,
-      responderUserId,
-      dispatchedByUserId: session?.id ?? '',
-      status: 'PENDING',
-      dispatchedAt: nowIso,
-    }
-    addMission(newMission)
-
     const isReassignment = allMissions.some(
       (mission) => mission.incidentId === incidentId && mission.status === 'DECLINED',
     )
+    const others = toDispatch.length - 1
+    const teamNote = others > 0 ? ` You are part of a ${toDispatch.length}-person response team.` : ''
 
-    addNotification({
-      id: generateId('notif'),
-      recipientUserId: responderUserId,
-      type: isReassignment ? 'MISSION_REASSIGNED' : 'MISSION_DISPATCH',
-      channel: 'SMS',
-      message: isReassignment
-        ? 'Mission reassigned to you after another responder declined. Reply to accept or decline.'
-        : 'New mission dispatched. Reply to accept or decline.',
-      missionId: newMission.id,
-      sentAt: nowIso,
-      read: false,
+    const newMissions = toDispatch.map((responderUserId): Mission => {
+      const mission: Mission = {
+        id: generateId('mission'),
+        incidentId,
+        responderUserId,
+        dispatchedByUserId: session?.id ?? '',
+        status: 'PENDING',
+        dispatchedAt: nowIso,
+      }
+      addMission(mission)
+      addNotification({
+        id: generateId('notif'),
+        recipientUserId: responderUserId,
+        type: isReassignment ? 'MISSION_REASSIGNED' : 'MISSION_DISPATCH',
+        channel: 'SMS',
+        message: isReassignment
+          ? `Mission reassigned to you after another responder declined.${teamNote} Reply to accept or decline.`
+          : `New mission dispatched.${teamNote} Reply to accept or decline.`,
+        missionId: mission.id,
+        sentAt: nowIso,
+        read: false,
+      })
+      return mission
     })
 
     const incident = allIncidents.find((i) => i.id === incidentId)
@@ -367,7 +375,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       updateIncident(incidentId, { status: 'DISPATCHED' })
     }
 
-    return newMission
+    return newMissions
   }
 
   /** Mission completed -> Command Staff confirms the incident is resolved -> Close incident. Never deletes the record. */
@@ -476,7 +484,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
         verifyDetection,
         rejectDetection,
         updateIncidentPriority,
-        dispatchIncident,
+        dispatchResponders,
         closeIncident,
         captureMedia,
         registerDrone,

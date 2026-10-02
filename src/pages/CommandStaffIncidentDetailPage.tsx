@@ -38,7 +38,7 @@ function sceneDamageText(detection: Detection): string {
   if (detection.damageClassification) return DAMAGE_CLASSIFICATION_LABEL[detection.damageClassification]
   return 'Not recorded'
 }
-import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
+import { RESPONSE_TEAM_STATUS_LABEL, responseTeamFor } from '../lib/responseTeams'
 import { ROUTES } from '../routes/paths'
 import type { IncidentPriority } from '../types/incident'
 
@@ -67,13 +67,10 @@ export function CommandStaffIncidentDetailPage() {
     )
   }
 
-  const hasCompletedMission = missions.some((m) => m.incidentId === incident.id && m.status === 'COMPLETED')
-  // Most recent mission first — a declined mission on this incident is
-  // reassigned from Detection Review, which then shows up here as a second row.
-  const incidentMissions = [...missions]
-    .filter((m) => m.incidentId === incident.id)
-    .sort((a, b) => b.dispatchedAt.localeCompare(a.dispatchedAt))
-  const currentMission = incidentMissions.find((m) => ACTIVE_MISSION_STATUSES.has(m.status)) ?? incidentMissions[0]
+  // The responders alerted for this incident form its response team. It can
+  // be closed once the team is done: someone finished, and nobody is still out.
+  const team = responseTeamFor(missions, incident.id)
+  const canClose = team?.status === 'COMPLETED'
 
   function handleUpdatePriority() {
     if (!incident || !pendingPriority || pendingPriority === incident.priority) return
@@ -112,8 +109,8 @@ export function CommandStaffIncidentDetailPage() {
             <Button
               size="sm"
               variant="secondary"
-              disabled={!hasCompletedMission}
-              title={hasCompletedMission ? undefined : 'Available once a dispatched mission is completed'}
+              disabled={!canClose}
+              title={canClose ? undefined : 'Available once the response team has finished — no member still on a mission'}
               onClick={handleCloseIncident}
             >
               <Archive className="size-3.5" />
@@ -148,8 +145,8 @@ export function CommandStaffIncidentDetailPage() {
             <Panel title="Incident Priority">
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-foreground-secondary">
-                  Change this incident's priority if it needs revisiting. Responder assignment happens on Detection
-                  Review, not here.
+                  Change this incident's priority if it needs revisiting. Responders are alerted from Detection Review,
+                  not here.
                 </p>
                 <div className="flex items-center gap-2">
                   <select
@@ -185,46 +182,65 @@ export function CommandStaffIncidentDetailPage() {
           </div>
         </Reveal>
 
-        {/* Side by side on a wide screen: who's assigned on the left, what has
-            happened so far on the right. Stacked on a narrow one. Assignment
-            itself happens on Detection Review, not here — see the panel below. */}
+        {/* Side by side on a wide screen: who's on the team on the left, what
+            has happened so far on the right. Stacked on a narrow one. Alerting
+            responders happens on Detection Review, not here. */}
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
           <Reveal delayMs={200}>
-            <Panel title="Responder Assignment">
-              {currentMission ? (
+            <Panel title="Response Team">
+              {team ? (
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                        <Users className="size-4 text-foreground-muted" />
-                        {mockUsers.find((u) => u.id === currentMission.responderUserId)?.name ?? 'Unknown responder'}
-                      </p>
-                      <p className="mt-0.5 text-xs text-foreground-muted">
-                        Dispatched {formatDateTime(currentMission.dispatchedAt)}
-                      </p>
-                    </div>
-                    <MissionStatusBadge status={currentMission.status} />
-                  </div>
-                  {!ACTIVE_MISSION_STATUSES.has(currentMission.status) ? (
                     <p className="text-xs text-foreground-muted">
-                      No active mission right now — reassign from Detection Review if this incident still needs a
-                      responder.
+                      Formed {formatDateTime(team.formedAt)} · {team.members.length}{' '}
+                      {team.members.length === 1 ? 'member' : 'members'}
+                    </p>
+                    <Badge tone={team.status === 'ACTIVE' ? 'info' : team.status === 'COMPLETED' ? 'success' : 'warning'}>
+                      {RESPONSE_TEAM_STATUS_LABEL[team.status]}
+                    </Badge>
+                  </div>
+                  {team.members.length > 0 ? (
+                    <ul className="flex flex-col divide-y divide-border">
+                      {team.members.map((member) => (
+                        <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                          <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                            <Users className="size-4 text-foreground-muted" />
+                            {mockUsers.find((u) => u.id === member.responderUserId)?.name ?? 'Unknown responder'}
+                          </p>
+                          <MissionStatusBadge status={member.status} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {team.declined.length > 0 ? (
+                    <p className="text-xs text-foreground-muted">
+                      Declined:{' '}
+                      {team.declined
+                        .map((m) => mockUsers.find((u) => u.id === m.responderUserId)?.name ?? 'Unknown responder')
+                        .join(', ')}
                     </p>
                   ) : null}
-                  <Link
-                    to={ROUTES.commandStaffDetections}
-                    state={{ selectDetectionId: incident.detectionId }}
-                    className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent hover:underline"
-                  >
-                    <Send className="size-3.5" />
-                    Reassign from Detection Review
-                  </Link>
+                  {team.status === 'NEEDS_RESPONDERS' ? (
+                    <p className="text-xs text-foreground-muted">
+                      Everyone alerted declined — alert more responders from Detection Review.
+                    </p>
+                  ) : null}
+                  {incident.status !== 'CLOSED' ? (
+                    <Link
+                      to={ROUTES.commandStaffDetections}
+                      state={{ selectDetectionId: incident.detectionId }}
+                      className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                    >
+                      <Send className="size-3.5" />
+                      Add responders from Detection Review
+                    </Link>
+                  ) : null}
                 </div>
               ) : (
                 <EmptyState
                   icon={Send}
-                  title="No responder assigned yet"
-                  description="Assign a nearby, available Field Responder to this incident from Detection Review."
+                  title="No response team yet"
+                  description="Alert the nearest available Field Responders from Detection Review — they become this incident's response team."
                   action={
                     <Link
                       to={ROUTES.commandStaffDetections}

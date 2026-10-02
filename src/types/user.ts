@@ -26,8 +26,6 @@ export interface User {
   lastLoginAt?: string
   /** Field Responders only — their last known position, used to find the nearest responder to an incident. */
   currentLocation?: GeoPoint
-  /** The response team this person belongs to, if any. Assigned by the Agency Admin. */
-  teamId?: string
 }
 
 /**

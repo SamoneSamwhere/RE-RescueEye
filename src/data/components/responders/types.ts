@@ -4,9 +4,10 @@ import type { IncidentPriority } from '../../../types/incident'
 import type { GeoPoint } from '../../../types/geo'
 
 /**
- * A Field Responder as a dispatch candidate for one specific incident —
- * not a Team, not a roster. Distance and availability are computed
- * relative to the incident being viewed.
+ * A Field Responder as a dispatch candidate for one specific incident.
+ * Distance and availability are computed relative to the incident being
+ * viewed. The candidates Command Staff select become the incident's
+ * response team.
  */
 export interface ResponderCandidate {
   id: string
@@ -17,6 +18,4 @@ export interface ResponderCandidate {
   missionStatus?: MissionStatus
   missionIncidentPriority?: IncidentPriority
   isAvailable: boolean
-  /** The response team this person belongs to, if any — grouping only; dispatch is still to this one person. */
-  teamName?: string
 }

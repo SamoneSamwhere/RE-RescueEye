@@ -6,14 +6,14 @@ import { Reveal } from '../data/components/landing/Reveal'
 import { DetectionQueueList, DetectionDetailPanel } from '../data/components/detections'
 import type { EnrichedDetection } from '../data/components/detections'
 import { ResponderSelectionPanel } from '../data/components/responders'
-import { Panel, Modal, Button, EmptyState } from '../data/components/ui'
+import { Modal, Button } from '../data/components/ui'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { useResponderCandidates } from '../hooks/useResponderCandidates'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
-import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
+import { responseTeamFor } from '../lib/responseTeams'
 import type { DetectionValidationStatus } from '../types/detection'
 import type { IncidentPriority } from '../types/incident'
 
@@ -36,7 +36,7 @@ function isReviewable(confidence: number): boolean {
 
 export function CommandStaffDetectionReviewPage() {
   const { session } = useAuth()
-  const { detections, incidents, missions, mediaAssets, verifyDetection, rejectDetection, dispatchIncident } =
+  const { detections, incidents, missions, mediaAssets, verifyDetection, rejectDetection, dispatchResponders } =
     useCommandStaffData()
 
   // Arriving from Live Monitoring's "Verify casualty": open on that detection.
@@ -81,24 +81,27 @@ export function CommandStaffDetectionReviewPage() {
     ? (incidents.find((i) => i.detectionId === selectedDetection.id) ?? null)
     : null
 
-  // Dispatch — this is the only place Command Staff assigns a responder to an
+  // Dispatch — this is the only place Command Staff alerts responders for an
   // incident (see CommandStaffIncidentDetailPage, which links back here for
-  // that reason instead of duplicating the picker).
+  // that reason instead of duplicating the picker). The responders alerted
+  // form the incident's response team; alerting more later adds to it.
   const responderCandidates = useResponderCandidates(selectedDetection, session?.agencyId, incidents, missions)
-  const [selectedResponderId, setSelectedResponderId] = useState<string | null>(null)
+  const [selectedResponderIds, setSelectedResponderIds] = useState<string[]>([])
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [dispatchSuccess, setDispatchSuccess] = useState<{ responderName: string } | null>(null)
+  const [dispatchSuccess, setDispatchSuccess] = useState<{ names: string[]; teamSize: number } | null>(null)
 
   useEffect(() => {
-    setSelectedResponderId(null)
+    setSelectedResponderIds([])
     setConfirmOpen(false)
     setDispatchSuccess(null)
   }, [selectedId])
 
-  const selectedCandidate = responderCandidates.find((c) => c.id === selectedResponderId) ?? null
-  const hasActiveMission = linkedIncident
-    ? missions.some((m) => m.incidentId === linkedIncident.id && ACTIVE_MISSION_STATUSES.has(m.status))
-    : false
+  const selectedCandidates = responderCandidates.filter((c) => c.isAvailable && selectedResponderIds.includes(c.id))
+  const team = linkedIncident ? responseTeamFor(missions, linkedIncident.id) : null
+
+  function toggleResponder(id: string) {
+    setSelectedResponderIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
 
   function handleVerify(detectionId: string, priority: IncidentPriority, notes: string) {
     verifyDetection(detectionId, priority, notes)
@@ -109,12 +112,19 @@ export function CommandStaffDetectionReviewPage() {
   }
 
   function handleConfirmDispatch() {
-    if (!linkedIncident || !selectedCandidate) return
-    const mission = dispatchIncident(linkedIncident.id, selectedCandidate.id)
-    if (!mission) return
-    setDispatchSuccess({ responderName: selectedCandidate.name })
+    if (!linkedIncident || selectedCandidates.length === 0) return
+    const dispatched = dispatchResponders(
+      linkedIncident.id,
+      selectedCandidates.map((c) => c.id),
+    )
+    if (dispatched.length === 0) return
+    const dispatchedIds = new Set(dispatched.map((m) => m.responderUserId))
+    setDispatchSuccess({
+      names: selectedCandidates.filter((c) => dispatchedIds.has(c.id)).map((c) => c.name),
+      teamSize: (team?.members.length ?? 0) + dispatched.length,
+    })
     setConfirmOpen(false)
-    setSelectedResponderId(null)
+    setSelectedResponderIds([])
   }
 
   return (
@@ -123,7 +133,7 @@ export function CommandStaffDetectionReviewPage() {
         title="Detection Review"
         description={`Review AI-generated detections at ${Math.round(MIN_REVIEW_CONFIDENCE * 100)}-${Math.round(
           MAX_REVIEW_CONFIDENCE * 100,
-        )}% confidence, then assign a responder once verified. Verifying confirms an incident; rejecting discards it —
+        )}% confidence, then alert the nearest available responders once verified. Verifying confirms an incident; rejecting discards it —
         neither happens automatically.`}
       />
 
@@ -152,26 +162,25 @@ export function CommandStaffDetectionReviewPage() {
             {dispatchSuccess ? (
               <div className="mb-4 flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
                 <Send className="size-4 shrink-0" />
-                Mission dispatched to {dispatchSuccess.responderName}. SMS notification sent — mission status: PENDING.
+                Alerted {dispatchSuccess.names.join(', ')}. The response team now has {dispatchSuccess.teamSize}{' '}
+                {dispatchSuccess.teamSize === 1 ? 'member' : 'members'} — each mission starts as PENDING.
               </div>
             ) : null}
 
-            {hasActiveMission ? (
-              <Panel title="Select Field Responder to Notify">
-                <EmptyState
-                  icon={Send}
-                  title="A mission is already in progress"
-                  description="This incident already has an active mission. It will be dispatchable to a new responder again if that mission is declined."
-                />
-              </Panel>
-            ) : (
-              <ResponderSelectionPanel
-                candidates={responderCandidates}
-                selectedId={selectedResponderId}
-                onSelect={setSelectedResponderId}
-                onNotify={() => setConfirmOpen(true)}
-              />
-            )}
+            {team && team.members.length > 0 ? (
+              <p className="mb-2 text-xs text-foreground-muted">
+                Response team: {team.members.map((m) => mockUsers.find((u) => u.id === m.responderUserId)?.name ?? 'Unknown').join(', ')}
+              </p>
+            ) : null}
+
+            <ResponderSelectionPanel
+              candidates={responderCandidates}
+              selectedIds={selectedResponderIds}
+              onToggle={toggleResponder}
+              onNotify={() => setConfirmOpen(true)}
+              hasTeam={Boolean(team && team.members.length > 0)}
+            />
+
           </Reveal>
         ) : null}
       </div>
@@ -179,26 +188,32 @@ export function CommandStaffDetectionReviewPage() {
       <Modal
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Confirm Dispatch"
+        title="Confirm Alert"
         footer={
           <>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmDispatch}>Confirm Dispatch</Button>
+            <Button onClick={handleConfirmDispatch}>Alert Responders</Button>
           </>
         }
       >
-        {selectedCandidate ? (
+        {selectedCandidates.length > 0 ? (
           <div className="flex flex-col gap-2">
             <p>
-              Dispatch this incident to <strong>{selectedCandidate.name}</strong>?
+              Alert {selectedCandidates.length === 1 ? 'this responder' : `these ${selectedCandidates.length} responders`}{' '}
+              and {team && team.members.length > 0 ? 'add them to' : 'form'} this incident&apos;s response team?
             </p>
+            <ul className="flex flex-col gap-1 text-foreground-secondary">
+              {selectedCandidates.map((candidate) => (
+                <li key={candidate.id}>
+                  <strong className="text-foreground">{candidate.name}</strong>
+                  {candidate.distanceKm !== null ? ` — ${candidate.distanceKm.toFixed(1)} km away` : ' — distance unknown'}
+                </li>
+              ))}
+            </ul>
             <p className="text-foreground-secondary">
-              {selectedCandidate.distanceKm !== null
-                ? `They are ${selectedCandidate.distanceKm.toFixed(1)} km from the incident location.`
-                : 'Their distance from the incident is unknown.'}{' '}
-              They will receive a mock SMS mission notification, and the mission will begin in <strong>PENDING</strong> status.
+              Each receives a mock SMS mission notification, and each mission begins in <strong>PENDING</strong> status.
             </p>
           </div>
         ) : null}

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, MapPin, Navigation, CheckCircle2, Flag, LifeBuoy } from 'lucide-react'
+import { ChevronLeft, MapPin, Navigation, CheckCircle2, Flag, LifeBuoy, Users } from 'lucide-react'
 import { MobileShell } from '../data/components/layout'
 import { Card, Button, PriorityBadge, MissionStatusBadge, StatusIndicator, EmptyState } from '../data/components/ui'
 import { MissionRouteMap } from '../data/components/missions'
@@ -12,6 +12,8 @@ import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../lib/la
 import { useNotificationStore } from '../state/NotificationStore'
 import { useIncidentStore } from '../state/IncidentStore'
 import { useDetectionStore } from '../state/DetectionStore'
+import { useMissionStore } from '../state/MissionStore'
+import { responseTeamFor } from '../lib/responseTeams'
 import { ROUTES } from '../routes/paths'
 
 export function FieldResponderMissionDetailPage() {
@@ -22,6 +24,7 @@ export function FieldResponderMissionDetailPage() {
   const { notifications: allNotifications } = useNotificationStore()
   const { incidents } = useIncidentStore()
   const { detections } = useDetectionStore()
+  const { missions: allMissions } = useMissionStore()
 
   const currentUser = session ? mockUsers.find((u) => u.id === session.id) : undefined
   const mission = missions.find((m) => m.id === missionId)
@@ -29,6 +32,10 @@ export function FieldResponderMissionDetailPage() {
   const detection = incident ? detections.find((d) => d.id === incident.detectionId) : undefined
 
   const notifications = session ? notificationsFor(allNotifications, session.id) : []
+  // Everyone else Command Staff alerted for this incident who did not decline.
+  const teammates = mission
+    ? (responseTeamFor(allMissions, mission.incidentId)?.members.filter((m) => m.id !== mission.id) ?? [])
+    : []
 
   if (!session) return null
 
@@ -90,6 +97,25 @@ export function FieldResponderMissionDetailPage() {
           </div>
           <p className="text-xs text-foreground-muted">Dispatched {formatDateTime(mission.dispatchedAt)}</p>
         </Card>
+
+        {teammates.length > 0 ? (
+          <Card className="flex flex-col gap-2 px-4 py-3">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
+              <Users className="size-3.5" />
+              Your Response Team
+            </span>
+            <ul className="flex flex-col divide-y divide-border">
+              {teammates.map((teammate) => (
+                <li key={teammate.id} className="flex items-center justify-between gap-2 py-1.5">
+                  <span className="text-sm text-foreground">
+                    {mockUsers.find((u) => u.id === teammate.responderUserId)?.name ?? 'Unknown responder'}
+                  </span>
+                  <MissionStatusBadge status={teammate.status} />
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : null}
 
         <Card className="flex flex-col gap-2 px-4 py-3">
           <div className="flex items-center justify-between">
