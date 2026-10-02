@@ -7,7 +7,8 @@ interface ResponderSelectionPanelProps {
   candidates: ResponderCandidate[]
   selectedIds: string[]
   onToggle: (id: string) => void
-  onNotify: () => void
+  /** Omit when the surrounding dialog supplies its own submit button. */
+  onNotify?: () => void
   /** True once the incident already has a response team — new picks join it. */
   hasTeam?: boolean
 }
@@ -108,9 +109,11 @@ export function ResponderSelectionPanel({
               {selectedCount > 0 ? `${selectedCount} selected.` : 'Select one or more available responders.'}
               {unavailableCount > 0 ? ` ${unavailableCount} on a mission or off duty not shown.` : ''}
             </p>
-            <Button size="sm" disabled={selectedCount === 0} onClick={onNotify}>
-              {selectedCount > 1 ? `Alert ${selectedCount} Responders` : 'Alert Selected Responder'}
-            </Button>
+            {onNotify ? (
+              <Button size="sm" disabled={selectedCount === 0} onClick={onNotify}>
+                {selectedCount > 1 ? `Alert ${selectedCount} Responders` : 'Alert Selected Responder'}
+              </Button>
+            ) : null}
           </div>
         </div>
       )}

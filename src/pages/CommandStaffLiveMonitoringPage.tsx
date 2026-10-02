@@ -113,23 +113,25 @@ export function CommandStaffLiveMonitoringPage() {
         {/* Incident details sit below all feeds: the feeds are what an operator
             watches, and the casualty awaiting a decision is what they act on next. */}
         {pendingCasualty ? (
-          <PossibleCasualtyCard
-            detection={pendingCasualty}
-            onVerify={(id) => {
-              verifyDetection(id, 'MEDIUM', '')
-              // Verifying opens an incident; Detection Review is where its
-              // priority is set and the follow-up happens, so go there with
-              // the casualty already selected.
-              navigate(ROUTES.commandStaffDetections, { state: { selectDetectionId: id } })
-            }}
-          />
+          <Reveal delayMs={100}>
+            <PossibleCasualtyCard
+              detection={pendingCasualty}
+              onVerify={(id) => {
+                verifyDetection(id, 'MEDIUM', '')
+                // Verifying opens an incident; Detection Review is where its
+                // priority is set and the follow-up happens, so go there with
+                // the casualty already selected.
+                navigate(ROUTES.commandStaffDetections, { state: { selectDetectionId: id } })
+              }}
+            />
+          </Reveal>
         ) : null}
 
         {/* Sits under the feeds, where an operator looks after seeing a
             detection: it answers "is the system currently ignoring any of my
             own people, and where?" — the one piece of the casualty gate that
             has no other visible trace. */}
-        <Reveal>
+        <Reveal delayMs={200}>
           <ResponderExclusionPanel />
         </Reveal>
       </div>

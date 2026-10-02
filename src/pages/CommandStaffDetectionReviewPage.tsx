@@ -3,10 +3,13 @@ import { useLocation } from 'react-router-dom'
 import { Send } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
-import { DetectionQueueList, DetectionDetailPanel } from '../data/components/detections'
-import type { EnrichedDetection } from '../data/components/detections'
-import { ResponderSelectionPanel } from '../data/components/responders'
-import { Modal, Button } from '../data/components/ui'
+import {
+  DetectionQueueList,
+  DetectionDetailPanel,
+  VerifyDispatchModal,
+  RejectDetectionModal,
+} from '../data/components/detections'
+import type { EnrichedDetection, VerifyDispatchSubmit } from '../data/components/detections'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { useResponderCandidates } from '../hooks/useResponderCandidates'
@@ -14,8 +17,8 @@ import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
 import { sourceLabelFor } from '../lib/sourceLabel'
 import { responseTeamFor } from '../lib/responseTeams'
+import { suggestPriority } from '../lib/priority'
 import type { DetectionValidationStatus } from '../types/detection'
-import type { IncidentPriority } from '../types/incident'
 
 type StatusFilter = DetectionValidationStatus | 'ALL'
 
@@ -85,46 +88,49 @@ export function CommandStaffDetectionReviewPage() {
   // incident (see CommandStaffIncidentDetailPage, which links back here for
   // that reason instead of duplicating the picker). The responders alerted
   // form the incident's response team; alerting more later adds to it.
+  // Both decisions happen in a window over the page, so the evidence stays put.
   const responderCandidates = useResponderCandidates(selectedDetection, session?.agencyId, incidents, missions)
-  const [selectedResponderIds, setSelectedResponderIds] = useState<string[]>([])
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [dispatchSuccess, setDispatchSuccess] = useState<{ names: string[]; teamSize: number } | null>(null)
+  const [dialog, setDialog] = useState<'verify' | 'dispatch' | 'reject' | null>(null)
+  const [outcome, setOutcome] = useState<string | null>(null)
 
   useEffect(() => {
-    setSelectedResponderIds([])
-    setConfirmOpen(false)
-    setDispatchSuccess(null)
+    setDialog(null)
+    setOutcome(null)
   }, [selectedId])
 
-  const selectedCandidates = responderCandidates.filter((c) => c.isAvailable && selectedResponderIds.includes(c.id))
   const team = linkedIncident ? responseTeamFor(missions, linkedIncident.id) : null
+  const nameOf = (userId: string) => mockUsers.find((u) => u.id === userId)?.name ?? 'Unknown'
+  const teamMemberNames = team ? team.members.map((m) => nameOf(m.responderUserId)) : []
 
-  function toggleResponder(id: string) {
-    setSelectedResponderIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  /** Alerts responders for an incident and describes what happened, for the banner. */
+  function alert(incidentId: string, responderIds: string[]): string | null {
+    if (responderIds.length === 0) return null
+    const dispatched = dispatchResponders(incidentId, responderIds)
+    if (dispatched.length === 0) return null
+    const teamSize = (team?.members.length ?? 0) + dispatched.length
+    return `Alerted ${dispatched.map((m) => nameOf(m.responderUserId)).join(', ')}. The response team now has ${teamSize} ${
+      teamSize === 1 ? 'member' : 'members'
+    } — each mission starts as PENDING.`
   }
 
-  function handleVerify(detectionId: string, priority: IncidentPriority, notes: string) {
-    verifyDetection(detectionId, priority, notes)
+  function handleVerifySubmit({ priority, notes, responderIds }: VerifyDispatchSubmit) {
+    if (!selectedDetection) return
+    const incidentId = verifyDetection(selectedDetection.id, priority, notes)
+    if (!incidentId) return
+    setOutcome(alert(incidentId, responderIds) ?? `Verified — incident ${incidentId} created. No responders alerted yet.`)
+    setDialog(null)
   }
 
-  function handleReject(detectionId: string, notes: string) {
-    rejectDetection(detectionId, notes)
+  function handleDispatchSubmit({ responderIds }: VerifyDispatchSubmit) {
+    if (!linkedIncident) return
+    setOutcome(alert(linkedIncident.id, responderIds))
+    setDialog(null)
   }
 
-  function handleConfirmDispatch() {
-    if (!linkedIncident || selectedCandidates.length === 0) return
-    const dispatched = dispatchResponders(
-      linkedIncident.id,
-      selectedCandidates.map((c) => c.id),
-    )
-    if (dispatched.length === 0) return
-    const dispatchedIds = new Set(dispatched.map((m) => m.responderUserId))
-    setDispatchSuccess({
-      names: selectedCandidates.filter((c) => dispatchedIds.has(c.id)).map((c) => c.name),
-      teamSize: (team?.members.length ?? 0) + dispatched.length,
-    })
-    setConfirmOpen(false)
-    setSelectedResponderIds([])
+  function handleReject(notes: string) {
+    if (!selectedDetection) return
+    rejectDetection(selectedDetection.id, notes)
+    setDialog(null)
   }
 
   return (
@@ -133,11 +139,18 @@ export function CommandStaffDetectionReviewPage() {
         title="Detection Review"
         description={`Review AI-generated detections at ${Math.round(MIN_REVIEW_CONFIDENCE * 100)}-${Math.round(
           MAX_REVIEW_CONFIDENCE * 100,
-        )}% confidence, then alert the nearest available responders once verified. Verifying confirms an incident; rejecting discards it —
+        )}% confidence. Verify to confirm an incident and alert the nearest available responders; reject to discard it —
         neither happens automatically.`}
       />
 
-      <div className="flex flex-col gap-6 px-4 py-4">
+      <div className="flex flex-col gap-4 px-4 py-4">
+        {outcome ? (
+          <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
+            <Send className="size-4 shrink-0" />
+            {outcome}
+          </div>
+        ) : null}
+
         <Reveal className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <DetectionQueueList
             detections={filteredDetections}
@@ -151,73 +164,30 @@ export function CommandStaffDetectionReviewPage() {
             detection={selectedDetection}
             reviewerName={reviewerName}
             linkedIncident={linkedIncident}
-            onVerify={handleVerify}
-            onReject={handleReject}
+            teamMemberNames={teamMemberNames}
+            onOpenVerify={() => setDialog('verify')}
+            onOpenReject={() => setDialog('reject')}
+            onOpenDispatch={linkedIncident && linkedIncident.status !== 'CLOSED' ? () => setDialog('dispatch') : undefined}
           />
         </Reveal>
-
-        {/* Only once a detection is verified is there an Incident to assign a responder to. */}
-        {selectedDetection?.validationStatus === 'VERIFIED' && linkedIncident ? (
-          <Reveal delayMs={100}>
-            {dispatchSuccess ? (
-              <div className="mb-4 flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-                <Send className="size-4 shrink-0" />
-                Alerted {dispatchSuccess.names.join(', ')}. The response team now has {dispatchSuccess.teamSize}{' '}
-                {dispatchSuccess.teamSize === 1 ? 'member' : 'members'} — each mission starts as PENDING.
-              </div>
-            ) : null}
-
-            {team && team.members.length > 0 ? (
-              <p className="mb-2 text-xs text-foreground-muted">
-                Response team: {team.members.map((m) => mockUsers.find((u) => u.id === m.responderUserId)?.name ?? 'Unknown').join(', ')}
-              </p>
-            ) : null}
-
-            <ResponderSelectionPanel
-              candidates={responderCandidates}
-              selectedIds={selectedResponderIds}
-              onToggle={toggleResponder}
-              onNotify={() => setConfirmOpen(true)}
-              hasTeam={Boolean(team && team.members.length > 0)}
-            />
-
-          </Reveal>
-        ) : null}
       </div>
 
-      <Modal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        title="Confirm Alert"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmDispatch}>Alert Responders</Button>
-          </>
-        }
-      >
-        {selectedCandidates.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <p>
-              Alert {selectedCandidates.length === 1 ? 'this responder' : `these ${selectedCandidates.length} responders`}{' '}
-              and {team && team.members.length > 0 ? 'add them to' : 'form'} this incident&apos;s response team?
-            </p>
-            <ul className="flex flex-col gap-1 text-foreground-secondary">
-              {selectedCandidates.map((candidate) => (
-                <li key={candidate.id}>
-                  <strong className="text-foreground">{candidate.name}</strong>
-                  {candidate.distanceKm !== null ? ` — ${candidate.distanceKm.toFixed(1)} km away` : ' — distance unknown'}
-                </li>
-              ))}
-            </ul>
-            <p className="text-foreground-secondary">
-              Each receives a mock SMS mission notification, and each mission begins in <strong>PENDING</strong> status.
-            </p>
-          </div>
-        ) : null}
-      </Modal>
+      {/* Mounted only while open, so each opening starts with a clean form. */}
+      {selectedDetection && (dialog === 'verify' || dialog === 'dispatch') ? (
+        <VerifyDispatchModal
+          open
+          onClose={() => setDialog(null)}
+          mode={dialog}
+          suggestedPriority={suggestPriority(selectedDetection)}
+          candidates={responderCandidates}
+          hasTeam={teamMemberNames.length > 0}
+          onSubmit={dialog === 'verify' ? handleVerifySubmit : handleDispatchSubmit}
+        />
+      ) : null}
+
+      {selectedDetection && dialog === 'reject' ? (
+        <RejectDetectionModal open onClose={() => setDialog(null)} onReject={handleReject} />
+      ) : null}
     </>
   )
 }

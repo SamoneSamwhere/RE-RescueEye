@@ -15,11 +15,18 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  // Read through a ref so a parent passing a fresh onClose each render does not
+  // re-run the effect below — that re-run refocuses the dialog and, for a form
+  // inside, knocks focus out of the field being typed in after every keystroke.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', handleKeyDown)
 
@@ -32,7 +39,7 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = previousOverflow
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
@@ -40,7 +47,7 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-surface-inverse/40 p-4 motion-safe:animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-surface-inverse/50 p-4 backdrop-blur-sm motion-safe:animate-fade-in"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -52,7 +59,9 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          'w-full max-w-md rounded-lg border border-border bg-surface shadow-modal focus:outline-none motion-safe:animate-pop-in',
+          'w-full rounded-lg border border-border bg-surface shadow-modal focus:outline-none motion-safe:animate-pop-in',
+          // cn() does not resolve conflicting utilities, so the default width only applies when the caller gave none.
+          !className?.includes('max-w-') && 'max-w-md',
           className,
         )}
       >

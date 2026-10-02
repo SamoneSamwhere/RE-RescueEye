@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Wifi } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
 import { Reveal } from '../data/components/landing/Reveal'
-import { DroneList } from '../data/components/drones'
+import { DroneList, DroneRegistrationModal } from '../data/components/drones'
 import { Button } from '../data/components/ui'
 import { ConnectDroneModal } from '../data/components/media'
 import { useCommandStaffData } from '../features/command-staff'
+import { useUserStore } from '../state/UserStore'
 import { useAddFeed } from '../features/media/useFeeds'
 import { ROUTES } from '../routes/paths'
 
@@ -18,10 +19,12 @@ const CONNECT_DELAY_MS = 800
  */
 export function CommandStaffDronesPage() {
   const navigate = useNavigate()
-  const { drones, liveDroneIds, connectDrone, startLiveFeed, addDemoDrone } = useCommandStaffData()
+  const { drones, liveDroneIds, connectDrone, startLiveFeed, addDemoDrone, registerDrone } = useCommandStaffData()
+  const { users } = useUserStore()
 
   const [connectingDroneId, setConnectingDroneId] = useState<string | null>(null)
   const [connectOpen, setConnectOpen] = useState(false)
+  const [registerOpen, setRegisterOpen] = useState(false)
   const addFeed = useAddFeed()
 
   function handleConnect(droneId: string) {
@@ -92,11 +95,23 @@ export function CommandStaffDronesPage() {
             onConnect={handleConnect}
             onStartLiveFeed={handleStartLiveFeed}
             onViewLive={() => navigate(ROUTES.commandStaffLiveMonitoring)}
-            onRegisterClick={() => navigate(ROUTES.commandStaffDroneRegistration)}
+            onRegisterClick={() => setRegisterOpen(true)}
             onAddDemoDrone={handleAddDemoDrone}
           />
         </Reveal>
       </div>
+
+      {/* Mounted only while open, so each registration starts at step one with an empty form. */}
+      {registerOpen ? (
+        <DroneRegistrationModal
+          open
+          onClose={() => setRegisterOpen(false)}
+          existingSerialNumbers={drones.map((d) => d.serialNumber)}
+          existingRegistrationNumbers={drones.flatMap((d) => (d.registrationNumber ? [d.registrationNumber] : []))}
+          availableOperators={users.filter((u) => u.role === 'COMMAND_STAFF' && u.accountStatus === 'ACTIVE')}
+          onRegister={registerDrone}
+        />
+      ) : null}
 
       <ConnectDroneModal
         open={connectOpen}

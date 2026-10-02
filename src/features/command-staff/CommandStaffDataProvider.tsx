@@ -36,7 +36,8 @@ interface CommandStaffDataContextValue {
   notifications: Notification[]
   drones: Drone[]
   liveDroneIds: string[]
-  verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => void
+  /** Returns the new Incident's id, or null if the detection could not be verified. */
+  verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => string | null
   rejectDetection: (detectionId: string, notes: string) => void
   updateIncidentPriority: (incidentId: string, priority: IncidentPriority) => void
   /** Alerts the selected responders; together they form (or join) the incident's response team. */
@@ -253,10 +254,10 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
    * verified and that a new incident now exists. No-ops if the detection
    * has already been reviewed.
    */
-  function verifyDetection(detectionId: string, priority: IncidentPriority, notes: string) {
-    if (!session || !agencyId) return
+  function verifyDetection(detectionId: string, priority: IncidentPriority, notes: string): string | null {
+    if (!session || !agencyId) return null
     const detection = detections.find((d) => d.id === detectionId)
-    if (!detection || detection.validationStatus !== 'PENDING') return
+    if (!detection || detection.validationStatus !== 'PENDING') return null
     const nowIso = now().toISOString()
 
     updateDetection(detectionId, {
@@ -301,6 +302,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
         read: false,
       })
     }
+    return newIncidentId
   }
 
   /** No-ops if the detection has already been reviewed. */
@@ -370,8 +372,9 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       return mission
     })
 
+    // An incident verified in this same action is not in allIncidents yet — it is OPEN by definition.
     const incident = allIncidents.find((i) => i.id === incidentId)
-    if (incident?.status === 'OPEN') {
+    if (!incident || incident.status === 'OPEN') {
       updateIncident(incidentId, { status: 'DISPATCHED' })
     }
 

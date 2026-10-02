@@ -16,7 +16,6 @@ export const ROUTES = {
   commandStaff: '/command-staff',
   commandStaffDrones: '/command-staff/drones',
   commandStaffMediaLibrary: '/command-staff/media-library',
-  commandStaffDroneRegistration: '/command-staff/drones/register',
   commandStaffLiveMonitoring: '/command-staff/live-monitoring',
   commandStaffDetections: '/command-staff/detections',
   commandStaffLogs: '/command-staff/logs',

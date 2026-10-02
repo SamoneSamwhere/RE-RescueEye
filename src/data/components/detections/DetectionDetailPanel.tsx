@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, CheckCircle2, XCircle, ArrowRight, Flag } from 'lucide-react'
+import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, CheckCircle2, XCircle, ArrowRight, Flag, Send, Users } from 'lucide-react'
 import { Panel, Button, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } from '../ui'
 import { formatDateTime } from '../../../lib/formatDateTime'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
@@ -17,18 +16,30 @@ interface DetectionDetailPanelProps {
   detection: EnrichedDetection | null
   reviewerName?: string
   linkedIncident?: LinkedIncident | null
-  onVerify: (detectionId: string, priority: IncidentPriority, notes: string) => void
-  onReject: (detectionId: string, notes: string) => void
+  /** Names of the incident's response team, once anyone has been alerted. */
+  teamMemberNames?: string[]
+  /** Opens the Verify & Dispatch window (pending detections). */
+  onOpenVerify: () => void
+  /** Opens the Reject window (pending detections). */
+  onOpenReject: () => void
+  /** Opens the responder picker for an already-verified detection; omit when the incident is closed. */
+  onOpenDispatch?: () => void
 }
 
-const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
-
-export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, onVerify, onReject }: DetectionDetailPanelProps) {
-  // Seeded from the AI's own suggestion (see suggestPriority) rather than a
-  // fixed default — Command Staff edits it here, and only their choice at the
-  // moment of Verify ever becomes the Incident's actual priority.
-  const [priority, setPriority] = useState<IncidentPriority>(() => (detection ? suggestPriority(detection) : 'MEDIUM'))
-  const [notes, setNotes] = useState('')
+/**
+ * The evidence for one detection. Decisions — verify, priority, which
+ * responders to alert, reject — happen in a window opened from here (see
+ * VerifyDispatchModal), so this panel stays a compact read of the evidence.
+ */
+export function DetectionDetailPanel({
+  detection,
+  reviewerName,
+  linkedIncident,
+  teamMemberNames = [],
+  onOpenVerify,
+  onOpenReject,
+  onOpenDispatch,
+}: DetectionDetailPanelProps) {
 
   if (!detection) {
     return (
@@ -98,48 +109,16 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
 
           {isPending ? (
             <div className="flex flex-col gap-3">
-              <div>
-                <label htmlFor="reviewer-notes" className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground-secondary">
-                  Reviewer Notes
-                </label>
-                <textarea
-                  id="reviewer-notes"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  rows={3}
-                  placeholder="Optional for verification, recommended when rejecting"
-                  className="w-full rounded-md border border-border-strong bg-surface px-2 py-2 text-sm text-foreground placeholder:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="incident-priority" className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground-secondary">
-                  Incident Priority
-                </label>
-                <select
-                  id="incident-priority"
-                  value={priority}
-                  onChange={(event) => setPriority(event.target.value as IncidentPriority)}
-                  className="h-9 w-full rounded-md border border-border-strong bg-surface px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                >
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-foreground-muted">
-                  Prefilled from the AI's assessment of this detection — change it if it looks wrong. This only takes
-                  effect once you click Verify.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button onClick={() => onVerify(detection.id, priority, notes)}>
+              <p className="text-sm text-foreground-secondary">
+                Awaiting review. Verifying confirms an incident and lets you alert the nearest responders in the same
+                step.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={onOpenVerify}>
                   <CheckCircle2 className="size-4" />
-                  Verify
+                  Verify &amp; Dispatch
                 </Button>
-                <Button variant="danger" onClick={() => onReject(detection.id, notes)}>
+                <Button variant="danger" onClick={onOpenReject}>
                   <XCircle className="size-4" />
                   Reject
                 </Button>
@@ -159,6 +138,23 @@ export function DetectionDetailPanel({ detection, reviewerName, linkedIncident, 
                   <ArrowRight className="size-4 shrink-0" />
                   Confirmed Incident {linkedIncident.id} created
                   <PriorityBadge priority={linkedIncident.priority} />
+                </div>
+              ) : null}
+
+              {detection.validationStatus === 'VERIFIED' && linkedIncident ? (
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-sm text-foreground-secondary">
+                    <Users className="size-4 shrink-0 text-foreground-muted" />
+                    {teamMemberNames.length > 0
+                      ? `Response team: ${teamMemberNames.join(', ')}`
+                      : 'No responders alerted yet'}
+                  </p>
+                  {onOpenDispatch ? (
+                    <Button size="sm" onClick={onOpenDispatch}>
+                      <Send className="size-3.5" />
+                      {teamMemberNames.length > 0 ? 'Add Responders' : 'Alert Responders'}
+                    </Button>
+                  ) : null}
                 </div>
               ) : null}
 
