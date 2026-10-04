@@ -3,6 +3,10 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp"
+    },
+    "Diagram": {
+      "type": "http",
+      "url": "https://mcp.draw.io/mcp"
     }
   }
 }
