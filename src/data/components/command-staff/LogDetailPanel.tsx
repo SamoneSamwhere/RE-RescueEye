@@ -42,6 +42,7 @@ export function LogDetailPanel({ detection, incident, reviewerName, mediaAssetId
             confidence={detection.confidence}
             boundingBox={detection.boundingBox}
             isLiveFeed={isLiveFeed ?? false}
+            snapshotUrl={detection.snapshotUrl}
           />
         )}
 
@@ -53,7 +54,7 @@ export function LogDetailPanel({ detection, incident, reviewerName, mediaAssetId
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <DetailField icon={Tag} label="Detection Type" value={DETECTION_CATEGORY_LABEL[detection.category]} />
-            <DetailField icon={Gauge} label="Confidence Score" value={`${Math.round(detection.confidence)}%`} />
+            <DetailField icon={Gauge} label="Confidence Score" value={`${Math.round(detection.confidence * 100)}%`} />
             <DetailField icon={Clock} label="Timestamp" value={formatDateTime(detection.detectedAt)} />
             <DetailField
               icon={MapPin}

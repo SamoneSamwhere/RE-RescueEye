@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Archive, Send, Tag, Gauge, Clock, Flame, Users } from 'lucide-react'
 import { PageHeader } from '../data/components/layout'
@@ -40,18 +39,13 @@ function sceneDamageText(detection: Detection): string {
 }
 import { RESPONSE_TEAM_STATUS_LABEL, responseTeamFor } from '../lib/responseTeams'
 import { ROUTES } from '../routes/paths'
-import type { IncidentPriority } from '../types/incident'
-
-const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 
 export function CommandStaffIncidentDetailPage() {
   const { incidentId } = useParams<{ incidentId: string }>()
-  const { incidents, detections, missions, mediaAssets, updateIncidentPriority, closeIncident } = useCommandStaffData()
+  const { incidents, detections, missions, mediaAssets, closeIncident } = useCommandStaffData()
 
   const incident = incidents.find((i) => i.id === incidentId) ?? null
   const detection = incident ? (detections.find((d) => d.id === incident.detectionId) ?? null) : null
-
-  const [pendingPriority, setPendingPriority] = useState<IncidentPriority | null>(incident?.priority ?? null)
 
   const sourceLabel = detection ? sourceLabelFor(detection.mediaAssetId, mediaAssets, mockDrones) : ''
   const timelineEvents = useIncidentTimeline(incident, detection, missions, sourceLabel)
@@ -71,11 +65,6 @@ export function CommandStaffIncidentDetailPage() {
   // be closed once the team is done: someone finished, and nobody is still out.
   const team = responseTeamFor(missions, incident.id)
   const canClose = team?.status === 'COMPLETED'
-
-  function handleUpdatePriority() {
-    if (!incident || !pendingPriority || pendingPriority === incident.priority) return
-    updateIncidentPriority(incident.id, pendingPriority)
-  }
 
   function handleCloseIncident() {
     if (!incident) return
@@ -142,35 +131,6 @@ export function CommandStaffIncidentDetailPage() {
           </Panel>
 
           <div className="flex flex-col gap-4">
-            <Panel title="Incident Priority">
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-foreground-secondary">
-                  Change this incident's priority if it needs revisiting. Responders are alerted from Detection Review,
-                  not here.
-                </p>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={pendingPriority ?? incident.priority}
-                    onChange={(event) => setPendingPriority(event.target.value as IncidentPriority)}
-                    className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                  >
-                    {PRIORITY_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    size="sm"
-                    disabled={!pendingPriority || pendingPriority === incident.priority}
-                    onClick={handleUpdatePriority}
-                  >
-                    Update Priority
-                  </Button>
-                </div>
-              </div>
-            </Panel>
-
             <DamageMapPreview
               title="Incident Location"
               emptyLabel="No location on record"
@@ -257,7 +217,14 @@ export function CommandStaffIncidentDetailPage() {
           </Reveal>
 
           <Reveal delayMs={300}>
-            <Panel title="Incident Timeline">
+            <Panel
+              title="Incident Timeline"
+              actions={
+                <Link to={ROUTES.commandStaffLogs} className="text-xs font-medium normal-case tracking-normal text-accent hover:underline">
+                  Full activity in Logs
+                </Link>
+              }
+            >
               <IncidentTimeline events={timelineEvents} />
             </Panel>
           </Reveal>

@@ -1,11 +1,27 @@
 import { useState } from 'react'
 import { CheckCircle2, ShieldCheck, Send } from 'lucide-react'
 import { Modal, Button } from '../ui'
+import { cn } from '../../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL } from '../../../lib/labels'
 import { ResponderSelectionPanel } from '../responders'
 import type { ResponderCandidate } from '../responders'
 import type { IncidentPriority } from '../../../types/incident'
 
 const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+
+const PRIORITY_SELECTED: Record<IncidentPriority, string> = {
+  LOW: 'border-priority-low bg-priority-low-bg text-priority-low-fg',
+  MEDIUM: 'border-priority-medium bg-priority-medium-bg text-priority-medium-fg',
+  HIGH: 'border-priority-high bg-priority-high-bg text-priority-high-fg',
+  CRITICAL: 'border-priority-critical bg-priority-critical-bg text-priority-critical-fg',
+}
+
+const PRIORITY_DOT: Record<IncidentPriority, string> = {
+  LOW: 'bg-priority-low',
+  MEDIUM: 'bg-priority-medium',
+  HIGH: 'bg-priority-high',
+  CRITICAL: 'bg-priority-critical',
+}
 
 export interface VerifyDispatchSubmit {
   priority: IncidentPriority
@@ -91,64 +107,65 @@ export function VerifyDispatchModal({
         </>
       }
     >
-      <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
+      <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto">
         {isVerify ? (
-          <div className="rounded-md border border-border bg-surface px-4 py-3">
-            <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-              <ShieldCheck className="size-3.5" />
+          <section className="shrink-0 overflow-hidden rounded-md border border-accent-border bg-surface">
+            <header className="flex items-center gap-2 border-b border-accent-border bg-accent-subtle px-4 py-2.5 text-sm font-semibold text-accent">
+              <ShieldCheck className="size-4" />
               Human Review
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="verify-notes"
-                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground-secondary"
-                >
-                  Reviewer Notes
+            </header>
+            <div className="flex flex-col gap-3 px-4 py-3">
+              <div>
+                <label htmlFor="verify-notes" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Reviewer notes <span className="font-normal text-foreground-secondary">(optional)</span>
                 </label>
                 <textarea
                   id="verify-notes"
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   rows={2}
-                  placeholder="Optional"
-                  className="w-full rounded-md border border-border-strong bg-surface px-2 py-2 text-sm text-foreground placeholder:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  placeholder="What did you see? Anything responders should know?"
+                  className="w-full resize-none rounded-md border border-border-strong bg-surface-secondary px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 />
               </div>
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="verify-priority"
-                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground-secondary"
-                >
-                  Incident Priority
-                </label>
-                <select
-                  id="verify-priority"
-                  value={priority}
-                  onChange={(event) => setPriority(event.target.value as IncidentPriority)}
-                  className="h-9 w-full rounded-md border border-border-strong bg-surface px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                >
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-foreground-muted">
-                  Prefilled from the AI&apos;s assessment — change it if it looks wrong.
+
+              <fieldset>
+                <legend className="mb-1.5 text-sm font-medium text-foreground">Incident priority</legend>
+                <div role="radiogroup" aria-label="Incident priority" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {PRIORITY_OPTIONS.map((option) => {
+                    const selected = priority === option
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setPriority(option)}
+                        className={cn(
+                          'flex items-center justify-center gap-2 rounded-md border-2 px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+                          selected
+                            ? PRIORITY_SELECTED[option]
+                            : 'border-border bg-surface-secondary text-foreground-secondary hover:border-border-strong hover:text-foreground',
+                        )}
+                      >
+                        <span className={cn('size-2 rounded-full', PRIORITY_DOT[option])} />
+                        {INCIDENT_PRIORITY_LABEL[option]}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="mt-2 text-xs text-foreground-secondary">
+                  Suggested by the AI: <span className="font-semibold text-foreground">{INCIDENT_PRIORITY_LABEL[suggestedPriority]}</span>
+                  . Change it if it looks wrong.
                 </p>
-              </div>
+              </fieldset>
             </div>
-          </div>
+          </section>
         ) : null}
 
-        <ResponderSelectionPanel candidates={candidates} selectedIds={selectedIds} onToggle={toggle} hasTeam={hasTeam} />
-
-        <p className="text-xs text-foreground-muted">
-          {isVerify
-            ? 'Verifying confirms an incident. Anyone you select gets a mock SMS, and each mission starts as PENDING.'
-            : 'Each selected responder gets a mock SMS, and each mission starts as PENDING.'}
-        </p>
+        <div className="shrink-0">
+          <ResponderSelectionPanel candidates={candidates} selectedIds={selectedIds} onToggle={toggle} hasTeam={hasTeam} />
+        </div>
       </div>
     </Modal>
   )

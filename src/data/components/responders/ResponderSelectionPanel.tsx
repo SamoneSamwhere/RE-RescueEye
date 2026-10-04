@@ -31,7 +31,6 @@ export function ResponderSelectionPanel({
   // wall of people they could not pick to find the one or two they could.
   // Candidates arrive nearest first.
   const available = candidates.filter((candidate) => candidate.isAvailable)
-  const unavailableCount = candidates.length - available.length
   const selectedCount = available.filter((candidate) => selectedIds.includes(candidate.id)).length
 
   const title = hasTeam ? 'Add Responders to the Response Team' : 'Select Responders to Alert'
@@ -48,11 +47,11 @@ export function ResponderSelectionPanel({
         />
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-foreground-muted">
+          <p className="text-sm text-foreground-secondary">
             Nearest available responders first. Everyone you alert {hasTeam ? 'joins' : 'forms'} this incident&apos;s
             response team.
           </p>
-          <ul className="flex flex-col divide-y divide-border">
+          <ul className="flex flex-col gap-1.5">
             {available.map((candidate) => {
               const isSelected = selectedIds.includes(candidate.id)
               return (
@@ -63,8 +62,10 @@ export function ResponderSelectionPanel({
                     aria-checked={isSelected}
                     onClick={() => onToggle(candidate.id)}
                     className={cn(
-                      'flex w-full flex-wrap items-center justify-between gap-3 px-1 py-2.5 text-left transition-colors',
-                      isSelected ? 'bg-accent-subtle' : 'hover:bg-surface-secondary',
+                      'flex w-full flex-wrap items-center justify-between gap-3 rounded-md border-2 px-3 py-2 text-left transition-colors',
+                      isSelected
+                        ? 'border-accent bg-accent-subtle'
+                        : 'border-border bg-surface-secondary hover:border-border-strong',
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -77,8 +78,8 @@ export function ResponderSelectionPanel({
                         {isSelected ? <Check className="size-3.5" /> : null}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-foreground">{candidate.name}</p>
-                        <p className="flex items-center gap-1 text-xs text-foreground-muted">
+                        <p className="text-base font-semibold text-foreground">{candidate.name}</p>
+                        <p className="flex items-center gap-1 text-xs text-foreground-secondary">
                           <MapPin className="size-3" />
                           {candidate.currentLocation
                             ? `${candidate.currentLocation.lat.toFixed(4)}, ${candidate.currentLocation.lng.toFixed(4)}`
@@ -104,17 +105,13 @@ export function ResponderSelectionPanel({
             })}
           </ul>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-            <p className="text-xs text-foreground-muted">
-              {selectedCount > 0 ? `${selectedCount} selected.` : 'Select one or more available responders.'}
-              {unavailableCount > 0 ? ` ${unavailableCount} on a mission or off duty not shown.` : ''}
-            </p>
-            {onNotify ? (
+          {onNotify ? (
+            <div className="flex justify-end border-t border-border pt-3">
               <Button size="sm" disabled={selectedCount === 0} onClick={onNotify}>
                 {selectedCount > 1 ? `Alert ${selectedCount} Responders` : 'Alert Selected Responder'}
               </Button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       )}
     </Panel>

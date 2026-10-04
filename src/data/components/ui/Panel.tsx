@@ -23,7 +23,7 @@ export function Panel({ title, actions, className, children, ...props }: PanelPr
         </h2>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
-      <div className="flex-1 px-4 py-3">{children}</div>
+      <div className="min-h-0 flex-1 px-4 py-3">{children}</div>
     </div>
   )
 }

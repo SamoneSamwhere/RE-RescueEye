@@ -134,7 +134,9 @@ export function CommandStaffDetectionReviewPage() {
   }
 
   return (
-    <>
+    // At xl the page is pinned to the viewport (shell top bar is h-14) so the review
+    // controls and the whole queue page are visible without scrolling; below xl it flows normally.
+    <div className="flex flex-col xl:h-[calc(100vh-3.5rem)] xl:overflow-hidden">
       <PageHeader
         title="Detection Review"
         description={`Review AI-generated detections at ${Math.round(MIN_REVIEW_CONFIDENCE * 100)}-${Math.round(
@@ -143,7 +145,7 @@ export function CommandStaffDetectionReviewPage() {
         neither happens automatically.`}
       />
 
-      <div className="flex flex-col gap-4 px-4 py-4">
+      <div className="flex min-h-0 flex-col gap-4 px-4 py-4 xl:flex-1">
         {outcome ? (
           <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
             <Send className="size-4 shrink-0" />
@@ -151,14 +153,7 @@ export function CommandStaffDetectionReviewPage() {
           </div>
         ) : null}
 
-        <Reveal className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <DetectionQueueList
-            detections={filteredDetections}
-            selectedId={selectedId}
-            statusFilter={statusFilter}
-            onSelect={setSelectedId}
-            onStatusFilterChange={setStatusFilter}
-          />
+        <Reveal className="grid grid-cols-1 gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] xl:grid-rows-[minmax(0,1fr)]">
           <DetectionDetailPanel
             key={selectedDetection?.id ?? 'none'}
             detection={selectedDetection}
@@ -168,6 +163,13 @@ export function CommandStaffDetectionReviewPage() {
             onOpenVerify={() => setDialog('verify')}
             onOpenReject={() => setDialog('reject')}
             onOpenDispatch={linkedIncident && linkedIncident.status !== 'CLOSED' ? () => setDialog('dispatch') : undefined}
+          />
+          <DetectionQueueList
+            detections={filteredDetections}
+            selectedId={selectedId}
+            statusFilter={statusFilter}
+            onSelect={setSelectedId}
+            onStatusFilterChange={setStatusFilter}
           />
         </Reveal>
       </div>
@@ -188,6 +190,6 @@ export function CommandStaffDetectionReviewPage() {
       {selectedDetection && dialog === 'reject' ? (
         <RejectDetectionModal open onClose={() => setDialog(null)} onReject={handleReject} />
       ) : null}
-    </>
+    </div>
   )
 }

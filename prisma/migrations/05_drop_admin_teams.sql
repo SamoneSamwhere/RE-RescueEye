@@ -12,4 +12,4 @@
 
 DROP INDEX IF EXISTS "user_teamId_idx";
 ALTER TABLE "user" DROP COLUMN IF EXISTS "teamId";
-DROP TABLE IF EXISTS "team";
+DROP TABLE IF EXISTS "team";             

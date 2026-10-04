@@ -9,6 +9,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { cn } from '../../../lib/cn'
 import { computeBounds } from '../../../lib/mapProjection'
 import { BaseTileLayer } from './BaseTileLayer'
+import { MARKER_COLOR } from './markerStyle'
 import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../../lib/mapViewport'
 import type { MapMarker } from './types'
 
@@ -32,6 +33,12 @@ export interface GeoMapCanvasProps {
    * phone and on the Command Staff console alike, so both Damage Maps enable it.
    */
   cluster?: boolean
+  /**
+   * Move the map to the selected marker when the selection changes, so picking an
+   * incident from a list takes you to it. Never zooms out, and zooms in far enough
+   * to leave a cluster. Off by default — the other maps keep the view you chose.
+   */
+  focusSelected?: boolean
 }
 
 const DEFAULT_ZOOM = 14
@@ -39,9 +46,9 @@ const DEFAULT_ZOOM = 14
 type MarkerVisual = { color: string; radius: number }
 
 const MARKER_STYLE: Record<MapMarker['kind'], MarkerVisual> = {
-  INCIDENT: { color: '#ff3b3b', radius: 10 },
-  DETECTION: { color: '#ffdc00', radius: 8 },
-  RESPONDER: { color: '#00d4ff', radius: 7 },
+  INCIDENT: { color: MARKER_COLOR.INCIDENT, radius: 10 },
+  DETECTION: { color: MARKER_COLOR.DETECTION, radius: 8 },
+  RESPONDER: { color: MARKER_COLOR.RESPONDER, radius: 7 },
 }
 
 /** Distinct from the other responders' cyan so "me" never reads as "a colleague". */
@@ -109,6 +116,22 @@ function ViewportController({ markers }: { markers: MapMarker[] }) {
     const frame = requestAnimationFrame(() => map.invalidateSize())
     return () => cancelAnimationFrame(frame)
   }, [map])
+
+  return null
+}
+
+/** Pans (and, if needed, zooms in) to the selected marker whenever the selection changes. */
+function SelectionFocus({ markers, selectedId }: { markers: MapMarker[]; selectedId: string | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const marker = markers.find((m) => m.id === selectedId)
+    if (!marker) return
+    // Zoom 17 is past the cluster radius, so the marker is a dot, not hidden in a count.
+    map.setView([marker.location.lat, marker.location.lng], Math.max(map.getZoom(), 17), { animate: true })
+    // Only a *change of selection* moves the map; re-filtering must not yank the view back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, map])
 
   return null
 }
@@ -195,7 +218,7 @@ export function MapLegend({ includeSelf = false }: { includeSelf?: boolean }) {
  * with no streets or terrain behind them, so nobody could tell which road a
  * casualty was near. OpenStreetMap tiles need no API key or billing.
  */
-export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, className, cluster = false }: GeoMapCanvasProps) {
+export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, className, cluster = false, focusSelected = false }: GeoMapCanvasProps) {
   const centre = useMemo<LatLngExpression>(() => {
     if (!markers.length) return [10.315, 123.895]
     return [markers[0].location.lat, markers[0].location.lng]
@@ -226,6 +249,7 @@ export function GeoMapCanvas({ markers, selectedId, onSelect, selfResponderId, c
       >
         <BaseTileLayer />
         <ViewportController markers={markers} />
+        {focusSelected ? <SelectionFocus markers={markers} selectedId={selectedId} /> : null}
 
         {cluster ? (
           <ClusterLayer

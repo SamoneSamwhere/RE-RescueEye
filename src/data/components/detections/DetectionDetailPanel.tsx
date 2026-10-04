@@ -53,8 +53,8 @@ export function DetectionDetailPanel({
   const suggestedPriority = suggestPriority(detection)
 
   return (
-    <Panel title="Detection Detail">
-      <div className="flex flex-col gap-4">
+    <Panel title="Detection Detail" className="xl:h-full xl:min-h-0">
+      <div className="flex flex-col gap-3 xl:h-full">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-foreground">
             {DETECTION_CATEGORY_LABEL[detection.category]}
@@ -74,12 +74,12 @@ export function DetectionDetailPanel({
         />
 
         {/* AI output — visually distinct from the human review section below */}
-        <div className="rounded-md border border-accent-border bg-accent-subtle px-4 py-3">
-          <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
+        <div className="rounded-md border border-accent-border bg-accent-subtle px-4 py-2.5">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
             <Sparkles className="size-3.5" />
             AI-Generated Output
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <DetailField icon={Tag} label="Detection Type" value={DETECTION_CATEGORY_LABEL[detection.category]} />
             <DetailField icon={Gauge} label="Confidence Score" value={`${Math.round(detection.confidence * 100)}%`} />
             <DetailField icon={Clock} label="Timestamp" value={formatDateTime(detection.detectedAt)} />
@@ -100,25 +100,40 @@ export function DetectionDetailPanel({
           </div>
         </div>
 
-        {/* Human review — visually distinct from AI output above */}
-        <div className="rounded-md border border-border bg-surface px-4 py-3">
-          <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
+        {/* Human review — styled apart from the AI output above */}
+        <div
+          className={
+            isPending
+              ? 'rounded-md border border-border bg-surface px-4 py-3'
+              : 'rounded-md border border-border bg-surface px-4 py-2.5'
+          }
+        >
+          <div
+            className={
+              isPending
+                ? 'mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary'
+                : 'mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground-secondary'
+            }
+          >
             <ShieldCheck className="size-3.5" />
             Human Review
           </div>
 
           {isPending ? (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-foreground-secondary">
-                Awaiting review. Verifying confirms an incident and lets you alert the nearest responders in the same
-                step.
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <p className="min-w-0 flex-1 basis-56 text-sm leading-snug text-foreground">
+                <span className="font-semibold">Awaiting review.</span> Verifying confirms an incident and lets you
+                alert the nearest responders.
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button onClick={onOpenVerify}>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  onClick={onOpenVerify}
+                  className="!border-success !bg-success font-semibold shadow-sm hover:!bg-success-fg"
+                >
                   <CheckCircle2 className="size-4" />
                   Verify &amp; Dispatch
                 </Button>
-                <Button variant="danger" onClick={onOpenReject}>
+                <Button variant="danger" onClick={onOpenReject} className="font-semibold shadow-sm">
                   <XCircle className="size-4" />
                   Reject
                 </Button>

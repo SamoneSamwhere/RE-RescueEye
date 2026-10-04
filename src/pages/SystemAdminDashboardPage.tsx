@@ -9,21 +9,6 @@ import { useSystemAdminData } from '../features/system-admin'
 import { ROUTES } from '../routes/paths'
 import { formatDateTime } from '../lib/formatDateTime'
 
-const ACTIONS = [
-  {
-    href: ROUTES.systemAdminAgencyValidation,
-    icon: ShieldCheck,
-    title: 'Agency Validation',
-    description: 'Approve or reject pending agency registrations.',
-  },
-  {
-    href: ROUTES.systemAdminAgencyStatus,
-    icon: Power,
-    title: 'Agency Account Status Management',
-    description: 'Activate or deactivate approved agencies.',
-  },
-]
-
 export function SystemAdminDashboardPage() {
   const { agencies } = useSystemAdminData()
 
@@ -106,28 +91,6 @@ export function SystemAdminDashboardPage() {
                 </div>
               </div>
             </Panel>
-          </div>
-        </Reveal>
-
-        <Reveal delayMs={100}>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {ACTIONS.map((action) => (
-              <Link key={action.href} to={action.href}>
-                <Card className="flex h-full flex-col gap-3 px-4 py-4 transition-colors hover:bg-surface-secondary">
-                  <span className="flex size-9 items-center justify-center rounded-md bg-accent-subtle text-accent">
-                    <action.icon className="size-5" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{action.title}</p>
-                    <p className="mt-1 text-xs text-foreground-secondary">{action.description}</p>
-                  </div>
-                  <p className="mt-auto flex items-center gap-1 text-xs font-medium text-accent">
-                    Go
-                    <ArrowRight className="size-3.5" />
-                  </p>
-                </Card>
-              </Link>
-            ))}
           </div>
         </Reveal>
 
