@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, ReactNode, WheelEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Maximize, X, ZoomIn, ZoomOut } from 'lucide-react'
-import { cn } from '../../../lib/cn'
+import { cn } from '../../lib/cn'
 
 const MIN_SCALE = 1
 const MAX_SCALE = 8

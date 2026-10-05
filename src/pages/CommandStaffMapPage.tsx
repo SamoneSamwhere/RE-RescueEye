@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { X } from 'lucide-react'
-import { PageHeader } from '../data/components/layout'
-import { Reveal } from '../data/components/landing/Reveal'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import {
   EMPTY_MARKER_FILTERS,
   GeoMapCanvas,
@@ -10,8 +10,8 @@ import {
   MapToolbar,
   MarkerDetailPanel,
   applyMarkerFilters,
-} from '../data/components/map'
-import type { IncidentMapMarker, MapMarker, MarkerFilters } from '../data/components/map'
+} from '../components/map'
+import type { IncidentMapMarker, MapMarker, MarkerFilters } from '../components/map'
 import { useDamageMapMarkers } from '../features/command-staff'
 
 function countByKind(markers: MapMarker[]): Record<MapMarker['kind'], number> {

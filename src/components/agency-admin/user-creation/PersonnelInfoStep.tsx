@@ -1,6 +1,6 @@
 import { UserRound } from 'lucide-react'
 import { Field, Input } from '../../ui'
-import { formatPhPhone } from '../../../../lib/phone'
+import { formatPhPhone } from '../../../lib/phone'
 import type { PersonnelInfoValues } from './types'
 
 interface PersonnelInfoStepProps {

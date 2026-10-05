@@ -5,7 +5,7 @@ import type { MockUser } from '../../data/mockUsers'
 import { mockAgencies } from '../../data/mockAgencies'
 import { useUserStore } from '../../state/UserStore'
 import { supabase } from '../../lib/supabase'
-import { hashPassword } from '../../hooks/useAgencyDatabase'
+import { hashPassword } from '../../db/useAgencyDatabase'
 
 export interface AuthSession {
   id: string

@@ -1,7 +1,7 @@
 import { Panel } from '../ui'
 import { GeoRouteMap } from '../map'
-import { distanceKm } from '../../../lib/geo'
-import type { GeoPoint } from '../../../types/geo'
+import { distanceKm } from '../../lib/geo'
+import type { GeoPoint } from '../../types/geo'
 
 interface MissionRouteMapProps {
   /** The responder's shared position, absent until location sharing reports a fix. */

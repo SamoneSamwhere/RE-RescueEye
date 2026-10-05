@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPinned, ArrowRight } from 'lucide-react'
 import { Panel, EmptyState, PriorityBadge, DetectionStatusBadge, MissionStatusBadge, Badge } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
-import { commandStaffIncidentDetailPath } from '../../../routes/paths'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
+import { commandStaffIncidentDetailPath } from '../../routes/paths'
 import type { MapMarker } from './types'
 
 interface DetailRowProps {

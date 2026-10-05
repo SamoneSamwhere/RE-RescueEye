@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShieldCheck, ShieldOff, UserCheck } from 'lucide-react'
 import { Panel, EmptyState } from '../ui'
-import { api } from '../../../lib/apiClient'
+import { api } from '../../lib/apiClient'
 
 interface ResponderPosition {
   id: string

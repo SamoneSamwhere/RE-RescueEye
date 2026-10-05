@@ -14,10 +14,10 @@ import {
   EmptyState,
   LoadingState,
 } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { mediaThumbnailUrl, mediaFileUrl } from '../../../features/media'
-import type { StoredMedia } from '../../../types/media'
-import { cn } from '../../../lib/cn'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { mediaThumbnailUrl, mediaFileUrl } from '../../features/media'
+import type { StoredMedia } from '../../types/media'
+import { cn } from '../../lib/cn'
 
 export interface StoredMediaTableProps {
   items: StoredMedia[]

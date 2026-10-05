@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import type { ReactNode } from 'react'
 import type { Agency, AgencyAccountStatus } from '../../types/agency'
 import { useAuth } from '../auth'
-import { useAgencyDatabase } from '../../hooks/useAgencyDatabase'
-import type { DbAgency } from '../../hooks/useAgencyDatabase'
+import { useAgencyDatabase } from '../../db/useAgencyDatabase'
+import type { DbAgency } from '../../db/useAgencyDatabase'
 import { supabase } from '../../lib/supabase'
 
 interface SystemAdminDataContextValue {

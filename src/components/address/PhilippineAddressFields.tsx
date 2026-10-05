@@ -1,14 +1,14 @@
 import { Loader2, TriangleAlert } from 'lucide-react'
 import { Field } from '../ui'
-import { usePsgcList } from '../../../hooks/usePsgcList'
+import { usePsgcList } from '../../hooks/usePsgcList'
 import {
   fetchRegions,
   fetchProvinces,
   fetchCitiesByRegion,
   fetchCitiesByProvince,
   fetchBarangays,
-} from '../../../lib/psgc'
-import { cn } from '../../../lib/cn'
+} from '../../lib/psgc'
+import { cn } from '../../lib/cn'
 
 export interface PhilippineAddressValue {
   regionCode: string

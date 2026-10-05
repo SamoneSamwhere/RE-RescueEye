@@ -1,5 +1,5 @@
-import type { MissionStatus } from '../../../types/mission'
-import { cn } from '../../../lib/cn'
+import type { MissionStatus } from '../../types/mission'
+import { cn } from '../../lib/cn'
 
 interface MissionStatusBadgeProps {
   status: MissionStatus

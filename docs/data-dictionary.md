@@ -4,7 +4,7 @@ This section presents the data dictionary for the "RescueEye" system, documentin
 elements used within the platform and providing detailed descriptions of each element, its
 attributes, and other relevant information.
 
-Revised to match `prisma/schema.prisma`.
+Describes the live Supabase schema; changes are applied with the SQL in `supabase/migrations/`.
 
 ---
 

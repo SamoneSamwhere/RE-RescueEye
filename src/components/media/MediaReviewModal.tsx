@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { Camera, Clock, Download, HardDrive, Monitor, Trash2, User } from 'lucide-react'
 import { Modal, Button, Panel, EmptyState, Badge } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { mediaFileUrl, mediaFrameUrl } from '../../../features/media'
-import type { StoredMedia } from '../../../types/media'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { mediaFileUrl, mediaFrameUrl } from '../../features/media'
+import type { StoredMedia } from '../../types/media'
 
 export interface MediaReviewModalProps {
   media: StoredMedia | null

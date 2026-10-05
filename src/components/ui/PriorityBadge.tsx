@@ -1,6 +1,6 @@
-import type { IncidentPriority } from '../../../types/incident'
-import { cn } from '../../../lib/cn'
-import { INCIDENT_PRIORITY_LABEL } from '../../../lib/labels'
+import type { IncidentPriority } from '../../types/incident'
+import { cn } from '../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL } from '../../lib/labels'
 
 interface PriorityBadgeProps {
   priority: IncidentPriority

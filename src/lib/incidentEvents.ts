@@ -1,7 +1,7 @@
 import { Sparkles, CheckCircle2, XCircle, Send, Archive, UserCheck, UserX, Navigation, MapPin, Flag } from 'lucide-react'
 import { mockUsers } from '../data/mockUsers'
 import { DAMAGE_CLASSIFICATION_LABEL, DETECTION_CATEGORY_LABEL } from './labels'
-import type { IncidentTimelineEvent } from '../data/components/incidents'
+import type { IncidentTimelineEvent } from '../components/incidents'
 import type { Detection } from '../types/detection'
 import type { Incident } from '../types/incident'
 import type { Mission } from '../types/mission'

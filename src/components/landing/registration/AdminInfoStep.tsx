@@ -1,5 +1,5 @@
 import { Field, Input } from '../../ui'
-import { formatPhPhone } from '../../../../lib/phone'
+import { formatPhPhone } from '../../../lib/phone'
 import { OTHER_POSITION, SAR_POSITIONS } from './types'
 import type { AdminInfoValues } from './types'
 

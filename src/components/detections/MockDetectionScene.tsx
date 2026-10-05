@@ -1,4 +1,4 @@
-import type { BoundingBox, DetectionCategory } from '../../../types/detection'
+import type { BoundingBox, DetectionCategory } from '../../types/detection'
 
 interface MockDetectionSceneProps {
   category: DetectionCategory

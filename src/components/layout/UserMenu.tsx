@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, LogOut, Settings, User as UserIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { USER_ROLE_LABEL } from '../../../lib/labels'
-import type { AppUserSummary } from '../../../types/user'
-import { cn } from '../../../lib/cn'
-import { useTheme } from '../../../features/theme'
-import { useAuth } from '../../../features/auth'
-import { ROUTES } from '../../../routes/paths'
+import { USER_ROLE_LABEL } from '../../lib/labels'
+import type { AppUserSummary } from '../../types/user'
+import { cn } from '../../lib/cn'
+import { useTheme } from '../../features/theme'
+import { useAuth } from '../../features/auth'
+import { ROUTES } from '../../routes/paths'
 
 interface UserMenuProps {
   user: AppUserSummary

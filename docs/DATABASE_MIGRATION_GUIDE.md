@@ -16,27 +16,17 @@ This guide explains the database schema changes and how to implement them in you
 
 - Supabase project created and configured
 - Environment variables set (`.env` file with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`)
-- Prisma CLI installed (`npm install -D prisma`)
 
 ## Step-by-Step Setup
 
 ### 1. Apply Database Migration
 
-Option A: Using Prisma (if you have Prisma configured for your Supabase database):
-
-```bash
-# Ensure your DATABASE_URL in .env points to your Supabase database
-npx prisma migrate deploy
-
-# Or generate and apply migration manually:
-npx prisma migrate dev --name add_system_admin_support
-```
-
-Option B: Direct SQL (via Supabase Dashboard):
+Migrations are plain SQL with no migration tool. Run every file in
+`supabase/migrations/`, in numeric order, via the Supabase Dashboard:
 
 1. Go to Supabase Dashboard → SQL Editor
 2. Create new query
-3. Copy the SQL from `prisma/migrations/01_add_system_admin_support.sql`
+3. Copy the SQL from `supabase/migrations/01_add_system_admin_support.sql` (then 02, 04, 05, …)
 4. Execute
 
 **Key SQL changes:**
@@ -104,16 +94,6 @@ Expected result:
 ----|----------------------|------------------------|---------------|----------|--------
   1 | admin@rescueeye.io   | System Administrator   | SYSTEM_ADMIN   | NULL     | true
 ```
-
-### 4. Run Prisma Generate (Optional)
-
-If you're using Prisma Client in your backend:
-
-```bash
-npx prisma generate
-```
-
-This updates the generated Prisma Client types to match your schema.
 
 ## Development: Using Mock Users
 
@@ -253,9 +233,7 @@ Currently, RLS is NOT enforced in development (using anon key). In production, i
 
 ## References
 
-- Prisma Schema: `prisma/schema.prisma`
-- Migration: `prisma/migrations/01_add_system_admin_support.sql`
-- Seed script: `prisma/seed.ts`
+- Migrations: `supabase/migrations/` (01 creates the System Admin account)
 - User types: `src/types/user.ts`
-- Database hooks: `src/hooks/useUserDatabase.ts`, `src/hooks/useAgencyDatabase.ts`
+- Database hooks: `src/db/useStaffDatabase.ts`, `src/db/useAgencyDatabase.ts`
 - Mock users: `src/data/mockUsers.ts` (for development)

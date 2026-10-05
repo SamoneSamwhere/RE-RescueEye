@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Sparkles, Video, Image as ImageIcon, ZoomIn } from 'lucide-react'
-import { DETECTION_CATEGORY_LABEL } from '../../../lib/labels'
+import { DETECTION_CATEGORY_LABEL } from '../../lib/labels'
 import { MockDetectionScene } from './MockDetectionScene'
 import { ZoomableViewer } from './ZoomableViewer'
-import type { BoundingBox, DetectionCategory } from '../../../types/detection'
+import type { BoundingBox, DetectionCategory } from '../../types/detection'
 
 interface DetectionMediaPreviewProps {
   category: DetectionCategory

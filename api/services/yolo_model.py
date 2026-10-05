@@ -7,7 +7,7 @@ Manages two YOLOv8 models independently:
 
 Priority order for each:
   1. Custom-trained weights (VICTIM_MODEL_PATH / DAMAGE_MODEL_PATH env vars)
-  2. Generic COCO pretrained fallback (MODEL_PATH / yolov8n.pt)
+  2. Generic COCO pretrained fallback (MODEL_PATH / models/base/yolov8n.pt)
 
 Hot-swap is supported: call reload_victim() / reload_damage() to swap weights
 at runtime without restarting the server (used by /models/reload endpoint).
@@ -77,6 +77,21 @@ _pose_assist = ModelState()
 # ── Paths ─────────────────────────────────────────────────────────────────────
 REPO_ROOT  = Path(__file__).parent.parent
 MODELS_DIR = REPO_ROOT / "models"
+# Stock Ultralytics weights (COCO detector, pose, classifier) live apart from
+# our trained models. They used to sit loose in api/, and model files are not
+# in git, so a checkout made before the move still has them there — look in
+# both places rather than break that machine.
+BASE_DIR = MODELS_DIR / "base"
+
+
+def base_weight(name: str) -> str:
+    """Path to a stock weight file: models/base/<name>, else the legacy api/<name>, else models/base/<name>."""
+    for candidate in (BASE_DIR / name, REPO_ROOT / name):
+        if candidate.exists():
+            return str(candidate)
+    # Neither exists: Ultralytics downloads stock weights on first use, so
+    # point it at the new home.
+    return str(BASE_DIR / name)
 
 
 def _load_meta(meta_file: Path) -> dict:
@@ -266,7 +281,7 @@ def get_damage_ort_names() -> list[str]:
 # -- DirectML ONNX session for the fire/smoke detector ------------------------
 # The damage classifier labels a whole frame; it cannot say where the fire is.
 # This detector boxes flame and smoke (trained on D-Fire, see
-# scripts/prepare_aerial_datasets.py). ONNX only: there is no PyTorch fallback,
+# scripts/training/prepare_aerial_datasets.py). ONNX only: there is no PyTorch fallback,
 # because the CPU torch path would cost more than the rest of /detect combined.
 FIRE_DETECT_ENABLED = os.getenv("FIRE_DETECT", "true").lower() == "true"
 _fire_ort_session: Any = None
@@ -311,7 +326,7 @@ def _resolve_victim_weights() -> tuple[str, bool]:
     custom = os.getenv("VICTIM_MODEL_PATH", str(MODELS_DIR / "victim_best.pt"))
     if Path(custom).exists():
         return custom, True
-    fallback = os.getenv("MODEL_PATH", "yolov8n.pt")
+    fallback = os.getenv("MODEL_PATH") or base_weight("yolov8n.pt")
     return fallback, False
 
 
@@ -319,7 +334,7 @@ def _resolve_damage_weights() -> tuple[str, bool]:
     custom = os.getenv("DAMAGE_MODEL_PATH", str(MODELS_DIR / "damage_best.pt"))
     if Path(custom).exists():
         return custom, True
-    return "yolov8n-cls.pt", False
+    return base_weight("yolov8n-cls.pt"), False
 
 
 def _init_model(state: ModelState, weights: str, is_custom: bool,
@@ -351,7 +366,7 @@ def _init_model(state: ModelState, weights: str, is_custom: bool,
 # ── Public API ────────────────────────────────────────────────────────────────
 
 COCO_ASSIST_ENABLED = os.getenv("COCO_ASSIST", "true").lower() == "true"
-COCO_ASSIST_WEIGHTS = os.getenv("COCO_ASSIST_WEIGHTS", "yolov8n.pt")
+COCO_ASSIST_WEIGHTS = os.getenv("COCO_ASSIST_WEIGHTS") or base_weight("yolov8n.pt")
 
 # Pose assist. Same person boxes as the COCO assist, plus the 17 COCO
 # keypoints, which is what lets services/casualty.py tell a body lying on the
@@ -360,7 +375,7 @@ COCO_ASSIST_WEIGHTS = os.getenv("COCO_ASSIST_WEIGHTS", "yolov8n.pt")
 # same class 0 people, so running both would cost latency to produce duplicate
 # boxes for NMS to throw away.
 POSE_ASSIST_ENABLED = os.getenv("POSE_ASSIST", "true").lower() == "true"
-POSE_ASSIST_WEIGHTS = os.getenv("POSE_ASSIST_WEIGHTS", "yolov8n-pose.pt")
+POSE_ASSIST_WEIGHTS = os.getenv("POSE_ASSIST_WEIGHTS") or base_weight("yolov8n-pose.pt")
 
 
 def get_coco_assist() -> Any:
@@ -423,10 +438,10 @@ def load_all() -> None:
         _load_fire_ort(str(fire_onnx))
     elif FIRE_DETECT_ENABLED:
         logger.info(f"[yolo] no {fire_onnx.name} - fire/smoke boxes off "
-                    "(train with scripts/train_models.py --fire-only)")
+                    "(train with scripts/training/train_models.py --fire-only)")
 
     if COCO_ASSIST_ENABLED:
-        coco_onnx = REPO_ROOT / os.getenv("COCO_ASSIST_ONNX", "yolov8n.onnx")
+        coco_onnx = Path(REPO_ROOT / os.environ["COCO_ASSIST_ONNX"] if os.getenv("COCO_ASSIST_ONNX") else base_weight("yolov8n.onnx"))
         if coco_onnx.exists():
             _load_coco_ort(str(coco_onnx))
             _coco_assist.weights = str(coco_onnx)
@@ -438,8 +453,8 @@ def load_all() -> None:
     if POSE_ASSIST_ENABLED:
         pose_path = _gpu_graph(
             str(REPO_ROOT / os.environ["POSE_ASSIST_ONNX"]) if os.getenv("POSE_ASSIST_ONNX") else None,
-            REPO_ROOT / "yolov8n-pose-fast.onnx", REPO_ROOT / "yolov8n-pose.onnx")
-        pose_onnx = Path(pose_path) if pose_path else REPO_ROOT / "yolov8n-pose.onnx"
+            Path(base_weight("yolov8n-pose-fast.onnx")), Path(base_weight("yolov8n-pose.onnx")))
+        pose_onnx = Path(pose_path) if pose_path else Path(base_weight("yolov8n-pose.onnx"))
         if pose_path:
             _load_pose_ort(str(pose_onnx))
             _pose_assist.weights = str(pose_onnx)

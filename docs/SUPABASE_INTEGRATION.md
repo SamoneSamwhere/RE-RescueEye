@@ -43,7 +43,7 @@ DATABASE_URL=postgresql://postgres:...  # For backend use
 
 ### `useDroneDatabase` Hook
 
-Located in `src/hooks/useDroneDatabase.ts`, provides these functions:
+Located in `src/db/useDroneDatabase.ts`, provides these functions:
 
 ```typescript
 // Get all drones for an agency
@@ -92,7 +92,7 @@ To use the Supabase database with the drone registration form:
 Replace the mock `registerDrone` function with the Supabase hook:
 
 ```typescript
-import { useDroneDatabase } from '../hooks/useDroneDatabase'
+import { useDroneDatabase } from '../db/useDroneDatabase'
 
 export function CommandStaffDroneRegistrationPage() {
   const { createDrone, checkSerialNumberExists, isLoading, error } = useDroneDatabase()
@@ -134,7 +134,7 @@ export function CommandStaffDroneRegistrationPage() {
 Replace mock drones with database drones:
 
 ```typescript
-import { useDroneDatabase } from '../hooks/useDroneDatabase'
+import { useDroneDatabase } from '../db/useDroneDatabase'
 
 export function CommandStaffDronesMediaPage() {
   const { getDronesByAgency, isLoading } = useDroneDatabase()
@@ -155,7 +155,7 @@ export function CommandStaffDronesMediaPage() {
 Replace mock drone operations with Supabase hook:
 
 ```typescript
-import { useDroneDatabase } from '../../hooks/useDroneDatabase'
+import { useDroneDatabase } from '../../db/useDroneDatabase'
 
 export function CommandStaffDataProvider({ children }: { children: ReactNode }) {
   const { createDrone } = useDroneDatabase()
@@ -221,7 +221,7 @@ console.log(data, error)
 
 ```javascript
 // In browser console
-import { useDroneDatabase } from './src/hooks/useDroneDatabase'
+import { useDroneDatabase } from './src/db/useDroneDatabase'
 const { getDronesByAgency } = useDroneDatabase()
 const drones = await getDronesByAgency(1)
 console.log(drones)
@@ -258,5 +258,4 @@ Ensure `.env` has `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 ## 📚 Resources
 
 - [Supabase JavaScript Documentation](https://supabase.com/docs/reference/javascript)
-- [Prisma Schema Generated](./src/generated/)
 - [Supabase Table Editor](https://supabase.com/dashboard)

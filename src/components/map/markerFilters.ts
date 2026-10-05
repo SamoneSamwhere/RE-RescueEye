@@ -1,4 +1,4 @@
-import type { IncidentPriority, IncidentStatus } from '../../../types/incident'
+import type { IncidentPriority, IncidentStatus } from '../../types/incident'
 import type { MapMarker } from './types'
 
 /**

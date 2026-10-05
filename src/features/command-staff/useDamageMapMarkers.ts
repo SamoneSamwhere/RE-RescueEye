@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { MapMarker, IncidentMapMarker } from '../../data/components/map'
+import type { MapMarker, IncidentMapMarker } from '../../components/map'
 import { useAuth } from '../auth'
 import { mockUsers } from '../../data/mockUsers'
 import { MAP_VISIBLE_MISSION_STATUSES } from '../../lib/missionStatus'

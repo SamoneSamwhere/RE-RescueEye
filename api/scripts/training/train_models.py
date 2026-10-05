@@ -6,7 +6,7 @@ Trains three YOLOv8 models:
   2. Damage Classification — YOLOv8n-cls (classification) on data/damage/
   3. Fire/Smoke Detection  — YOLOv8n (detection) on fire.yaml
 
-Build the damage and fire datasets with scripts/prepare_aerial_datasets.py.
+Build the damage and fire datasets with scripts/training/prepare_aerial_datasets.py.
 
 Recommended: run on Google Colab (free T4 GPU) via the notebook at
   notebooks/train_rescueeye.ipynb
@@ -14,8 +14,8 @@ Recommended: run on Google Colab (free T4 GPU) via the notebook at
 Local CPU training works but is much slower (~hours vs minutes on GPU).
 
 Usage:
-    python api/scripts/train_models.py [--victim-only | --damage-only | --fire-only]
-    python api/scripts/train_models.py --epochs 50 --batch 16
+    python api/scripts/training/train_models.py [--victim-only | --damage-only | --fire-only]
+    python api/scripts/training/train_models.py --epochs 50 --batch 16
 
 Environment variables:
     DATA_ROOT           — base directory containing victim.yaml / damage.yaml
@@ -38,7 +38,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = Path(__file__).parent
-REPO_ROOT   = SCRIPT_DIR.parent
+REPO_ROOT   = SCRIPT_DIR.parent.parent   # scripts/training/ -> api/
 DATA_ROOT   = Path(os.getenv("DATA_ROOT",  str(REPO_ROOT / "data")))
 MODELS_DIR  = Path(os.getenv("MODELS_DIR", str(REPO_ROOT / "models")))
 
@@ -52,9 +52,20 @@ VICTIM_BEST  = Path(os.getenv("VICTIM_MODEL_PATH", str(MODELS_DIR / "victim_best
 DAMAGE_BEST  = Path(os.getenv("DAMAGE_MODEL_PATH", str(MODELS_DIR / "damage_best.pt")))
 FIRE_BEST    = Path(os.getenv("FIRE_MODEL_PATH",   str(MODELS_DIR / "fire_best.pt")))
 
-RESULTS_VICTIM = MODELS_DIR / "victim_results"
-RESULTS_DAMAGE = MODELS_DIR / "damage_results"
-RESULTS_FIRE   = MODELS_DIR / "fire_results"
+RUNS_DIR    = REPO_ROOT / "runs"          # training runs and candidate exports, kept out of models/
+BASE_DIR    = MODELS_DIR / "base"         # stock Ultralytics weights
+
+
+def base_weight(name: str) -> str:
+    """Stock weights from models/base/, else the legacy api/ location, else a fresh download into models/base/."""
+    for candidate in (BASE_DIR / name, REPO_ROOT / name):
+        if candidate.exists():
+            return str(candidate)
+    return str(BASE_DIR / name)
+
+RESULTS_VICTIM = RUNS_DIR / "victim"
+RESULTS_DAMAGE = RUNS_DIR / "damage"
+RESULTS_FIRE   = RUNS_DIR / "fire"
 
 # services/yolo_model.py runs the damage ONNX graph at a fixed 224 input.
 DAMAGE_IMGSZ = 224
@@ -79,7 +90,7 @@ def _check_yaml(path: Path, name: str) -> bool:
     if not path.exists():
         log(
             f"{name} YAML not found at {path}.\n"
-            "  Run: python api/scripts/prepare_dataset.py first.",
+            "  Run: python api/scripts/training/prepare_dataset.py first.",
             "ERR",
         )
         return False
@@ -161,7 +172,7 @@ def train_victim(args: argparse.Namespace) -> None:
 
     from ultralytics import YOLO  # type: ignore
 
-    model = YOLO("yolov8n.pt")
+    model = YOLO(base_weight("yolov8n.pt"))
     log(f"Loaded base weights: yolov8n.pt")
     log(f"Dataset: {VICTIM_YAML}")
     log(f"Epochs: {args.epochs}  Batch: {args.batch}  imgsz: {args.imgsz}")
@@ -251,7 +262,7 @@ def train_damage(args: argparse.Namespace) -> None:
     if not (DAMAGE_DIR / "train").is_dir():
         log(
             f"Damage dataset not found at {DAMAGE_DIR}.\n"
-            "  Run: python scripts/prepare_aerial_datasets.py --damage-only first.",
+            "  Run: python scripts/training/prepare_aerial_datasets.py --damage-only first.",
             "ERR",
         )
         return
@@ -260,7 +271,7 @@ def train_damage(args: argparse.Namespace) -> None:
 
     from ultralytics import YOLO  # type: ignore
 
-    model = YOLO("yolov8n-cls.pt")
+    model = YOLO(base_weight("yolov8n-cls.pt"))
     log(f"Loaded base weights: yolov8n-cls.pt")
     log(f"Dataset: {DAMAGE_DIR}")
     log(f"Epochs: {args.epochs}  Batch: {args.batch}  imgsz: {DAMAGE_IMGSZ}")
@@ -354,7 +365,7 @@ def train_fire(args: argparse.Namespace) -> None:
 
     from ultralytics import YOLO  # type: ignore
 
-    model = YOLO("yolov8n.pt")
+    model = YOLO(base_weight("yolov8n.pt"))
     log(f"Loaded base weights: yolov8n.pt")
     log(f"Dataset: {FIRE_YAML}")
     log(f"Epochs: {args.epochs}  Batch: {args.batch}  imgsz: {args.imgsz}")

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Building2, Camera, Film, Flame, RefreshCw, Scan, ShieldCheck, Waves, X, Zap } from 'lucide-react'
 import { Panel, Button, Badge } from '../ui'
-import { cn } from '../../../lib/cn'
-import { SCENE_DAMAGE_LABEL } from '../../../lib/labels'
-import { feedMjpegUrl, useFeedDetection } from '../../../features/media/useFeeds'
-import type { DetectionBox, Feed, SceneLabel } from '../../../features/media/useFeeds'
+import { cn } from '../../lib/cn'
+import { SCENE_DAMAGE_LABEL } from '../../lib/labels'
+import { feedMjpegUrl, useFeedDetection } from '../../features/media/useFeeds'
+import type { DetectionBox, Feed, SceneLabel } from '../../features/media/useFeeds'
 
 export interface LiveFeedPanelProps {
   feed: Feed

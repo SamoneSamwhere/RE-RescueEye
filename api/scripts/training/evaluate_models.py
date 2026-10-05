@@ -5,13 +5,13 @@ Evaluates both trained models against their test splits and
 asserts the combined inference latency constraint (Objective 6).
 
 Usage:
-    python api/scripts/evaluate_models.py [--victim-only | --damage-only]
-    python api/scripts/evaluate_models.py --latency-frames 100
+    python api/scripts/training/evaluate_models.py [--victim-only | --damage-only]
+    python api/scripts/training/evaluate_models.py --latency-frames 100
 
 Outputs saved to:
-    models/victim_results/confusion_matrix.png
-    models/victim_results/pr_curve.png
-    models/damage_results/confusion_matrix.png
+    runs/victim/confusion_matrix.png
+    runs/victim/pr_curve.png
+    runs/damage/confusion_matrix.png
     models/evaluation_report.json   ← machine-readable summary
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).parent
-REPO_ROOT  = SCRIPT_DIR.parent
+REPO_ROOT  = SCRIPT_DIR.parent.parent   # scripts/training/ -> api/
 DATA_ROOT  = Path(os.getenv("DATA_ROOT",  str(REPO_ROOT / "data")))
 MODELS_DIR = Path(os.getenv("MODELS_DIR", str(REPO_ROOT / "models")))
 
@@ -39,8 +39,9 @@ DAMAGE_YAML  = DATA_ROOT / "damage.yaml"
 VICTIM_BEST  = Path(os.getenv("VICTIM_MODEL_PATH", str(MODELS_DIR / "victim_best.pt")))
 DAMAGE_BEST  = Path(os.getenv("DAMAGE_MODEL_PATH", str(MODELS_DIR / "damage_best.pt")))
 
-RESULTS_VICTIM = MODELS_DIR / "victim_results"
-RESULTS_DAMAGE = MODELS_DIR / "damage_results"
+RUNS_DIR   = REPO_ROOT / "runs"
+RESULTS_VICTIM = RUNS_DIR / "victim"
+RESULTS_DAMAGE = RUNS_DIR / "damage"
 
 LATENCY_THRESHOLD_MS = float(os.getenv("LATENCY_WARN_MS", "3000"))
 DAMAGE_CLASSES = ["flood_damage", "fire_damage", "structural_damage", "no_damage"]
@@ -71,7 +72,7 @@ def _divider(title: str = "") -> None:
 def evaluate_victim(latency_frames: int = 100) -> dict:
     _divider("VICTIM DETECTION — EVALUATION")
 
-    weights = VICTIM_BEST if VICTIM_BEST.exists() else "yolov8n.pt"
+    weights = VICTIM_BEST if VICTIM_BEST.exists() else str(MODELS_DIR / "base/yolov8n.pt")
     log(f"Weights: {weights}")
     if not VICTIM_YAML.exists():
         log(f"Dataset YAML not found: {VICTIM_YAML}", "ERR")
@@ -164,7 +165,7 @@ def evaluate_victim(latency_frames: int = 100) -> dict:
 def evaluate_damage(latency_frames: int = 100) -> dict:
     _divider("DAMAGE CLASSIFICATION — EVALUATION")
 
-    weights = DAMAGE_BEST if DAMAGE_BEST.exists() else "yolov8n-cls.pt"
+    weights = DAMAGE_BEST if DAMAGE_BEST.exists() else str(MODELS_DIR / "base/yolov8n-cls.pt")
     log(f"Weights: {weights}")
     if not DAMAGE_YAML.exists():
         log(f"Dataset YAML not found: {DAMAGE_YAML}", "ERR")

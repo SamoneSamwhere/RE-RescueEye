@@ -2,7 +2,7 @@ import { forwardRef, useState } from 'react'
 import { Film, Zap, ZapOff } from 'lucide-react'
 import { Button, EmptyState, Panel } from '../ui'
 import { LiveFeedPanel } from './LiveFeedPanel'
-import { useCloseFeed, useFeeds } from '../../../features/media/useFeeds'
+import { useCloseFeed, useFeeds } from '../../features/media/useFeeds'
 
 /**
  * Uploaded (recorded) clips being played back with AI detection — kept apart

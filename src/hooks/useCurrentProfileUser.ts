@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { MockUser } from '../data/mockUsers'
 import { useAuth } from '../features/auth'
 import { useUserStore } from '../state/UserStore'
-import { useProfileDatabase } from './useProfileDatabase'
+import { useProfileDatabase } from '../db/useProfileDatabase'
 
 /**
  * Resolves the logged-in user's profile record from whichever store actually

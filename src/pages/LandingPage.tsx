@@ -6,7 +6,7 @@ import {
   WorkflowTimeline,
   CtaSection,
   LandingFooter,
-} from '../data/components/landing'
+} from '../components/landing'
 
 function LandingPageContent() {
   return (

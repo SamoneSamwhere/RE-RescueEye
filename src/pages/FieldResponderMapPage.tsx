@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { MobileShell } from '../data/components/layout'
+import { MobileShell } from '../components/layout'
 import {
   GeoMapCanvas,
   MapLegend,
@@ -8,8 +8,8 @@ import {
   EMPTY_MARKER_FILTERS,
   applyMarkerFilters,
   countIncidentMarkers,
-} from '../data/components/map'
-import type { MapMarker, IncidentMapMarker, MarkerFilters } from '../data/components/map'
+} from '../components/map'
+import type { MapMarker, IncidentMapMarker, MarkerFilters } from '../components/map'
 import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS, useFieldResponderData } from '../features/field-responder'
 import { useIncidentStore } from '../state/IncidentStore'

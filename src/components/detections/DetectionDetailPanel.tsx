@@ -1,10 +1,10 @@
 import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, CheckCircle2, XCircle, ArrowRight, Flag, Send, Users } from 'lucide-react'
 import { Panel, Button, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
-import { suggestPriority } from '../../../lib/priority'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
+import { suggestPriority } from '../../lib/priority'
 import { DetectionMediaPreview } from './DetectionMediaPreview'
-import type { IncidentPriority } from '../../../types/incident'
+import type { IncidentPriority } from '../../types/incident'
 import type { EnrichedDetection } from './types'
 
 interface LinkedIncident {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Radio, BrainCircuit, ClipboardCheck, Users2 } from 'lucide-react'
-import { cn } from '../../../lib/cn'
-import { useInView } from '../../../hooks/useInView'
+import { cn } from '../../lib/cn'
+import { useInView } from '../../hooks/useInView'
 import { Reveal } from './Reveal'
 import { AmbientBackground } from './AmbientBackground'
 

@@ -1,10 +1,10 @@
 import { ShieldAlert } from 'lucide-react'
 import { Panel, EmptyState, PriorityBadge } from '../ui'
-import { cn } from '../../../lib/cn'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL, INCIDENT_STATUS_LABEL } from '../../../lib/labels'
+import { cn } from '../../lib/cn'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL, INCIDENT_STATUS_LABEL } from '../../lib/labels'
 import type { IncidentMapMarker } from './types'
-import type { IncidentPriority } from '../../../types/incident'
+import type { IncidentPriority } from '../../types/incident'
 
 const PRIORITY_RANK: Record<IncidentPriority, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
 

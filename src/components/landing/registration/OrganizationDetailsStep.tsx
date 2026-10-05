@@ -1,5 +1,5 @@
 import { Field, Input } from '../../ui'
-import { formatPhPhone } from '../../../../lib/phone'
+import { formatPhPhone } from '../../../lib/phone'
 import { ORGANIZATION_TYPES } from './types'
 import type { AgencyInfoValues } from './types'
 

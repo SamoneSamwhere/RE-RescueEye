@@ -5,7 +5,7 @@ interface CreateAgencyInput {
   agencyName: string
   agencyType: string
   agencyAddress: string
-  /** PSGC codes for the office address — see prisma/migrations/04_address_psgc_codes.sql. */
+  /** PSGC codes for the office address — see supabase/migrations/04_address_psgc_codes.sql. */
   agencyAddressRegionCode?: string
   agencyAddressProvinceCode?: string
   agencyAddressCityCode?: string
@@ -61,7 +61,7 @@ async function rollback(agencyId: number | null, userId: number | null): Promise
 }
 
 /**
- * Insert a row that carries columns added by prisma/migrations/02_registration_fields.sql.
+ * Insert a row that carries columns added by supabase/migrations/02_registration_fields.sql.
  *
  * Until that migration has been run, PostgREST rejects an unknown column
  * (PGRST204). Registration must keep working in the meantime, so a rejected

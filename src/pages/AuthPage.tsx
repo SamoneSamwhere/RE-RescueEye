@@ -3,8 +3,8 @@ import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { Building2, CheckCircle2, LogIn } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
-import { Field, Input, Button } from '../data/components/ui'
-import { AuthPageShell, Reveal } from '../data/components/landing'
+import { Field, Input, Button } from '../components/ui'
+import { AuthPageShell, Reveal } from '../components/landing'
 import {
   RegistrationStepper,
   OrganizationDetailsStep,
@@ -18,7 +18,7 @@ import {
   emptyDocumentRecord,
   formatAddress,
   resolvedPosition,
-} from '../data/components/landing/registration'
+} from '../components/landing/registration'
 import type {
   AgencyInfoValues,
   AdminInfoValues,
@@ -26,9 +26,9 @@ import type {
   DocumentErrors,
   DocumentId,
   OrganizationCategory,
-} from '../data/components/landing/registration'
+} from '../components/landing/registration'
 import { useAgencyStore } from '../state/AgencyStore'
-import { useAgencyDatabase } from '../hooks/useAgencyDatabase'
+import { useAgencyDatabase } from '../db/useAgencyDatabase'
 import { now } from '../lib/now'
 import { formatPhPhone, parsePhPhone } from '../lib/phone'
 import { cn } from '../lib/cn'

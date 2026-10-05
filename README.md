@@ -1,229 +1,139 @@
 # RescueEye :D
 
-RescueEye is a web dashboard for drone-based search-and-rescue operations. It turns
-AI-flagged detections from drone footage into confirmed incidents, dispatches the
-nearest available field responder, and tracks the mission through to resolution.
+RescueEye is a web platform for drone-based search-and-rescue. Drone footage is
+analysed by AI to flag possible casualties and damage; Command Staff verify what
+the AI found, dispatch the nearest available Field Responders, and track each
+incident to resolution.
 
-This repo contains a React/TypeScript frontend with mock data and in-memory stores for core workflows, plus Supabase PostgreSQL backend integration for drone registration and user profile management.
+The repo has two parts:
+
+- **Web app** (`src/`) — React + TypeScript, backed by Supabase PostgreSQL for
+  accounts, organizations and drones, with in-memory stores for the rest.
+- **Detection API** (`api/`) — Python FastAPI service that runs the AI models
+  over live and uploaded drone feeds (casualty detection, damage classification,
+  fire/smoke detection).
 
 ## Roles
 
-The app is organized around four roles, each with its own dashboard and routes:
+| Role | What they do |
+|---|---|
+| **System Admin** | Reviews and approves organization registrations; manages organization account status. |
+| **Agency Admin** | Manages the organization's personnel (Add Staff, activate/deactivate) and monitors response teams and incident history. |
+| **Command Staff** | Watches live drone feeds, reviews AI detections, verifies casualties, dispatches responders, registers drones, uses the Damage Map. |
+| **Field Responder** | Receives missions, views mission details and the map, updates status. |
 
-- **System Admin** — approves/rejects agency registrations, oversees agency status platform-wide, manages profile & password.
-- **Agency Admin** — manages an agency's users (creates Command Staff / Field Responder accounts), reviews account status, views mission history, manages profile & password.
-- **Command Staff** — reviews AI detections from drone footage, confirms incidents, assigns responders, registers drones, tracks incidents and drones/media on a Damage Map, manages profile & password.
-- **Field Responder** — receives mission assignments, views mission details, views profile, updates password, manages location.
-
-Each role has a dedicated data provider (e.g. `CommandStaffDataProvider`) and route
-group in [src/app/router.tsx](src/app/router.tsx), gated by [ProtectedRoute](src/features/auth/ProtectedRoute.tsx)
-and [roleRoutes.ts](src/features/auth/roleRoutes.ts).
-
-## ✨ Recent Features
-
-### 1. User Profile Management & Password Change
-- All roles can now edit their profile (name, email, phone)
-- Secure password change with validation
-- Settings accessible from user menu in top-right
-- Routes: `/[role]/settings`
-- See [Profile Management](src/components/profile/) for implementation
-
-### 2. Comprehensive Drone Registration
-- Multi-step registration workflow (4 steps)
-  - Step 1: Drone Information (name, manufacturer, model, type)
-  - Step 2: Registration Details (serial number, registration number, date acquired)
-  - Step 3: Assignment & Operations (operator, status, inspection date, notes)
-  - Step 4: Review/Confirmation
-- Full validation and uniqueness checks
-- Realistic for disaster-response systems
-- See [Drone Registration Components](src/components/drones/registration/)
-
-### 3. Supabase Database Integration
-- PostgreSQL database with comprehensive drone schema
-- React hook (`useDroneDatabase`) for database operations
-- Validation layer with duplicate checking
-- Real-time database writes
-- See [Supabase Integration Guide](SUPABASE_INTEGRATION.md)
-
-## Tech stack
-
-**Frontend:**
-- React 19 + TypeScript, built with Vite
-- React Router 7 for routing
-- TanStack Query for data fetching
-- Tailwind CSS 4 for styling
-- Oxlint for linting
-- Supabase JavaScript client for database access
-
-**Backend:**
-- PostgreSQL (hosted on Supabase)
-- Prisma ORM for schema management
-- Row-Level Security (RLS) ready for production
-
-## Getting started
-
-### Prerequisites
-- Node.js 18+
-- Supabase account with PostgreSQL database
-
-### Setup
-
-**1. Clone and install:**
-```bash
-git clone <your-repo-url>
-cd "RE RescueEye"
-npm install
-```
-
-**2. Set up environment variables:**
-Create a `.env` file in the root directory:
-```env
-# Supabase Configuration
-VITE_SUPABASE_URL=https://[YOUR-PROJECT].supabase.co
-VITE_SUPABASE_ANON_KEY=[YOUR-ANON-KEY]
-
-# Backend Database (optional, for Prisma CLI)
-DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
-```
-
-Get your Supabase credentials:
-- Go to your Supabase project settings
-- Copy Project URL and Anon Key from API settings
-
-**3. Run dev server:**
-```bash
-npm run dev
-```
-
-### Available scripts
-
-```bash
-npm run dev      # start dev server (http://localhost:5173)
-npm run build    # type-check (tsc -b) and build for production
-npm run preview  # preview the production build locally
-npm run lint     # run oxlint
-```
-
-### Database Operations
-
-#### View current schema
-```bash
-# Supabase Dashboard → SQL Editor
-# Or view prisma/schema.prisma for reference
-```
-
-#### Update schema
-```bash
-# Edit prisma/schema.prisma, then:
-npx prisma db push     # sync changes to database
-npx prisma generate    # regenerate TypeScript types
-```
-
-#### Test database connection
-Use the `useDroneDatabase` hook in any component:
-```typescript
-import { useDroneDatabase } from './hooks/useDroneDatabase'
-
-function MyComponent() {
-  const { getDronesByAgency, isLoading } = useDroneDatabase()
-  
-  useEffect(() => {
-    getDronesByAgency(1).then(drones => console.log(drones))
-  }, [])
-}
-```
-
-### Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| System Admin | admin@rescueeye.io | password123 |
-| Agency Admin | agencyadmin@rescueeye.io | password123 |
-| Command Staff | commandstaff@rescueeye.io | password123 |
-| Field Responder | responder@rescueeye.io | password123 |
-
-### For teammates
-
-1. Clone this repo
-2. Run `npm install`
-3. Create your own `.env` file with Supabase credentials
-4. Run `npm run dev`
-5. See [SUPABASE_INTEGRATION.md](SUPABASE_INTEGRATION.md) for database details
+Each role has its own route group in [src/app/router.tsx](src/app/router.tsx), gated by
+[ProtectedRoute](src/features/auth/ProtectedRoute.tsx).
 
 ## Project structure
 
 ```
-src/
-  app/              # router, root layout, query client
-  pages/            # top-level route components, one per screen
-  components/       # UI grouped by feature area
-    profile/        # Profile edit & password change forms
-    drones/         # Drone list, cards, registration workflow
-      registration/ # Multi-step drone registration forms
-    ...other areas
-  features/         # role-scoped data providers, auth, theming
-  state/            # in-memory stores for non-database data
-  data/             # mock seed data used by stores
-  hooks/            
-    useDroneDatabase.ts  # React hook for drone database operations
-    ...other hooks
-  lib/
-    supabase.ts     # Supabase client & utilities
-    ...other utilities
-  types/            # shared domain types
-  routes/           # centralized route path definitions
-prisma/
-  schema.prisma     # Database schema (Supabase PostgreSQL)
+src/                         Web app
+  app/                       router, root layout, query client, role layouts
+  pages/                     one component per screen
+  components/                UI, grouped by feature area
+    ui/                      shared building blocks (Button, Panel, Table, …)
+    landing/registration/    organization sign-up steps
+    agency-admin/ command-staff/ detections/ map/ media/ …
+  features/                  role data providers, auth, theming, media feeds
+  db/                        Supabase data-access hooks (agencies, staff, drones, profiles)
+  state/                     shared in-memory stores (detections, incidents, missions, …)
+  hooks/                     general-purpose React hooks
+  lib/                       utilities (Supabase client, labels, phone/address helpers, …)
+  data/                      mock seed data for demo accounts
+  types/                     shared domain types
+  routes/                    route path definitions
+
+api/                         Detection API (FastAPI)
+  main.py                    app entry point
+  routers/                   HTTP endpoints (/detect, /classify, /stream, /detections, …)
+  services/                  model loading, casualty verdict, tracking, feeds, georeferencing
+  models/                    weights the server loads (victim, damage, fire)
+    base/                    stock Ultralytics weights (COCO, pose, classifier)
+    archive/                 retired weights kept for reference
+  scripts/training/          dataset preparation, training and evaluation scripts
+  runs/                      training runs and candidate models (not in git)
+  data/                      datasets, uploads and media (not in git)
+  tests/                     pytest suite
+
+supabase/migrations/         SQL to run in the Supabase SQL editor, in order
+docs/                        data dictionary, database and Supabase guides
 ```
 
-## Key Features by Role
+Model weights, datasets and training runs are **not in git** (see `.gitignore`) —
+share them separately.
 
-### All Roles
-- ✅ View and edit profile (name, email, phone)
-- ✅ Change password securely
-- ✅ Logout
+## Getting started
 
-### System Admin
-- ✅ Review and approve/reject agency registrations
-- ✅ Manage agency account status
-- ✅ View agency details
+### Web app
 
-### Agency Admin
-- ✅ Create Command Staff and Field Responder accounts
-- ✅ View and manage user account status
-- ✅ View incident history
+Prerequisites: Node.js 18+, a Supabase project.
 
-### Command Staff
-- ✅ Review AI detections from drone footage
-- ✅ Verify/reject detections
-- ✅ Create incidents from detections
-- ✅ **Register new drones** (with comprehensive form)
-- ✅ Connect to drones and start live feeds
-- ✅ Upload video footage for AI analysis
-- ✅ View incidents and assign responders
-- ✅ View Damage Map with incident locations
+```bash
+npm install
+```
 
-### Field Responder
-- ✅ View mission assignments
-- ✅ View mission details and location
-- ✅ See current location on map
-- ✅ View and edit profile
+Create `.env` in the repo root:
 
-## Status
+```env
+VITE_SUPABASE_URL=https://[YOUR-PROJECT].supabase.co
+VITE_SUPABASE_ANON_KEY=[YOUR-ANON-KEY]
+```
 
-**Frontend:** React UI complete and fully navigable with all role-based dashboards.
+```bash
+npm run dev      # http://localhost:5173
+npm run build    # type-check and build for production
+npm run lint     # oxlint
+```
 
-**Profile Management:** ✅ Complete for all roles
+### Detection API
 
-**Drone Registration:** ✅ Complete with multi-step workflow
+Prerequisites: Python 3.11, FFmpeg (bundled via `imageio-ffmpeg`).
 
-**Database Integration:** ✅ Supabase PostgreSQL connected
-- Mock data still used for most workflows
-- Drone registration integrated with database
-- Profile/password changes stored in mock data (ready for database integration)
+```bash
+cd api
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000
+```
 
-**Next Steps:**
-- Integrate remaining workflows with Supabase database
-- Implement Row-Level Security (RLS) policies
-- Set up production authentication
-- Build backend API endpoints (optional, for advanced features)
+- On Windows with any GPU, install `onnxruntime-directml` so models run on the GPU.
+- `torch` must stay below 2.6 (pinned in `requirements.txt`).
+- Put the trained weights in `api/models/` and the stock ones in `api/models/base/`.
+  (Older checkouts with the stock weights loose in `api/` still work.)
+- Tests: `.venv\Scripts\python.exe -m pytest -q`
+
+### Database migrations
+
+Run each file in [supabase/migrations/](supabase/migrations/) **in order** in the
+Supabase SQL editor. They are plain SQL — there is no migration tool. The live
+schema is whatever Supabase has; [docs/data-dictionary.md](docs/data-dictionary.md)
+describes it.
+
+## AI models
+
+| Model | File | Trained on | Used for |
+|---|---|---|---|
+| Person detector | `models/victim_best.pt` (+ `victim_fast.onnx`) | VisDrone | finding people; a separate casualty check (posture + stillness) decides who is a casualty |
+| Damage classifier | `models/damage_best.pt/.onnx` | AIDER + demo clips | labelling a frame as fire / flood / structural / no damage |
+| Fire/smoke detector | `models/fire_best.pt/.onnx` | D-Fire | boxes around fire and smoke |
+
+Training and evaluation scripts are in [api/scripts/training/](api/scripts/training/)
+and run in a separate GPU venv (`api/.venv-train`, CUDA PyTorch). Each script's
+header explains its data sources and usage. Outputs go to `api/runs/`; a model
+only replaces one in `api/models/` after it beats it on the evaluation script.
+
+## Demo accounts
+
+All use password `password123`. Demo accounts are local mock logins — they cannot
+register drones or add personnel, and nothing they create is saved.
+
+| Role | Email |
+|---|---|
+| System Admin | admin@rescueeye.io (needs the seeded Supabase database) |
+| Agency Admin | agencyadmin@rescueeye.io |
+| Command Staff | commandstaff@rescueeye.io |
+| Field Responder | responder@rescueeye.io |
+
+More guides: [docs/SUPABASE_INTEGRATION.md](docs/SUPABASE_INTEGRATION.md),
+[docs/DATABASE_MIGRATION_GUIDE.md](docs/DATABASE_MIGRATION_GUIDE.md).

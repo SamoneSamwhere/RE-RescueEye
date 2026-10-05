@@ -1,9 +1,9 @@
 import { ShieldAlert } from 'lucide-react'
 import { NotificationArea } from './NotificationArea'
 import { ThemeToggle } from '../landing/ThemeToggle'
-import type { AppNotification } from '../../../types/notification'
-import { useTheme } from '../../../features/theme'
-import { cn } from '../../../lib/cn'
+import type { AppNotification } from '../../types/notification'
+import { useTheme } from '../../features/theme'
+import { cn } from '../../lib/cn'
 
 interface MobileTopBarProps {
   notifications?: AppNotification[]

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Send } from 'lucide-react'
-import { PageHeader } from '../data/components/layout'
-import { Reveal } from '../data/components/landing/Reveal'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import {
   DetectionQueueList,
   DetectionDetailPanel,
   VerifyDispatchModal,
   RejectDetectionModal,
-} from '../data/components/detections'
-import type { EnrichedDetection, VerifyDispatchSubmit } from '../data/components/detections'
+} from '../components/detections'
+import type { EnrichedDetection, VerifyDispatchSubmit } from '../components/detections'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { useResponderCandidates } from '../hooks/useResponderCandidates'

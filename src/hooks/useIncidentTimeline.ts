@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { buildIncidentEvents } from '../lib/incidentEvents'
-import type { IncidentTimelineEvent } from '../data/components/incidents'
+import type { IncidentTimelineEvent } from '../components/incidents'
 import type { Detection } from '../types/detection'
 import type { Incident } from '../types/incident'
 import type { Mission } from '../types/mission'

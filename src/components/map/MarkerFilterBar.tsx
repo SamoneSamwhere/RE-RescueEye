@@ -1,7 +1,7 @@
 import { FilterX } from 'lucide-react'
 import { Button } from '../ui'
-import { cn } from '../../../lib/cn'
-import { INCIDENT_PRIORITY_LABEL, INCIDENT_STATUS_LABEL } from '../../../lib/labels'
+import { cn } from '../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL, INCIDENT_STATUS_LABEL } from '../../lib/labels'
 import {
   EMPTY_MARKER_FILTERS,
   FILTERABLE_PRIORITIES,

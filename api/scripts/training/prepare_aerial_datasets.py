@@ -29,7 +29,7 @@ Inputs (download first):
     data/media/*_demo_feed{,7,8}.mp4        uploaded through the app
 
 Usage:
-    python scripts/prepare_aerial_datasets.py [--damage-only | --fire-only]
+    python scripts/training/prepare_aerial_datasets.py [--damage-only | --fire-only]
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 SCRIPT_DIR = Path(__file__).parent
-REPO_ROOT  = SCRIPT_DIR.parent
+REPO_ROOT  = SCRIPT_DIR.parent.parent   # scripts/training/ -> api/
 DATA_ROOT  = Path(os.getenv("DATA_ROOT", str(REPO_ROOT / "data")))
 
 DOWNLOADS      = DATA_ROOT / "raw" / "downloads"

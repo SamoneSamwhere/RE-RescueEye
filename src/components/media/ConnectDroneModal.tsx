@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Check, Copy, Radio, Wifi } from 'lucide-react'
 import { Modal, Button } from '../ui'
-import { usePublishTarget } from '../../../features/media/useFeeds'
+import { usePublishTarget } from '../../features/media/useFeeds'
 
 export interface ConnectDroneModalProps {
   open: boolean

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { CheckCircle2, ShieldCheck, Send } from 'lucide-react'
 import { Modal, Button } from '../ui'
-import { cn } from '../../../lib/cn'
-import { INCIDENT_PRIORITY_LABEL } from '../../../lib/labels'
+import { cn } from '../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL } from '../../lib/labels'
 import { ResponderSelectionPanel } from '../responders'
 import type { ResponderCandidate } from '../responders'
-import type { IncidentPriority } from '../../../types/incident'
+import type { IncidentPriority } from '../../types/incident'
 
 const PRIORITY_OPTIONS: IncidentPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 

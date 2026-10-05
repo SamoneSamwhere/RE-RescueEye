@@ -1,10 +1,10 @@
 """
-Unit tests for scripts/evaluate_models.py's pure latency_assertion() logic.
+Unit tests for scripts/training/evaluate_models.py's pure latency_assertion() logic.
 evaluate_victim()/evaluate_damage() themselves are NOT tested — they run real
 model.val() against the full VisDrone dataset, which isn't available here and
 would be far too slow for a test suite. Explicit non-goal per the test plan.
 """
-from scripts.evaluate_models import latency_assertion, LATENCY_THRESHOLD_MS
+from scripts.training.evaluate_models import latency_assertion, LATENCY_THRESHOLD_MS
 
 
 def test_passes_when_combined_latency_is_under_threshold():

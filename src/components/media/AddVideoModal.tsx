@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Film, Upload, X } from 'lucide-react'
 import { Modal, Button } from '../ui'
-import type { Drone } from '../../../types/drone'
+import type { Drone } from '../../types/drone'
 
 export interface AddVideoModalProps {
   open: boolean

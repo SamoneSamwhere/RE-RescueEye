@@ -20,10 +20,10 @@ import { useDetectionStore } from '../../state/DetectionStore'
 import { useMediaAssetStore } from '../../state/MediaAssetStore'
 import { useNotificationStore } from '../../state/NotificationStore'
 import { useDroneStore } from '../../state/DroneStore'
-import { useDroneDatabase } from '../../hooks/useDroneDatabase'
+import { useDroneDatabase } from '../../db/useDroneDatabase'
 import { useLiveDetections } from '../media/useLiveDetections'
 import { useResponderPositions } from '../media/useResponderPositions'
-import type { DroneRecord } from '../../hooks/useDroneDatabase'
+import type { DroneRecord } from '../../db/useDroneDatabase'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
 const DEFAULT_AREA_CENTER: GeoPoint = { lat: 10.3155, lng: 123.895402 }

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import type { MockUser } from '../../mockUsers'
+import type { MockUser } from '../../data/mockUsers'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { Field } from '../ui/Field'
 import { Input } from '../ui/Input'
-import { useUserStore } from '../../../state/UserStore'
-import { useProfileDatabase } from '../../../hooks/useProfileDatabase'
-import { parsePhPhone } from '../../../lib/phone'
+import { useUserStore } from '../../state/UserStore'
+import { useProfileDatabase } from '../../db/useProfileDatabase'
+import { parsePhPhone } from '../../lib/phone'
 
 interface ProfileEditFormProps {
   user: MockUser

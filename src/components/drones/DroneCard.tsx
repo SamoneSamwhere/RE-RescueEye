@@ -1,10 +1,10 @@
 import { Loader2, Video, MonitorPlay } from 'lucide-react'
 import { Card, Button, StatusIndicator, Badge } from '../ui'
 import { DroneIllustration } from './DroneIllustration'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { cn } from '../../../lib/cn'
-import type { Drone } from '../../../types/drone'
-import { isDemoDroneId } from '../../../lib/demoDrone'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { cn } from '../../lib/cn'
+import type { Drone } from '../../types/drone'
+import { isDemoDroneId } from '../../lib/demoDrone'
 
 interface DroneCardProps {
   drone: Drone

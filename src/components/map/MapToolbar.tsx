@@ -1,6 +1,6 @@
 import { FilterX } from 'lucide-react'
-import { cn } from '../../../lib/cn'
-import { INCIDENT_PRIORITY_LABEL, INCIDENT_STATUS_LABEL } from '../../../lib/labels'
+import { cn } from '../../lib/cn'
+import { INCIDENT_PRIORITY_LABEL, INCIDENT_STATUS_LABEL } from '../../lib/labels'
 import { MARKER_COLOR } from './markerStyle'
 import {
   FILTERABLE_PRIORITIES,

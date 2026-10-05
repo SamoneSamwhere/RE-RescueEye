@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Plus } from 'lucide-react'
-import { PageHeader } from '../data/components/layout'
-import { Reveal } from '../data/components/landing/Reveal'
-import { Button } from '../data/components/ui'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
+import { Button } from '../components/ui'
 import {
   StoredMediaTable,
   MediaReviewModal,
@@ -10,9 +10,9 @@ import {
   MediaFilterBar,
   EMPTY_MEDIA_FILTERS,
   hasActiveFilters,
-} from '../data/components/media'
-import { UploadedFeedsSection } from '../data/components/media/UploadedFeedsSection'
-import type { MediaFilters } from '../data/components/media'
+} from '../components/media'
+import { UploadedFeedsSection } from '../components/media/UploadedFeedsSection'
+import type { MediaFilters } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
 import { mockUsers } from '../data/mockUsers'

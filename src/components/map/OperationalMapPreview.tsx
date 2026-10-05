@@ -3,12 +3,12 @@ import { MapContainer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import { MapPin } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { Panel, EmptyState } from '../ui'
-import { cn } from '../../../lib/cn'
+import { cn } from '../../lib/cn'
 import { BaseTileLayer } from './BaseTileLayer'
-import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../../lib/mapViewport'
-import { computeBounds } from '../../../lib/mapProjection'
-import type { GeoPoint } from '../../../types/geo'
-import type { IncidentPriority } from '../../../types/incident'
+import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../lib/mapViewport'
+import { computeBounds } from '../../lib/mapProjection'
+import type { GeoPoint } from '../../types/geo'
+import type { IncidentPriority } from '../../types/incident'
 
 export interface MapPreviewPin {
   id: string

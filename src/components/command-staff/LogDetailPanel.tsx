@@ -1,10 +1,10 @@
 import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, BarChart3, AlertCircle } from 'lucide-react'
 import { Panel, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../../lib/labels'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
 import { DetectionMediaPreview } from '../detections/DetectionMediaPreview'
-import type { Detection } from '../../../types/detection'
-import type { Incident } from '../../../types/incident'
+import type { Detection } from '../../types/detection'
+import type { Incident } from '../../types/incident'
 
 interface LogDetailPanelProps {
   detection: Detection | null

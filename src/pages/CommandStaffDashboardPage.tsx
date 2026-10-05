@@ -1,21 +1,21 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ScanSearch, Navigation, UserCheck, Maximize2 } from 'lucide-react'
-import { PageHeader } from '../data/components/layout'
-import { Reveal } from '../data/components/landing/Reveal'
+import { PageHeader } from '../components/layout'
+import { Reveal } from '../components/landing/Reveal'
 import {
   StatTile,
   PendingDetectionsPanel,
   ActiveMissionsPanel,
   ResponderStatusPanel,
-} from '../data/components/dashboard'
+} from '../components/dashboard'
 import type {
   DetectionListItem,
   MissionListItem,
   ResponderStatusItem,
-} from '../data/components/dashboard'
-import { GeoMapCanvas, MapLegend } from '../data/components/map'
-import { Button, Panel } from '../data/components/ui'
+} from '../components/dashboard'
+import { GeoMapCanvas, MapLegend } from '../components/map'
+import { Button, Panel } from '../components/ui'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData, useDamageMapMarkers } from '../features/command-staff'
 import { mockDrones } from '../data/mockDrones'

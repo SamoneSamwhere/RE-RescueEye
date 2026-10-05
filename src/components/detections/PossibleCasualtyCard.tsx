@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { AlertTriangle, Check, ImageOff, ShieldCheck } from 'lucide-react'
 import { Button, Badge } from '../ui'
-import { formatDateTime } from '../../../lib/formatDateTime'
-import { CASUALTY_REASON_LABEL, SUPPORTING_CASUALTY_REASONS } from '../../../lib/labels'
-import { cn } from '../../../lib/cn'
-import type { Detection } from '../../../types/detection'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { CASUALTY_REASON_LABEL, SUPPORTING_CASUALTY_REASONS } from '../../lib/labels'
+import { cn } from '../../lib/cn'
+import type { Detection } from '../../types/detection'
 
 export interface PossibleCasualtyCardProps {
   detection: Detection

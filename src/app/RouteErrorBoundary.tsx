@@ -1,6 +1,6 @@
 import { useRouteError, isRouteErrorResponse, useNavigate, Link } from 'react-router-dom'
 import { AlertTriangle, RotateCw, Home } from 'lucide-react'
-import { Button } from '../data/components/ui'
+import { Button } from '../components/ui'
 import { ROUTES } from '../routes/paths'
 
 function describe(error: unknown): { title: string; detail: string } {

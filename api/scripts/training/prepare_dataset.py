@@ -9,7 +9,7 @@ All annotations are converted to YOLOv8 format (normalized xywh txt).
 Outputs dataset YAML files ready for `ultralytics train`.
 
 Usage (run from repo root or Colab):
-    python api/scripts/prepare_dataset.py [--victim-only | --damage-only]
+    python api/scripts/training/prepare_dataset.py [--victim-only | --damage-only]
 
 Environment variables (optional overrides):
     DATA_ROOT   — base directory for all dataset output (default: api/data)
@@ -50,7 +50,7 @@ except ImportError:
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).parent
-REPO_ROOT  = SCRIPT_DIR.parent
+REPO_ROOT  = SCRIPT_DIR.parent.parent   # scripts/training/ -> api/
 DATA_ROOT  = Path(os.getenv("DATA_ROOT", str(REPO_ROOT / "data")))
 
 RAW_VICTIM  = DATA_ROOT / "raw" / "victim"
@@ -281,8 +281,11 @@ def prepare_victim_dataset() -> None:
             "       api/data/raw/victim/annotations/  (*.txt for VisDrone, *.xml for WiSARD)",
             "WARN",
         )
-        _generate_victim_placeholder()
-        return
+        raise SystemExit(
+            "No real victim data found. This script no longer generates a synthetic placeholder:\n"
+            "the shipped damage model was once trained on one, scored 100% on its own noise and\n"
+            "failed on real footage. Download real data first (see scripts/training/prepare_aerial_datasets.py)."
+        )
 
     log(f"Found {len(visdrone_images)} raw images, {len(ann_files)} annotation files")
 
@@ -342,63 +345,6 @@ def prepare_victim_dataset() -> None:
         },
     )
     log("Victim dataset prepared.", "OK")
-
-
-def _generate_victim_placeholder() -> None:
-    """
-    Generate a minimal synthetic dataset so training scripts can be tested
-    end-to-end without real data.  For real training use Colab + actual data.
-    """
-    log("Generating synthetic placeholder victim dataset (50 images) ...")
-    try:
-        import numpy as np
-        from PIL import Image, ImageDraw
-    except ImportError:
-        log("PIL not available — cannot generate placeholder images", "ERR")
-        return
-
-    random.seed(0)
-    np.random.seed(0)
-
-    for split_name, n in [("train", 35), ("val", 10), ("test", 5)]:
-        img_dir = VICTIM_OUT / "images" / split_name
-        lbl_dir = VICTIM_OUT / "labels" / split_name
-        img_dir.mkdir(parents=True, exist_ok=True)
-        lbl_dir.mkdir(parents=True, exist_ok=True)
-
-        for i in range(n):
-            W, H = 640, 480
-            arr = np.random.randint(20, 60, (H, W, 3), dtype=np.uint8)
-            img = Image.fromarray(arr)
-            draw = ImageDraw.Draw(img)
-            # Draw 1-3 "person" blobs
-            labels = []
-            for _ in range(random.randint(1, 3)):
-                px = random.randint(50, W - 80)
-                py = random.randint(50, H - 100)
-                pw = random.randint(30, 60)
-                ph = random.randint(60, 100)
-                draw.rectangle([px, py, px + pw, py + ph], fill=(180, 120, 100))
-                cx = (px + pw / 2) / W
-                cy = (py + ph / 2) / H
-                labels.append(f"0 {cx:.6f} {cy:.6f} {pw/W:.6f} {ph/H:.6f}")
-
-            stem = f"synth_{split_name}_{i:04d}"
-            img.save(img_dir / f"{stem}.jpg")
-            (lbl_dir / f"{stem}.txt").write_text("\n".join(labels))
-
-    write_yaml(
-        DATA_ROOT / "victim.yaml",
-        {
-            "path": str(VICTIM_OUT.resolve()),
-            "train": "images/train",
-            "val":   "images/val",
-            "test":  "images/test",
-            "nc":    1,
-            "names": ["person"],
-        },
-    )
-    log("Placeholder victim dataset ready (synthetic — replace with real data for production).", "WARN")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -464,8 +410,11 @@ def prepare_damage_dataset() -> None:
             "    with their original folder structure so labels can be inferred from paths.",
             "WARN",
         )
-        _generate_damage_placeholder()
-        return
+        raise SystemExit(
+            "No real damage data found. This script no longer generates a synthetic placeholder:\n"
+            "the shipped damage model was once trained on one, scored 100% on its own noise and\n"
+            "failed on real footage. Download real data first (see scripts/training/prepare_aerial_datasets.py)."
+        )
 
     # ── Infer labels from paths ───────────────────────────────────────────
     labelled: dict[str, list[Path]] = {c: [] for c in DAMAGE_CLASSES}
@@ -526,77 +475,6 @@ def prepare_damage_dataset() -> None:
         },
     )
     log("Damage dataset prepared.", "OK")
-
-
-def _generate_damage_placeholder() -> None:
-    """Synthetic placeholder: 600 images per class (150 per split × 4)."""
-    log("Generating synthetic placeholder damage dataset (2400 images) ...")
-    try:
-        import numpy as np
-        from PIL import Image, ImageDraw
-    except ImportError:
-        log("PIL not available — cannot generate placeholder images", "ERR")
-        return
-
-    random.seed(1)
-    np.random.seed(1)
-
-    PALETTE = {
-        "flood_damage":      (20, 80, 160),
-        "fire_damage":       (200, 60, 10),
-        "structural_damage": (120, 100, 80),
-        "no_damage":         (60, 120, 60),
-    }
-    COUNTS = {"train": 420, "val": 120, "test": 60}
-
-    for split_name, per_class in COUNTS.items():
-        for cls, base_color in PALETTE.items():
-            out_dir = DAMAGE_OUT / split_name / cls
-            out_dir.mkdir(parents=True, exist_ok=True)
-            for i in range(per_class):
-                W, H = 224, 224
-                noise = np.random.randint(-30, 30, (H, W, 3), dtype=np.int16)
-                arr = np.clip(
-                    np.array(base_color, dtype=np.int16) + noise, 0, 255
-                ).astype(np.uint8)
-                img = Image.fromarray(arr)
-                draw = ImageDraw.Draw(img)
-                # Add crude visual texture per class
-                if cls == "flood_damage":
-                    for y in range(0, H, 8):
-                        draw.line([(0, y), (W, y + random.randint(-4, 4))],
-                                  fill=(30, 100, 200), width=1)
-                elif cls == "fire_damage":
-                    for _ in range(20):
-                        fx = random.randint(0, W)
-                        fy = random.randint(H // 2, H)
-                        draw.ellipse([fx, fy, fx + 12, fy + 20], fill=(255, 140, 0))
-                elif cls == "structural_damage":
-                    for _ in range(10):
-                        draw.line(
-                            [(random.randint(0, W), random.randint(0, H)),
-                             (random.randint(0, W), random.randint(0, H))],
-                            fill=(80, 60, 50), width=2,
-                        )
-                img.save(out_dir / f"synth_{i:04d}.jpg", quality=85)
-
-    write_yaml(
-        DATA_ROOT / "damage.yaml",
-        {
-            "path": str(DAMAGE_OUT.resolve()),
-            "train": "train",
-            "val":   "val",
-            "test":  "test",
-            "nc":    4,
-            "names": DAMAGE_CLASSES,
-        },
-    )
-
-    print_distribution(
-        "Synthetic class distribution",
-        {c: COUNTS["train"] + COUNTS["val"] + COUNTS["test"] for c in DAMAGE_CLASSES},
-    )
-    log("Placeholder damage dataset ready (synthetic — replace with real data for production).", "WARN")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

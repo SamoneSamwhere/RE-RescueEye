@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { MapContainer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { cn } from '../../../lib/cn'
+import { cn } from '../../lib/cn'
 import { BaseTileLayer } from './BaseTileLayer'
-import { MIN_ZOOM, viewportBounds } from '../../../lib/mapViewport'
-import type { GeoPoint } from '../../../types/geo'
+import { MIN_ZOOM, viewportBounds } from '../../lib/mapViewport'
+import type { GeoPoint } from '../../types/geo'
 
 export interface GeoRouteMapProps {
   /** The responder's own position. Undefined when location sharing has nothing to report yet. */

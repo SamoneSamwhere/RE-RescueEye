@@ -10,7 +10,7 @@ import {
   EMPTY_REGISTRATION_DATA,
 } from './registration'
 import type { DroneRegistrationData } from './registration'
-import type { User } from '../../../types/user'
+import type { User } from '../../types/user'
 
 const STEP_LABELS = ['Drone Info', 'Registration', 'Assignment', 'Review']
 const LAST_STEP = STEP_LABELS.length - 1
