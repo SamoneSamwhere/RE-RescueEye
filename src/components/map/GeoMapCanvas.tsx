@@ -10,6 +10,7 @@ import { cn } from '../../lib/cn'
 import { computeBounds } from '../../lib/mapProjection'
 import { BaseTileLayer } from './BaseTileLayer'
 import { MARKER_COLOR } from './markerStyle'
+import { RESPONDER_STATUS_LABEL } from '../../lib/missionStatus'
 import { FALLBACK_AOI, MIN_ZOOM, viewportBounds } from '../../lib/mapViewport'
 import type { MapMarker } from './types'
 
@@ -66,7 +67,7 @@ function markerLabel(marker: MapMarker, selfResponderId?: string): string {
       return `${marker.category} · ${Math.round(marker.confidence * 100)}%`
     case 'RESPONDER': {
       const name = isSelf(marker, selfResponderId) ? 'You' : marker.name
-      return marker.missionStatus ? `${name} · ${marker.missionStatus}` : name
+      return marker.missionStatus ? `${name} · ${RESPONDER_STATUS_LABEL[marker.missionStatus]}` : `${name} · Available`
     }
   }
 }
@@ -80,14 +81,22 @@ function markerLabel(marker: MapMarker, selfResponderId?: string): string {
  */
 function ViewportController({ markers }: { markers: MapMarker[] }) {
   const map = useMap()
-  const key = markers.map((m) => `${m.location.lat},${m.location.lng}`).join('|')
+  // Two keys: positions move every few seconds once responders report live GPS,
+  // and re-fitting the view on each move would yank the map away from wherever
+  // the operator panned. So the pannable area follows positions, but the view
+  // is only re-fitted when markers are added or removed.
+  const positionsKey = markers.map((m) => `${m.location.lat},${m.location.lng}`).join('|')
+  const membershipKey = markers.map((m) => m.id).join('|')
 
   useEffect(() => {
     // maxBounds is an init-only MapContainer prop, so it has to be re-applied
     // here whenever the data moves; otherwise the map stays clamped to whatever
     // was on screen at mount.
     map.setMaxBounds(viewportBounds(markers.map((m) => m.location)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionsKey])
 
+  useEffect(() => {
     // No markers yet: show the whole survey area rather than an arbitrary point.
     if (!markers.length) {
       map.fitBounds(FALLBACK_AOI, { padding: [24, 24] })
@@ -105,9 +114,9 @@ function ViewportController({ markers }: { markers: MapMarker[] }) {
       ],
       { padding: [40, 40], maxZoom: 17 },
     )
-    // `key` is the real dependency; `markers`/`map` are stable enough alongside it.
+    // `membershipKey` is the real dependency; `markers`/`map` are stable enough alongside it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
+  }, [membershipKey])
 
   // The mobile shell lays the map out inside a column that settles after the
   // first paint; without this Leaflet keeps the stale height and renders a
@@ -190,10 +199,10 @@ function ClusterLayer({ markers, selectedId, onSelect, selfResponderId }: {
 
 
 /** Colour key for the marker kinds a map can show. */
-export function MapLegend({ includeSelf = false }: { includeSelf?: boolean }) {
+export function MapLegend({ includeSelf = false, showDetections = true }: { includeSelf?: boolean; showDetections?: boolean }) {
   const entries: Array<{ color: string; label: string }> = [
     { color: MARKER_STYLE.INCIDENT.color, label: 'Confirmed incident' },
-    { color: MARKER_STYLE.DETECTION.color, label: 'Verified detection' },
+    ...(showDetections ? [{ color: MARKER_STYLE.DETECTION.color, label: 'Verified detection' }] : []),
     { color: MARKER_STYLE.RESPONDER.color, label: 'Responder' },
   ]
   if (includeSelf) entries.push({ color: SELF_STYLE.color, label: 'You' })

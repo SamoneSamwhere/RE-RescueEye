@@ -31,7 +31,7 @@ export function MissionRouteMap({ origin, destination, isEnRoute }: MissionRoute
           : 'Your location is unavailable — showing the incident location only.'}
       </p>
       <p className="text-xs text-foreground-muted">
-        Straight-line bearing, not a road route. Live turn-by-turn GPS navigation is not yet available in this preview.
+        Straight-line distance, not the road route. Navigation gives turn-by-turn directions.
       </p>
     </Panel>
   )

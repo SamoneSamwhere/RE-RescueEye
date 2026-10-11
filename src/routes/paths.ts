@@ -28,6 +28,7 @@ export const ROUTES = {
   fieldResponderProfile: '/field-responder/profile',
   fieldResponderSettings: '/field-responder/settings',
   fieldResponderMissionDetail: '/field-responder/mission/:missionId',
+  fieldResponderMissionNavigate: '/field-responder/mission/:missionId/navigate',
 } as const
 
 export function commandStaffIncidentDetailPath(incidentId: string): string {
@@ -40,4 +41,8 @@ export function systemAdminAgencyValidationDetailPath(agencyId: string): string 
 
 export function fieldResponderMissionDetailPath(missionId: string): string {
   return `/field-responder/mission/${missionId}`
+}
+
+export function fieldResponderMissionNavigatePath(missionId: string): string {
+  return `/field-responder/mission/${missionId}/navigate`
 }

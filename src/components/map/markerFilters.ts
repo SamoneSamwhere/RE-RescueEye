@@ -4,7 +4,7 @@ import type { MapMarker } from './types'
 /**
  * Filter state for the Damage Map's markers.
  *
- * Kept out of MarkerFilterBar.tsx so that file exports only its component —
+ * Kept out of MapToolbar.tsx so that file exports only its component —
  * mixing plain exports into a component module breaks Fast Refresh's ability
  * to preserve state across edits.
  *

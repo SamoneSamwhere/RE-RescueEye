@@ -28,3 +28,16 @@ export const MAP_VISIBLE_MISSION_STATUSES = new Set<MissionStatus>([
  * an in-progress mission.
  */
 export const FIELD_RESPONDER_ACTIVE_STATUSES = new Set<MissionStatus>(['ACCEPTED', 'EN_ROUTE', 'ON_SITE'])
+
+/**
+ * How a responder's status reads on the Damage Map, from their most recent
+ * mission. A completed mission means the responder has been cleared.
+ */
+export const RESPONDER_STATUS_LABEL: Record<MissionStatus, string> = {
+  PENDING: 'Alerted',
+  ACCEPTED: 'Accepted',
+  DECLINED: 'Declined',
+  EN_ROUTE: 'En Route',
+  ON_SITE: 'On Site',
+  COMPLETED: 'Cleared',
+}

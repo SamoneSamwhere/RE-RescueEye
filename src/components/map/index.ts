@@ -3,7 +3,6 @@ export { DamageMapCanvas } from './OperationalMapCanvas'
 export { GeoMapCanvas, MapLegend } from './GeoMapCanvas'
 export { GeoRouteMap } from './GeoRouteMap'
 export { MarkerDetailPanel } from './MarkerDetailPanel'
-export { MarkerFilterBar } from './MarkerFilterBar'
 export { MapToolbar } from './MapToolbar'
 export { IncidentListPanel } from './IncidentListPanel'
 export {

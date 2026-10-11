@@ -14,6 +14,12 @@ veto the casualty promotion, and the detection is still reported as a person.
 Positions are held in memory with a TTL. A stale fix is worse than none here:
 a responder who moved 200m ten minutes ago would otherwise keep vetoing
 casualties at a location they have long left.
+
+A position has a source. "device" is the responder's own phone GPS, posted by
+the Field Responder app; "console" is the last location the Command Staff
+console has on record for them. A fresh device fix always wins: the console
+reposts its roster every 30s, and must not drag a moving responder back to
+where their profile says they are.
 """
 from __future__ import annotations
 
@@ -39,6 +45,8 @@ class ResponderPosition:
     lng: float
     reported_at: float  # time.monotonic()
     name: str = ""
+    source: str = "console"  # "device" (phone GPS) or "console" (roster)
+    updated_at: float = 0.0  # time.time(), for clients that show when it was taken
 
 
 _positions: dict[str, ResponderPosition] = {}
@@ -54,13 +62,27 @@ def haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return 2 * EARTH_RADIUS_M * math.asin(min(1.0, math.sqrt(a)))
 
 
-def report(responder_id: str, lat: float, lng: float, name: str = "") -> None:
-    """Records or refreshes one responder's position."""
+def report(responder_id: str, lat: float, lng: float, name: str = "",
+           source: str = "console") -> ResponderPosition | None:
+    """
+    Records or refreshes one responder's position.
+
+    Returns the stored position, or None when a console report was ignored
+    because the responder's own device has reported within the TTL.
+    """
+    now = time.monotonic()
     with _lock:
-        _positions[responder_id] = ResponderPosition(
+        current = _positions.get(responder_id)
+        if (source == "console" and current is not None and current.source == "device"
+                and now - current.reported_at <= RESPONDER_TTL_S):
+            return None
+        position = ResponderPosition(
             responder_id=responder_id, lat=lat, lng=lng,
-            reported_at=time.monotonic(), name=name,
+            reported_at=now, name=name or (current.name if current else ""),
+            source=source, updated_at=time.time(),
         )
+        _positions[responder_id] = position
+        return position
 
 
 def active() -> list[ResponderPosition]:

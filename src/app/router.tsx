@@ -21,6 +21,7 @@ import { FieldResponderMapPage } from '../pages/FieldResponderMapPage'
 import { FieldResponderProfilePage } from '../pages/FieldResponderProfilePage'
 import { FieldResponderSettingsPage } from '../pages/FieldResponderSettingsPage'
 import { FieldResponderMissionDetailPage } from '../pages/FieldResponderMissionDetailPage'
+import { FieldResponderNavigationPage } from '../pages/FieldResponderNavigationPage'
 import { AgencyAdminDashboardPage } from '../pages/AgencyAdminDashboardPage'
 import { AgencyAdminUserCreationPage } from '../pages/AgencyAdminUserCreationPage'
 import { AgencyAdminAccountStatusPage } from '../pages/AgencyAdminAccountStatusPage'
@@ -124,6 +125,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.fieldResponderProfile, element: <FieldResponderProfilePage /> },
           { path: ROUTES.fieldResponderSettings, element: <FieldResponderSettingsPage /> },
           { path: ROUTES.fieldResponderMissionDetail, element: <FieldResponderMissionDetailPage /> },
+          { path: ROUTES.fieldResponderMissionNavigate, element: <FieldResponderNavigationPage /> },
         ],
       },
     ],

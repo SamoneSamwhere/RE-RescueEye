@@ -69,4 +69,13 @@ export const mockMissions: Mission[] = [
     onSiteAt: '2026-08-19T17:05:00Z',
     completedAt: '2026-08-19T18:05:00Z',
   },
+  // Demo mission — dispatched to the Demo Responder, awaiting Accept.
+  {
+    id: 'mission-demo',
+    incidentId: 'incident-demo',
+    responderUserId: 'usr-demo-responder',
+    dispatchedByUserId: 'usr-command-staff-1',
+    status: 'PENDING',
+    dispatchedAt: '2026-10-11T07:56:00Z',
+  },
 ]

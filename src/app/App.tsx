@@ -4,6 +4,7 @@ import { queryClient } from './queryClient'
 import { router } from './router'
 import { AuthProvider } from '../features/auth'
 import { MissionStoreProvider } from '../state/MissionStore'
+import { LiveUpdatesProvider } from '../state/LiveUpdatesStore'
 import { UserStoreProvider } from '../state/UserStore'
 import { AgencyStoreProvider } from '../state/AgencyStore'
 import { IncidentStoreProvider } from '../state/IncidentStore'
@@ -23,9 +24,11 @@ function App() {
                 <DetectionStoreProvider>
                   <IncidentStoreProvider>
                     <MissionStoreProvider>
-                      <NotificationStoreProvider>
-                        <RouterProvider router={router} />
-                      </NotificationStoreProvider>
+                      <LiveUpdatesProvider>
+                        <NotificationStoreProvider>
+                          <RouterProvider router={router} />
+                        </NotificationStoreProvider>
+                      </LiveUpdatesProvider>
                     </MissionStoreProvider>
                   </IncidentStoreProvider>
                 </DetectionStoreProvider>

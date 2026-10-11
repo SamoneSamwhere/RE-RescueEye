@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPinned, ArrowRight } from 'lucide-react'
-import { Panel, EmptyState, PriorityBadge, DetectionStatusBadge, MissionStatusBadge, Badge } from '../ui'
+import { Panel, EmptyState, PriorityBadge, DetectionStatusBadge, Badge } from '../ui'
 import { formatDateTime } from '../../lib/formatDateTime'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
+import { RESPONDER_STATUS_LABEL } from '../../lib/missionStatus'
 import { commandStaffIncidentDetailPath } from '../../routes/paths'
 import type { MapMarker } from './types'
+import type { MissionStatus } from '../../types/mission'
 
 interface DetailRowProps {
   label: string
@@ -19,6 +21,15 @@ function DetailRow({ label, children }: DetailRowProps) {
       <span className="text-sm text-foreground">{children}</span>
     </div>
   )
+}
+
+const RESPONDER_STATUS_TONE: Record<MissionStatus, 'neutral' | 'success' | 'warning' | 'info'> = {
+  PENDING: 'warning',
+  ACCEPTED: 'info',
+  DECLINED: 'neutral',
+  EN_ROUTE: 'info',
+  ON_SITE: 'warning',
+  COMPLETED: 'success',
 }
 
 interface MarkerDetailPanelProps {
@@ -108,10 +119,10 @@ export function MarkerDetailPanel({ marker, showIncidentLink = true }: MarkerDet
         </DetailRow>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-            Mission Status
+            Status
           </span>
           {marker.missionStatus ? (
-            <MissionStatusBadge status={marker.missionStatus} />
+            <Badge tone={RESPONDER_STATUS_TONE[marker.missionStatus]}>{RESPONDER_STATUS_LABEL[marker.missionStatus]}</Badge>
           ) : (
             <Badge tone="neutral">Available</Badge>
           )}

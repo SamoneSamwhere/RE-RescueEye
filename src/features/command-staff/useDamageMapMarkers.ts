@@ -4,6 +4,7 @@ import { useAuth } from '../auth'
 import { mockUsers } from '../../data/mockUsers'
 import { MAP_VISIBLE_MISSION_STATUSES } from '../../lib/missionStatus'
 import { useCommandStaffData } from './CommandStaffDataProvider'
+import { useLiveUpdates } from '../../state/LiveUpdatesStore'
 
 /**
  * Every marker on the Command Staff Damage Map.
@@ -16,6 +17,7 @@ import { useCommandStaffData } from './CommandStaffDataProvider'
 export function useDamageMapMarkers(): MapMarker[] {
   const { session } = useAuth()
   const { detections, incidents, missions } = useCommandStaffData()
+  const { positions } = useLiveUpdates()
   const agencyId = session?.agencyId
 
   return useMemo(() => {
@@ -66,9 +68,12 @@ export function useDamageMapMarkers(): MapMarker[] {
         detectedAt: detection.detectedAt,
       }))
 
+    // A responder's live GPS (pushed over WebSocket from their device) wins over
+    // the location on their profile, which is only a fallback until they report.
     const responderMarkers: MapMarker[] = mockUsers
-      .filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId && u.currentLocation)
+      .filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId && (positions[u.id] || u.currentLocation))
       .map((responder) => {
+        const live = positions[responder.id]
         const latestMission = missions
           .filter((m) => m.responderUserId === responder.id)
           .sort((a, b) => b.dispatchedAt.localeCompare(a.dispatchedAt))[0]
@@ -81,7 +86,7 @@ export function useDamageMapMarkers(): MapMarker[] {
         return {
           kind: 'RESPONDER' as const,
           id: `responder-marker-${responder.id}`,
-          location: responder.currentLocation!,
+          location: live ? { lat: live.lat, lng: live.lng } : responder.currentLocation!,
           responderId: responder.id,
           name: responder.name,
           accountStatus: responder.accountStatus,
@@ -92,5 +97,5 @@ export function useDamageMapMarkers(): MapMarker[] {
       })
 
     return [...incidentMarkers, ...detectionMarkers, ...responderMarkers]
-  }, [detections, incidents, missions, agencyId])
+  }, [detections, incidents, missions, agencyId, positions])
 }
