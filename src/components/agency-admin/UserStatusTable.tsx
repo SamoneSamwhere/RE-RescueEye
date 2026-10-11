@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState } from '../ui'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState, Pagination } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { USER_ROLE_LABEL } from '../../lib/labels'
 import { formatDateTime } from '../../lib/formatDateTime'
 import { cn } from '../../lib/cn'
@@ -16,12 +17,14 @@ interface UserStatusTableProps {
 }
 
 export function UserStatusTable({ users, onSetStatus, highlightUserId }: UserStatusTableProps) {
+  const { pageItems, pagination } = usePagination(users)
+
   if (users.length === 0) {
     return <EmptyState icon={Users} title="No staff yet" description="Use Add Staff to create your first account." />
   }
 
   return (
-    <Table>
+    <Table footer={<Pagination {...pagination} />}>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -34,7 +37,7 @@ export function UserStatusTable({ users, onSetStatus, highlightUserId }: UserSta
         </TableRow>
       </TableHeader>
       <TableBody>
-        {users.map((user) => (
+        {pageItems.map((user) => (
           <TableRow
             key={user.id}
             className={cn(

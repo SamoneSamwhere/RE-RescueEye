@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDown, ArrowUp, Download, ScrollText, Search, X } from 'lucide-react'
-import { EmptyState, Badge, Button } from '../ui'
+import { EmptyState, Badge, Button, Pagination } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { cn } from '../../lib/cn'
 import { ACTIVITY_KIND_LABEL } from '../../lib/incidentEvents'
 import { commandStaffIncidentDetailPath } from '../../routes/paths'
@@ -63,8 +64,6 @@ export function ActivityLogFeed({ events, selectedId, onSelect }: ActivityLogFee
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [newestFirst, setNewestFirst] = useState(true)
-  const [pageSize, setPageSize] = useState(PAGE_SIZES[0])
-  const [page, setPage] = useState(0)
 
   const counts = useMemo(() => {
     const result = {} as Record<ActivityKind, number>
@@ -91,16 +90,13 @@ export function ActivityLogFeed({ events, selectedId, onSelect }: ActivityLogFee
     )
   }, [events, query, kinds, from, to, newestFirst])
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const currentPage = Math.min(page, pageCount - 1)
-  const start = currentPage * pageSize
-  const visible = filtered.slice(start, start + pageSize)
+  const { pageItems: visible, pagination, resetPage } = usePagination(filtered, PAGE_SIZES)
   const hasFilters = query !== '' || kinds.length > 0 || from !== '' || to !== ''
 
   // Any change to what is shown returns to the first page.
   function update(apply: () => void) {
     apply()
-    setPage(0)
+    resetPage()
   }
 
   function toggleKind(kind: ActivityKind) {
@@ -250,40 +246,7 @@ export function ActivityLogFeed({ events, selectedId, onSelect }: ActivityLogFee
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-2 text-sm text-foreground-secondary">
-            <span className="tabular-nums">
-              {start + 1}–{Math.min(start + pageSize, filtered.length)} of {filtered.length}
-            </span>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5">
-                Rows
-                <select
-                  className={cn(fieldClass, 'h-8')}
-                  value={pageSize}
-                  onChange={(e) => update(() => setPageSize(Number(e.target.value)))}
-                >
-                  {PAGE_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage >= pageCount - 1}
-                  onClick={() => setPage(currentPage + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
+          <Pagination {...pagination} />
         </div>
       )}
     </div>

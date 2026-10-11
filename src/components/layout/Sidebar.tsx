@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LogOut, Moon, Settings, ShieldAlert, Sun, X } from 'lucide-react'
+import { LogOut, Moon, Settings, Sun, X } from 'lucide-react'
+import logo from '../../assets/logo-mark.png'
+import { useAuth } from '../../features/auth'
 import type { NavItem } from '../../types/nav'
 import { cn } from '../../lib/cn'
 import { useTheme } from '../../features/theme'
-import { useAuth } from '../../features/auth'
 import { settingsRouteFor } from '../../routes/paths'
 
 interface SidebarProps {
@@ -65,10 +66,12 @@ export function Sidebar({ navItems, open, onClose, onLogout }: SidebarProps) {
             isDark ? 'border-white/10' : 'border-border',
           )}
         >
-          <ShieldAlert className="size-5 shrink-0 text-accent" />
+          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-white p-1">
+            <img src={logo} alt="" className="size-full object-contain" />
+          </span>
           <span
             className={cn(
-              'whitespace-nowrap text-sm font-semibold tracking-tight',
+              'whitespace-nowrap text-lg font-semibold tracking-tight',
               isDark ? 'text-foreground-inverse' : 'text-foreground',
             )}
           >

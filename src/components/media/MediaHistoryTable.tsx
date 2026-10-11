@@ -1,5 +1,6 @@
 import { Archive, Radio, Upload } from 'lucide-react'
-import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, EmptyState } from '../ui'
+import { Panel, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, EmptyState, Pagination } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { formatDateTime } from '../../lib/formatDateTime'
 import type { MediaHistoryItem } from './types'
 
@@ -8,12 +9,14 @@ interface MediaHistoryTableProps {
 }
 
 export function MediaHistoryTable({ items }: MediaHistoryTableProps) {
+  const { pageItems, pagination } = usePagination(items)
+
   return (
     <Panel title="Media Storage & History">
       {items.length === 0 ? (
         <EmptyState icon={Archive} title="No media stored yet" />
       ) : (
-        <Table>
+        <Table footer={<Pagination {...pagination} />}>
           <TableHeader>
             <TableRow>
               <TableHead>Type</TableHead>
@@ -23,7 +26,7 @@ export function MediaHistoryTable({ items }: MediaHistoryTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => (
+            {pageItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
                   <Badge tone={item.sourceType === 'LIVE_FEED' ? 'info' : 'neutral'}>

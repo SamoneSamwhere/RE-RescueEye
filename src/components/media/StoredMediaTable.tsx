@@ -13,7 +13,9 @@ import {
   Button,
   EmptyState,
   LoadingState,
+  Pagination,
 } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { formatDateTime } from '../../lib/formatDateTime'
 import { mediaThumbnailUrl, mediaFileUrl } from '../../features/media'
 import type { StoredMedia } from '../../types/media'
@@ -75,6 +77,7 @@ export function StoredMediaTable({
   // decoding at once on a laptop already running detection is a real cost,
   // and nobody watches two clips simultaneously.
   const [playingId, setPlayingId] = useState<string | null>(null)
+  const { pageItems, pagination } = usePagination(items)
 
   return (
     <Panel title="Media Storage & History" actions={actions}>
@@ -117,7 +120,7 @@ export function StoredMediaTable({
       ) : (
         <>
         {filterBar}
-        <Table>
+        <Table footer={<Pagination {...pagination} />}>
           <TableHeader>
             <TableRow>
               <TableHead>Clip</TableHead>
@@ -132,7 +135,7 @@ export function StoredMediaTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
+            {pageItems.map((item) => {
               const isPlaying = playingId === item.id
               return (
               <Fragment key={item.id}>

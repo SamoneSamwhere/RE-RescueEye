@@ -1,5 +1,6 @@
 import { History } from 'lucide-react'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, MissionStatusBadge, EmptyState } from '../ui'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, PriorityBadge, MissionStatusBadge, EmptyState, Pagination } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { formatDateTime } from '../../lib/formatDateTime'
 import type { IncidentHistoryItem } from '../../features/agency-admin'
 
@@ -8,6 +9,8 @@ interface IncidentHistoryTableProps {
 }
 
 export function IncidentHistoryTable({ incidents }: IncidentHistoryTableProps) {
+  const { pageItems, pagination } = usePagination(incidents)
+
   if (incidents.length === 0) {
     return (
       <EmptyState
@@ -19,7 +22,7 @@ export function IncidentHistoryTable({ incidents }: IncidentHistoryTableProps) {
   }
 
   return (
-    <Table>
+    <Table footer={<Pagination {...pagination} />}>
       <TableHeader>
         <TableRow>
           <TableHead>Responder</TableHead>
@@ -30,7 +33,7 @@ export function IncidentHistoryTable({ incidents }: IncidentHistoryTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {incidents.map((incident) => (
+        {pageItems.map((incident) => (
           <TableRow key={incident.id}>
             <TableCell className="font-medium text-foreground">{incident.responderName}</TableCell>
             <TableCell>{incident.incidentPriority ? <PriorityBadge priority={incident.incidentPriority} /> : '—'}</TableCell>

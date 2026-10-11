@@ -1,4 +1,4 @@
-import { ShieldAlert } from 'lucide-react'
+import logo from '../../assets/logo-mark.png'
 import { NotificationArea } from './NotificationArea'
 import { ThemeToggle } from '../landing/ThemeToggle'
 import type { AppNotification } from '../../types/notification'
@@ -21,8 +21,10 @@ export function MobileTopBar({ notifications = [] }: MobileTopBarProps) {
       )}
     >
       <div className="flex items-center gap-2">
-        <ShieldAlert className="size-5 text-accent" />
-        <span className={cn('text-sm font-semibold tracking-tight', isDark ? 'text-foreground-inverse' : 'text-foreground')}>
+        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-white p-1">
+          <img src={logo} alt="" className="size-full object-contain" />
+        </span>
+        <span className={cn('text-lg font-semibold tracking-tight', isDark ? 'text-foreground-inverse' : 'text-foreground')}>
           RescueEye
         </span>
       </div>

@@ -1,5 +1,6 @@
 import { Building2 } from 'lucide-react'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState } from '../ui'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, EmptyState, Pagination } from '../ui'
+import { usePagination } from '../../hooks/usePagination'
 import { formatDateTime } from '../../lib/formatDateTime'
 import type { Agency, AgencyAccountStatus } from '../../types/agency'
 
@@ -9,12 +10,14 @@ interface AgencyStatusTableProps {
 }
 
 export function AgencyStatusTable({ agencies, onSetStatus }: AgencyStatusTableProps) {
+  const { pageItems, pagination } = usePagination(agencies)
+
   if (agencies.length === 0) {
     return <EmptyState icon={Building2} title="No approved agencies yet" />
   }
 
   return (
-    <Table>
+    <Table footer={<Pagination {...pagination} />}>
       <TableHeader>
         <TableRow>
           <TableHead>Agency</TableHead>
@@ -25,7 +28,7 @@ export function AgencyStatusTable({ agencies, onSetStatus }: AgencyStatusTablePr
         </TableRow>
       </TableHeader>
       <TableBody>
-        {agencies.map((agency) => (
+        {pageItems.map((agency) => (
           <TableRow key={agency.id}>
             <TableCell className="font-medium text-foreground">{agency.name}</TableCell>
             <TableCell>{agency.contactEmail}</TableCell>

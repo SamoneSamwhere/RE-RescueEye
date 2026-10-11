@@ -1,10 +1,18 @@
-import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react'
+import type { HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
-export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
+interface TableProps extends HTMLAttributes<HTMLTableElement> {
+  /** Rendered inside the table's border, below the rows — e.g. a Pagination bar. */
+  footer?: ReactNode
+}
+
+export function Table({ className, footer, ...props }: TableProps) {
   return (
-    <div className="w-full overflow-x-auto rounded-md border border-border">
-      <table className={cn('w-full border-collapse text-sm', className)} {...props} />
+    <div className="w-full overflow-hidden rounded-md border border-border">
+      <div className="w-full overflow-x-auto">
+        <table className={cn('w-full border-collapse text-sm', className)} {...props} />
+      </div>
+      {footer}
     </div>
   )
 }
