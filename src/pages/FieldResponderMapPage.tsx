@@ -125,7 +125,7 @@ export function FieldResponderMapPage() {
             to={fieldResponderMissionDetailPath(myMission.id)}
             className="flex items-center justify-center gap-1 text-sm font-medium text-accent hover:underline"
           >
-            Open mission details
+            Open incident details
             <ChevronRight className="size-4" />
           </Link>
         ) : null}

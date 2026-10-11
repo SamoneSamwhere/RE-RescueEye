@@ -254,7 +254,7 @@ export function FieldResponderNavigationPage() {
           className="inline-flex w-fit items-center gap-1 rounded-full bg-surface/90 px-3 py-1 text-xs font-medium text-foreground shadow-panel backdrop-blur hover:bg-surface"
         >
           <ChevronLeft className="size-3.5" />
-          Mission
+          Incident Details
         </Link>
         <div className="flex items-center gap-3 rounded-lg bg-accent px-4 py-3 text-foreground-inverse shadow-xl">
           <StepIcon className="size-9 shrink-0" />

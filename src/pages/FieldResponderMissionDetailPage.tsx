@@ -60,8 +60,8 @@ export function FieldResponderMissionDetailPage() {
           <Card className="px-4 py-3">
             <EmptyState
               icon={Flag}
-              title="Mission not available"
-              description="This mission is no longer active. Return to Home to see your current status."
+              title="Incident not available"
+              description="This incident is no longer assigned to you. Return to Home to see your current status."
             />
           </Card>
         </div>

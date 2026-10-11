@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Radar, MapPin, Navigation, ChevronRight } from 'lucide-react'
 import { MobileShell } from '../components/layout'
 import { Card, StatusIndicator, PriorityBadge, MissionStatusBadge, EmptyState } from '../components/ui'
@@ -17,6 +17,7 @@ import { fieldResponderMissionDetailPath } from '../routes/paths'
 
 export function FieldResponderHomePage() {
   const { session } = useAuth()
+  const navigate = useNavigate()
   const { missions, acceptMission, declineMission, location } = useFieldResponderData()
   const { notifications: allNotifications } = useNotificationStore()
   const { incidents } = useIncidentStore()
@@ -55,7 +56,10 @@ export function FieldResponderHomePage() {
                 location: pendingDetection.location,
                 dispatchedAt: pendingMission.dispatchedAt,
               }}
-              onAccept={() => acceptMission(pendingMission.id)}
+              onAccept={() => {
+                acceptMission(pendingMission.id)
+                navigate(fieldResponderMissionDetailPath(pendingMission.id))
+              }}
               onDecline={() => declineMission(pendingMission.id)}
             />
           ) : !activeMission ? (
@@ -115,7 +119,7 @@ export function FieldResponderHomePage() {
                     Dispatched {formatDateTime(activeMission.dispatchedAt)}
                   </p>
                   <p className="flex items-center gap-1 text-xs font-medium text-accent">
-                    View mission details
+                    View incident details
                     <ChevronRight className="size-3.5" />
                   </p>
                 </Card>
