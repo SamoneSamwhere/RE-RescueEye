@@ -1,6 +1,8 @@
-import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, BarChart3, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Sparkles, ShieldCheck, MapPin, Clock, Gauge, Tag, BarChart3, AlertCircle, ArrowRight } from 'lucide-react'
 import { Panel, DetectionStatusBadge, PriorityBadge, EmptyState, DetailField } from '../ui'
 import { formatDateTime } from '../../lib/formatDateTime'
+import { commandStaffIncidentDetailPath } from '../../routes/paths'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../../lib/labels'
 import { DetectionMediaPreview } from '../detections/DetectionMediaPreview'
 import type { Detection } from '../../types/detection'
@@ -87,10 +89,14 @@ export function LogDetailPanel({ detection, incident, reviewerName, mediaAssetId
             ) : null}
 
             {detection.validationStatus === 'VERIFIED' && incident ? (
-              <div className="mt-1 flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-                <AlertCircle className="size-4 shrink-0" />
-                Confirmed Incident {incident.id} created
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-foreground-secondary">
+                <ShieldCheck className="size-4 shrink-0 text-success" />
+                Linked incident
                 <PriorityBadge priority={incident.priority} />
+                <Link to={commandStaffIncidentDetailPath(incident.id)} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                  View incident
+                  <ArrowRight className="size-3.5" />
+                </Link>
               </div>
             ) : null}
 

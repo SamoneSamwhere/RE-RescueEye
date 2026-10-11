@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Send } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import {
@@ -12,6 +11,7 @@ import {
 import type { EnrichedDetection, VerifyDispatchSubmit } from '../components/detections'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
+import { useToast } from '../features/toast'
 import { useResponderCandidates } from '../hooks/useResponderCandidates'
 import { mockDrones } from '../data/mockDrones'
 import { mockUsers } from '../data/mockUsers'
@@ -91,18 +91,17 @@ export function CommandStaffDetectionReviewPage() {
   // Both decisions happen in a window over the page, so the evidence stays put.
   const responderCandidates = useResponderCandidates(selectedDetection, session?.agencyId, incidents, missions)
   const [dialog, setDialog] = useState<'verify' | 'dispatch' | 'reject' | null>(null)
-  const [outcome, setOutcome] = useState<string | null>(null)
+  const toast = useToast()
 
   useEffect(() => {
     setDialog(null)
-    setOutcome(null)
   }, [selectedId])
 
   const team = linkedIncident ? responseTeamFor(missions, linkedIncident.id) : null
   const nameOf = (userId: string) => mockUsers.find((u) => u.id === userId)?.name ?? 'Unknown'
   const teamMemberNames = team ? team.members.map((m) => nameOf(m.responderUserId)) : []
 
-  /** Alerts responders for an incident and describes what happened, for the banner. */
+  /** Alerts responders for an incident and describes what happened, for the toast. */
   function alert(incidentId: string, responderIds: string[]): string | null {
     if (responderIds.length === 0) return null
     const dispatched = dispatchResponders(incidentId, responderIds)
@@ -117,19 +116,24 @@ export function CommandStaffDetectionReviewPage() {
     if (!selectedDetection) return
     const incidentId = verifyDetection(selectedDetection.id, priority, notes)
     if (!incidentId) return
-    setOutcome(alert(incidentId, responderIds) ?? `Verified — incident ${incidentId} created. No responders alerted yet.`)
+    toast.success(`Confirmed Incident ${incidentId} created.`, 'Detection verified')
+    const alerted = alert(incidentId, responderIds)
+    if (alerted) toast.success(alerted, 'Responders alerted')
+    else toast.info('No responders alerted yet — use Alert Responders when you are ready.')
     setDialog(null)
   }
 
   function handleDispatchSubmit({ responderIds }: VerifyDispatchSubmit) {
     if (!linkedIncident) return
-    setOutcome(alert(linkedIncident.id, responderIds))
+    const alerted = alert(linkedIncident.id, responderIds)
+    if (alerted) toast.success(alerted, 'Responders alerted')
     setDialog(null)
   }
 
   function handleReject(notes: string) {
     if (!selectedDetection) return
     rejectDetection(selectedDetection.id, notes)
+    toast.info('No operational incident was created.', 'Detection rejected')
     setDialog(null)
   }
 
@@ -146,13 +150,6 @@ export function CommandStaffDetectionReviewPage() {
       />
 
       <div className="flex min-h-0 flex-col gap-4 px-4 py-4 xl:flex-1">
-        {outcome ? (
-          <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-            <Send className="size-4 shrink-0" />
-            {outcome}
-          </div>
-        ) : null}
-
         <Reveal className="grid grid-cols-1 gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] xl:grid-rows-[minmax(0,1fr)]">
           <DetectionDetailPanel
             key={selectedDetection?.id ?? 'none'}

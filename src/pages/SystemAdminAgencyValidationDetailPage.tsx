@@ -5,7 +5,6 @@ import {
   Briefcase,
   Building2,
   Check,
-  CheckCircle2,
   Clock,
   Globe,
   Mail,
@@ -22,6 +21,7 @@ import { Reveal } from '../components/landing/Reveal'
 import { Badge, Button, DetailField, EmptyState, Modal, Panel } from '../components/ui'
 import { AgencyDocumentCard, AgencyDocumentViewer } from '../components/system-admin'
 import { useSystemAdminData } from '../features/system-admin'
+import { useToast } from '../features/toast'
 import { DOCUMENT_CATALOGUE, categoryForType, documentsFor } from '../components/landing/registration/types'
 import { formatDateTime } from '../lib/formatDateTime'
 import { AGENCY_REGISTRATION_STATUS_LABEL, AGENCY_REGISTRATION_STATUS_TONE } from '../lib/labels'
@@ -37,7 +37,7 @@ export function SystemAdminAgencyValidationDetailPage() {
 
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
   const [reasonText, setReasonText] = useState('')
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const toast = useToast()
   const [viewerStartIndex, setViewerStartIndex] = useState<number | null>(null)
 
   if (!agency) {
@@ -62,18 +62,18 @@ export function SystemAdminAgencyValidationDetailPage() {
     if (!agency) return
     if (confirmAction === 'approve') {
       approveAgency(agency.id)
-      setSuccessMessage(`${agency.name} has been approved.`)
+      toast.success(`${agency.name} has been approved.`, 'Registration approved')
     } else if (confirmAction === 'reject') {
       if (!reasonText.trim()) return
       rejectAgency(agency.id, reasonText.trim())
-      setSuccessMessage(`${agency.name}'s registration has been rejected.`)
+      toast.info(`${agency.name}'s registration has been rejected.`, 'Registration rejected')
     } else if (confirmAction === 'resubmission') {
       if (!reasonText.trim()) return
       requestResubmission(agency.id, reasonText.trim())
-      setSuccessMessage(`${agency.name} has been asked to resubmit corrected information.`)
+      toast.info(`${agency.name} has been asked to resubmit corrected information.`, 'Resubmission requested')
     } else if (confirmAction === 'reopen') {
       resubmitAgency(agency.id)
-      setSuccessMessage(`${agency.name}'s registration has been reopened for review.`)
+      toast.info(`${agency.name}'s registration has been reopened for review.`, 'Registration reopened')
     }
     closeConfirm()
   }
@@ -108,13 +108,6 @@ export function SystemAdminAgencyValidationDetailPage() {
       />
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        {successMessage ? (
-          <Reveal className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg motion-safe:animate-fade-in">
-            <CheckCircle2 className="size-4 shrink-0" />
-            {successMessage}
-          </Reveal>
-        ) : null}
-
         <Reveal className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface px-4 py-3 shadow-panel">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={AGENCY_REGISTRATION_STATUS_TONE[agency.registrationStatus]}>

@@ -331,6 +331,16 @@
   }
 }
 
+/* Toast auto-dismiss countdown bar (features/toast). */
+@keyframes toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes shake {
   10%,
   90% {

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { ThemeProvider, useTheme } from '../features/theme'
+import { ToastProvider } from '../features/toast'
 
 /**
  * Public pages get their own page-in fade via PublicLayout; authenticated role dashboards get
@@ -12,7 +13,9 @@ function ThemedRootLayout() {
 
   return (
     <div data-theme={theme} className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <Outlet />
+      <ToastProvider>
+        <Outlet />
+      </ToastProvider>
     </div>
   )
 }

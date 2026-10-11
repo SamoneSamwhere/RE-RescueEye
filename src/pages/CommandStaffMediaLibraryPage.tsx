@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
 import { Button } from '../components/ui'
@@ -15,6 +15,7 @@ import { UploadedFeedsSection } from '../components/media/UploadedFeedsSection'
 import type { MediaFilters } from '../components/media'
 import { useAuth } from '../features/auth'
 import { useCommandStaffData } from '../features/command-staff'
+import { useToast } from '../features/toast'
 import { mockUsers } from '../data/mockUsers'
 import { useMediaLibrary, useUploadMedia, useCaptureFrame, useDeleteMedia } from '../features/media'
 import { useMonitorMedia } from '../features/media/useFeeds'
@@ -31,7 +32,7 @@ export function CommandStaffMediaLibraryPage() {
 
   const agencyId = session?.agencyId
 
-  const [uploadedName, setUploadedName] = useState<string | null>(null)
+  const toast = useToast()
   const [reviewingId, setReviewingId] = useState<string | null>(null)
   const [addVideoOpen, setAddVideoOpen] = useState(false)
   const [filters, setFilters] = useState<MediaFilters>(EMPTY_MEDIA_FILTERS)
@@ -152,7 +153,7 @@ export function CommandStaffMediaLibraryPage() {
       },
       {
         onSuccess: (stored) => {
-          setUploadedName(stored.original_name)
+          toast.success(`${stored.original_name} was uploaded and stored for later review.`, 'Video uploaded')
           setAddVideoOpen(false)
         },
       },
@@ -195,13 +196,6 @@ export function CommandStaffMediaLibraryPage() {
           <p className="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger-fg">
             {monitorMedia.error.message}
           </p>
-        ) : null}
-
-        {uploadedName ? (
-          <div className="flex items-center gap-2 rounded-md border border-success-border bg-success-bg px-3 py-2 text-sm text-success-fg">
-            <CheckCircle2 className="size-4 shrink-0" />
-            <span className="truncate">{uploadedName} was uploaded and stored for later review.</span>
-          </div>
         ) : null}
 
         <Reveal>
