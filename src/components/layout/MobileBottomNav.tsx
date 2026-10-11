@@ -15,19 +15,27 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
   return (
     <nav
       className={cn(
-        'sticky bottom-0 z-10 flex h-16 shrink-0 items-stretch border-t',
-        isDark ? 'border-white/10 bg-surface-inverse' : 'border-border bg-surface',
+        'sticky bottom-0 z-10 flex shrink-0 items-stretch gap-1 border-t px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur',
+        isDark ? 'border-white/10 bg-surface-inverse/95' : 'border-border bg-surface/95',
       )}
     >
-      {items.map((item) => {
+      {items.map((item, index) => {
         const Icon = item.icon
-        const isActive = location.pathname === item.href
+        // A page under a tab keeps that tab lit; anything else under the role's
+        // root (e.g. a mission or Settings) belongs to the first tab, Home.
+        const matches = (href: string) => location.pathname === href || location.pathname.startsWith(`${href}/`)
+        const isActive =
+          index === 0
+            ? location.pathname === item.href ||
+              (matches(item.href) && !items.slice(1).some((other) => matches(other.href)))
+            : matches(item.href)
         return (
           <Link
             key={item.href}
             to={item.href}
+            aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors',
+              'group flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors',
               isActive
                 ? 'text-accent'
                 : isDark
@@ -35,8 +43,17 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
                   : 'text-foreground-muted hover:text-foreground-secondary',
             )}
           >
-            {Icon ? <Icon className="size-5" /> : null}
-            {item.label}
+            {Icon ? (
+              <span
+                className={cn(
+                  'flex h-8 w-14 items-center justify-center rounded-full transition-colors',
+                  isActive ? 'bg-accent/15' : 'group-hover:bg-surface-secondary/40',
+                )}
+              >
+                <Icon className={cn('size-5 transition-transform', isActive && 'scale-110')} />
+              </span>
+            ) : null}
+            <span className={cn(isActive && 'font-semibold')}>{item.label}</span>
           </Link>
         )
       })}

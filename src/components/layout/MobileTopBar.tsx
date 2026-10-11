@@ -1,6 +1,5 @@
 import logo from '../../assets/logo-mark.png'
 import { NotificationArea } from './NotificationArea'
-import { ThemeToggle } from '../landing/ThemeToggle'
 import type { AppNotification } from '../../types/notification'
 import { useTheme } from '../../features/theme'
 import { cn } from '../../lib/cn'
@@ -29,7 +28,6 @@ export function MobileTopBar({ notifications = [] }: MobileTopBarProps) {
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <ThemeToggle tone="adaptive" />
         <NotificationArea notifications={notifications} />
       </div>
     </header>
