@@ -5,6 +5,7 @@ import { Building2, CheckCircle2, LogIn } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
 import { Field, Input, Button } from '../components/ui'
 import { AuthPageShell, Reveal } from '../components/landing'
+import { AuthCardDecor } from '../components/landing/AuthCardDecor'
 import {
   RegistrationStepper,
   OrganizationDetailsStep,
@@ -133,6 +134,15 @@ function validateDocumentsStep(
 }
 
 const MOBILE_QUERY = '(max-width: 1023px)'
+
+/**
+ * Sign-in fields stand out from the card: a fill a shade lighter than the card
+ * (a foreground tint, so it works in both themes — the default input fill is
+ * darker than the card in dark mode), a clearly visible border, and a little
+ * more height for a primary form.
+ */
+const SIGN_IN_INPUT_CLASS =
+  'h-11 border-foreground-muted/70 bg-foreground/[0.06] px-3 text-base placeholder:text-foreground-secondary/60 hover:border-foreground-muted focus-visible:border-accent'
 
 export function AuthPage() {
   const { login, session } = useAuth()
@@ -345,6 +355,7 @@ export function AuthPage() {
       <Reveal className="flex w-full flex-col">
         <div className={cn('mx-auto w-full motion-safe:transition-[max-width,height] motion-safe:duration-300 motion-safe:ease-in-out', cardWidthClass, cardHeightClass)}>
           <div className="relative h-full overflow-hidden rounded-2xl border border-border bg-surface shadow-modal">
+          <AuthCardDecor />
           <div className="relative flex h-full flex-col lg:flex-row">
             {/* Sign in slot — always shown on mobile, where it's the only slot in the row.
                 On desktop it collapses to zero width in signup mode (mirroring the sign-up slot below) since
@@ -378,7 +389,7 @@ export function AuthPage() {
                     type="email"
                     autoComplete="username"
                     placeholder="name@agency.org"
-                    className="bg-surface-secondary"
+                    className={SIGN_IN_INPUT_CLASS}
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
@@ -393,7 +404,7 @@ export function AuthPage() {
                     type="password"
                     autoComplete="current-password"
                     placeholder="Enter your password"
-                    className="bg-surface-secondary"
+                    className={SIGN_IN_INPUT_CLASS}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
@@ -513,7 +524,7 @@ export function AuthPage() {
                 two content slots reserve lg:pr-20 / lg:pl-20 so it doesn't overlap them once at rest. */}
             <div
               className={cn(
-                'absolute inset-y-0 z-10 hidden w-20 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#172554] via-[#0f1f46] to-[#08152f] text-center motion-safe:transition-[left] motion-safe:duration-500 motion-safe:ease-in-out lg:flex',
+                'absolute inset-y-0 z-10 hidden w-20 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#172554] text-center motion-safe:transition-[left] motion-safe:duration-500 motion-safe:ease-in-out lg:flex',
                 mode === 'signup' ? 'left-0' : 'left-[calc(100%-5rem)]',
               )}
             >
@@ -523,7 +534,7 @@ export function AuthPage() {
               />
               <div
                 aria-hidden="true"
-                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.32),transparent_62%)]"
+                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.18),transparent_62%)]"
               />
 
               <button
