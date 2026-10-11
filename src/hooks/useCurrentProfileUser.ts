@@ -8,8 +8,8 @@ import { useProfileDatabase } from '../db/useProfileDatabase'
  * Resolves the logged-in user's profile record from whichever store actually
  * has it: the mock UserStore for the built-in demo accounts (ids prefixed
  * "usr-"), or the real Supabase `user` table for anyone who registered/was
- * created through the real agency flow. System Admin is always mock — the
- * database has no SYSTEM_ADMIN role at all.
+ * created through the real agency flow — which now includes the System Admin
+ * (admin@rescueeye.io), whose mock account was removed.
  */
 export function useCurrentProfileUser() {
   const { session } = useAuth()

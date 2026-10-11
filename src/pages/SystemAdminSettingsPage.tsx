@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/layout'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth'
-import { useUserStore } from '../state/UserStore'
+import { useCurrentProfileUser } from '../hooks/useCurrentProfileUser'
 import { ProfileEditForm, ChangePasswordForm } from '../components/profile'
 import { ROUTES } from '../routes/paths'
 
 export function SystemAdminSettingsPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { users } = useUserStore()
-
-  const currentUser = session ? users.find((u) => u.id === session.id) : undefined
+  // The System Admin is a real Supabase account (the mock one was removed), so
+  // the mock user list alone would find nobody and the page would render empty.
+  const { currentUser, isRealAccount } = useCurrentProfileUser()
 
   if (!session || !currentUser) return null
 
@@ -34,8 +34,8 @@ export function SystemAdminSettingsPage() {
             </Button>
           </div>
           <div className="flex flex-col gap-4">
-            <ProfileEditForm user={currentUser} onSuccess={handleSuccess} />
-            <ChangePasswordForm user={currentUser} onSuccess={handleSuccess} />
+            <ProfileEditForm user={currentUser} isRealAccount={isRealAccount} onSuccess={handleSuccess} />
+            <ChangePasswordForm user={currentUser} isRealAccount={isRealAccount} onSuccess={handleSuccess} />
           </div>
         </div>
       </div>
