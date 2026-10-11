@@ -1,97 +1,95 @@
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ScanSearch, Navigation, UserCheck, Maximize2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Reveal } from '../components/landing/Reveal'
-import {
-  StatTile,
-  PendingDetectionsPanel,
-  ActiveMissionsPanel,
-  ResponderStatusPanel,
-} from '../components/dashboard'
-import type {
-  DetectionListItem,
-  MissionListItem,
-  ResponderStatusItem,
-} from '../components/dashboard'
-import { GeoMapCanvas, MapLegend } from '../components/map'
-import { Button, Panel } from '../components/ui'
+import { Panel } from '../components/ui'
+import { BarList, ColumnChart, DonutBreakdown } from '../components/dashboard'
 import { useAuth } from '../features/auth'
-import { useCommandStaffData, useDamageMapMarkers } from '../features/command-staff'
-import { mockDrones } from '../data/mockDrones'
+import { useCommandStaffData } from '../features/command-staff'
 import { mockUsers } from '../data/mockUsers'
-import { sourceLabelFor } from '../lib/sourceLabel'
-import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
+import { formatDateTime } from '../lib/formatDateTime'
+import { ACTIVE_MISSION_STATUSES, RESPONDER_STATUS_LABEL } from '../lib/missionStatus'
+import { INCIDENT_PRIORITY_LABEL } from '../lib/labels'
 import { ROUTES } from '../routes/paths'
+import type { IncidentPriority } from '../types/incident'
+import type { MissionStatus } from '../types/mission'
 
+/** In-flight mission stages, in the order a responder moves through them. */
+const MISSION_STAGES: MissionStatus[] = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ON_SITE']
+
+const PRIORITY_ORDER: IncidentPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
+
+const DETECTION_SERIES = [
+  { label: 'Casualty', color: 'var(--color-danger)' },
+  { label: 'Damage', color: 'var(--color-info)' },
+]
+
+/**
+ * At-a-glance summary only: each panel answers "how much, and where is it
+ * stuck?" and links to the page that holds the full list. Row-level detail
+ * lives on Detection Review, Incidents and the Damage Map.
+ */
 export function CommandStaffDashboardPage() {
   const { session } = useAuth()
-  const {
-    detections: sharedDetections,
-    incidents: sharedIncidents,
-    missions: sharedMissions,
-    mediaAssets,
-  } = useCommandStaffData()
-  const mapMarkers = useDamageMapMarkers()
-  const navigate = useNavigate()
+  const { detections, incidents, missions } = useCommandStaffData()
 
   const agencyId = session?.agencyId
 
   const data = useMemo(() => {
-    const detections: DetectionListItem[] = sharedDetections
-      .map((detection) => ({
-        id: detection.id,
-        category: detection.category,
-        confidence: detection.confidence,
-        detectedAt: detection.detectedAt,
-        validationStatus: detection.validationStatus,
-        sourceLabel: sourceLabelFor(detection.mediaAssetId, mediaAssets, mockDrones),
-      }))
-      .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt))
+    const pending = detections.filter((d) => d.validationStatus === 'PENDING')
+    const oldestPending = pending.reduce<string | undefined>(
+      (oldest, d) => (!oldest || d.detectedAt < oldest ? d.detectedAt : oldest),
+      undefined,
+    )
 
-    const pendingDetections = detections.filter((d) => d.validationStatus === 'PENDING')
+    const openIncidents = incidents.filter((i) => i.status !== 'CLOSED')
 
+    const activeMissions = missions.filter((m) => ACTIVE_MISSION_STATUSES.has(m.status))
+    const busyResponderIds = new Set(activeMissions.map((m) => m.responderUserId))
 
     const agencyResponders = mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId)
-
-    const missions: MissionListItem[] = sharedMissions
-      .map((mission) => {
-        const responder = mockUsers.find((u) => u.id === mission.responderUserId)
-        const incident = sharedIncidents.find((i) => i.id === mission.incidentId)
-        return {
-          id: mission.id,
-          responderName: responder?.name ?? 'Unknown responder',
-          incidentPriority: incident?.priority ?? 'LOW',
-          status: mission.status,
-          dispatchedAt: mission.dispatchedAt,
-        }
-      })
-
-    const activeMissions = missions
-      .filter((mission) => ACTIVE_MISSION_STATUSES.has(mission.status))
-      .sort((a, b) => b.dispatchedAt.localeCompare(a.dispatchedAt))
-
-    const responderStatus: ResponderStatusItem[] = agencyResponders.map((responder) => {
-      const activeMission = sharedMissions.find(
-        (mission) => mission.responderUserId === responder.id && ACTIVE_MISSION_STATUSES.has(mission.status),
-      )
-      const incident = activeMission ? sharedIncidents.find((i) => i.id === activeMission.incidentId) : undefined
-      return {
-        id: responder.id,
-        name: responder.name,
-        isActive: responder.accountStatus === 'ACTIVE',
-        missionStatus: activeMission?.status,
-        incidentPriority: incident?.priority,
-      }
-    })
+    const onMission = agencyResponders.filter((r) => busyResponderIds.has(r.id)).length
+    const offDuty = agencyResponders.filter((r) => !busyResponderIds.has(r.id) && r.accountStatus !== 'ACTIVE').length
 
     return {
-      pendingDetections,
-      activeMissions,
-      responderStatus,
-      availableResponders: responderStatus.filter((r) => r.isActive && !r.missionStatus).length,
+      pendingCount: pending.length,
+      oldestPending,
+      detectionStatus: {
+        pending: pending.length,
+        verified: detections.filter((d) => d.validationStatus === 'VERIFIED').length,
+        rejected: detections.filter((d) => d.validationStatus === 'REJECTED').length,
+      },
+      openIncidentCount: openIncidents.length,
+      incidentsByPriority: PRIORITY_ORDER.map((priority) => ({
+        label: INCIDENT_PRIORITY_LABEL[priority],
+        values: [openIncidents.filter((i) => i.priority === priority).length],
+        color: `var(--color-priority-${priority.toLowerCase()})`,
+      })),
+      // Local hour of day, all dates folded together — shows when the drones
+      // are finding the most, which is when reviewers are needed most.
+      detectionsByHour: Array.from({ length: 24 }, (_, hour) => {
+        const inHour = detections.filter((d) => new Date(d.detectedAt).getHours() === hour)
+        return {
+          label: `${String(hour).padStart(2, '0')}:00`,
+          values: [
+            inHour.filter((d) => d.category === 'CASUALTY').length,
+            inHour.filter((d) => d.category === 'DAMAGE').length,
+          ],
+        }
+      }),
+      activeMissionCount: activeMissions.length,
+      missionsByStage: MISSION_STAGES.map((stage) => ({
+        label: RESPONDER_STATUS_LABEL[stage],
+        value: activeMissions.filter((m) => m.status === stage).length,
+      })),
+      responders: {
+        available: agencyResponders.length - onMission - offDuty,
+        onMission,
+        offDuty,
+      },
     }
-  }, [agencyId, sharedDetections, sharedIncidents, sharedMissions, mediaAssets])
+  }, [agencyId, detections, incidents, missions])
 
   if (!session) return null
 
@@ -103,61 +101,80 @@ export function CommandStaffDashboardPage() {
       />
 
       <div className="px-4 py-4">
-        {/* Two halves on a wide screen: the numbers, the queue, missions and
-            responders on the left; the map on the right, held in view while
-            the left side scrolls. On a narrow screen the map stays first. */}
-        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
-          <Reveal className="lg:order-2 lg:sticky lg:top-4">
-            {/* The same map, markers and clustering as the full Damage Map —
-                one marker source, so the two can never disagree. Clicking a
-                marker opens the full map with it selected. */}
-            <Panel
-              title={`Damage Map (${mapMarkers.length} markers)`}
-              actions={
-                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.commandStaffMap)}>
-                  <Maximize2 className="size-3.5" />
-                  Open Damage Map
-                </Button>
-              }
-            >
-              <div className="flex flex-col gap-3">
-                <GeoMapCanvas
-                  cluster
-                  markers={mapMarkers}
-                  selectedId={null}
-                  onSelect={(marker) =>
-                    navigate(`${ROUTES.commandStaffMap}?marker=${encodeURIComponent(marker.id)}`)
-                  }
-                  className="h-72 lg:h-[calc(100vh-15rem)] lg:min-h-[24rem]"
+        <div className="flex flex-col gap-4">
+          <Reveal delayMs={100}>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <Panel title="Detection Review" actions={<PanelLink to={ROUTES.commandStaffDetections} label="Review" />}>
+                <div className="flex flex-col gap-3">
+                  <DonutBreakdown
+                    centerLabel="Detections"
+                    size={120}
+                    segments={[
+                      { label: 'Pending', value: data.detectionStatus.pending, tone: 'warning' },
+                      { label: 'Verified', value: data.detectionStatus.verified, tone: 'success' },
+                      { label: 'Rejected', value: data.detectionStatus.rejected, tone: 'neutral' },
+                    ]}
+                  />
+                  {data.oldestPending ? (
+                    <p className="text-xs text-foreground-muted">
+                      Oldest waiting since {formatDateTime(data.oldestPending)}
+                    </p>
+                  ) : null}
+                </div>
+              </Panel>
+
+              <Panel title="Responder Availability" actions={<PanelLink to={ROUTES.commandStaffMap} label="Map" />}>
+                <DonutBreakdown
+                  centerLabel="Responders"
+                  size={120}
+                  segments={[
+                    { label: 'Available', value: data.responders.available, tone: 'success' },
+                    { label: 'On mission', value: data.responders.onMission, tone: 'info' },
+                    { label: 'Off duty', value: data.responders.offDuty, tone: 'neutral' },
+                  ]}
                 />
-                <MapLegend />
-              </div>
-            </Panel>
+              </Panel>
+
+              <Panel title="Open Incidents by Priority" actions={<PanelLink to={ROUTES.commandStaffIncidents} label="Incidents" />}>
+                {data.openIncidentCount === 0 ? (
+                  <p className="text-sm text-foreground-muted">No open incidents</p>
+                ) : (
+                  <ColumnChart data={data.incidentsByPriority} series={[{ label: 'Open incidents', color: 'var(--color-info)' }]} unit="open" height={140} />
+                )}
+              </Panel>
+            </div>
           </Reveal>
 
-          <div className="flex flex-col gap-4 lg:order-1">
-            <Reveal delayMs={100}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <StatTile label="Pending Detections" value={data.pendingDetections.length} icon={ScanSearch} tone="warning" />
-                <StatTile label="Active Missions" value={data.activeMissions.length} icon={Navigation} tone="info" />
-                <StatTile label="Available Responders" value={data.availableResponders} icon={UserCheck} tone="success" />
-              </div>
-            </Reveal>
+          <Reveal delayMs={200}>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <Panel title="Detections by Time of Day" className="lg:col-span-2">
+                {detections.length === 0 ? (
+                  <p className="text-sm text-foreground-muted">No detections yet</p>
+                ) : (
+                  <ColumnChart data={data.detectionsByHour} series={DETECTION_SERIES} labelEvery={3} unit="detections" />
+                )}
+              </Panel>
 
-            <Reveal delayMs={200}>
-              <PendingDetectionsPanel detections={data.pendingDetections} />
-            </Reveal>
-
-            <Reveal delayMs={300}>
-              <ActiveMissionsPanel missions={data.activeMissions} />
-            </Reveal>
-
-            <Reveal delayMs={350}>
-              <ResponderStatusPanel responders={data.responderStatus} />
-            </Reveal>
-          </div>
+              <Panel title="Mission Progress" actions={<PanelLink to={ROUTES.commandStaffIncidents} label="Incidents" />}>
+                {data.activeMissionCount === 0 ? (
+                  <p className="text-sm text-foreground-muted">No active missions</p>
+                ) : (
+                  <BarList items={data.missionsByStage} unit="missions" />
+                )}
+              </Panel>
+            </div>
+          </Reveal>
         </div>
       </div>
     </>
+  )
+}
+
+function PanelLink({ to, label }: { to: string; label: string }) {
+  return (
+    <Link to={to} className="flex items-center gap-1 text-xs font-medium text-accent">
+      {label}
+      <ArrowRight className="size-3.5" />
+    </Link>
   )
 }

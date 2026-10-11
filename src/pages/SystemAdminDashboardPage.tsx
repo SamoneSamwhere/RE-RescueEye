@@ -1,13 +1,19 @@
-import { Link } from 'react-router-dom'
-import { Building2, ShieldCheck, ShieldAlert, Power, ArrowRight, FileWarning } from 'lucide-react'
 import { PageHeader } from '../components/layout'
-import { Card, Badge, Panel } from '../components/ui'
+import { Panel } from '../components/ui'
 import { Reveal } from '../components/landing/Reveal'
-import { BarList, BreakdownBar, StatTile } from '../components/dashboard'
+import { BarList, ColumnChart, DonutChart, DonutBreakdown } from '../components/dashboard'
+import type { DonutSegment } from '../components/dashboard'
 import { categoryForType } from '../components/landing/registration/types'
 import { useSystemAdminData } from '../features/system-admin'
-import { ROUTES } from '../routes/paths'
-import { formatDateTime } from '../lib/formatDateTime'
+import { lastMonths } from '../lib/monthBuckets'
+import type { AgencyRegistrationStatus } from '../types/agency'
+
+const REGISTRATION_SERIES: Array<{ label: string; color: string; status: AgencyRegistrationStatus }> = [
+  { label: 'Approved', color: 'var(--color-success)', status: 'APPROVED' },
+  { label: 'Pending', color: 'var(--color-warning)', status: 'PENDING' },
+  { label: 'Resubmission', color: 'var(--color-info)', status: 'RESUBMISSION_REQUIRED' },
+  { label: 'Rejected', color: 'var(--color-danger)', status: 'REJECTED' },
+]
 
 export function SystemAdminDashboardPage() {
   const { agencies } = useSystemAdminData()
@@ -17,6 +23,14 @@ export function SystemAdminDashboardPage() {
   const rejectedCount = agencies.filter((a) => a.registrationStatus === 'REJECTED').length
   const resubmissionCount = agencies.filter((a) => a.registrationStatus === 'RESUBMISSION_REQUIRED').length
   const activeCount = agencies.filter((a) => a.accountStatus === 'ACTIVE').length
+  const inactiveCount = agencies.length - activeCount
+
+  const statusSegments: DonutSegment[] = [
+    { label: 'Pending Review', value: pendingCount, tone: 'warning' },
+    { label: 'Needs Resubmission', value: resubmissionCount, tone: 'info' },
+    { label: 'Approved', value: approvedCount, tone: 'success' },
+    { label: 'Rejected', value: rejectedCount, tone: 'danger' },
+  ]
 
   // Organizations by the category that decides their documents — tells the
   // reviewer what kind of evidence the queue will ask them to check.
@@ -38,9 +52,22 @@ export function SystemAdminDashboardPage() {
     .sort((a, b) => a.registeredAt.localeCompare(b.registeredAt))[0]
   const oldestPendingDays = oldestPending ? Math.floor((Date.now() - Date.parse(oldestPending.registeredAt)) / DAY_MS) : null
 
-  const recentAgencies = [...agencies]
-    .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
-    .slice(0, 5)
+  // New registrations over the last year, stacked by where each one stands now.
+  const registrationsByMonth = lastMonths(12).map((month) => {
+    const registered = agencies.filter((a) => a.registeredAt.slice(0, 7) === month.key)
+    return {
+      label: month.label,
+      values: REGISTRATION_SERIES.map((s) => registered.filter((a) => a.registrationStatus === s.status).length),
+    }
+  })
+
+  // The finer-grained type each organization registered as, most common first.
+  const typeCounts = new Map<string, number>()
+  for (const a of agencies) typeCounts.set(a.agencyType, (typeCounts.get(a.agencyType) ?? 0) + 1)
+  const byType = [...typeCounts]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6)
 
   return (
     <>
@@ -48,30 +75,43 @@ export function SystemAdminDashboardPage() {
 
       <div className="flex flex-col gap-4 px-4 py-4">
         <Reveal>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <StatTile label="Pending Review" value={pendingCount} icon={ShieldAlert} tone="warning" />
-            <StatTile label="Needs Resubmission" value={resubmissionCount} icon={FileWarning} tone="warning" />
-            <StatTile label="Approved Organizations" value={approvedCount} icon={ShieldCheck} tone="success" />
-            <StatTile label="Rejected" value={rejectedCount} icon={Building2} tone="danger" />
-            <StatTile label="Active Accounts" value={activeCount} icon={Power} tone="info" />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Panel title="Registrations by Status" className="lg:col-span-2">
+              <DonutBreakdown segments={statusSegments} centerLabel="Organizations" />
+            </Panel>
+            <Panel title="Active Accounts">
+              <div className="flex flex-col items-center gap-3">
+                <DonutChart
+                  segments={[
+                    { label: 'Active', value: activeCount, tone: 'success' },
+                    { label: 'Inactive', value: inactiveCount, tone: 'neutral' },
+                  ]}
+                  centerValue={activeCount}
+                  centerLabel={`of ${agencies.length} active`}
+                />
+                <p className="text-xs text-foreground-secondary">
+                  {inactiveCount} inactive account{inactiveCount === 1 ? '' : 's'}
+                </p>
+              </div>
+            </Panel>
           </div>
         </Reveal>
 
-        <Reveal delayMs={50}>
+        <Reveal delayMs={100}>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <Panel title="Registrations by Status">
-              <BreakdownBar
-                emptyLabel="No registrations yet"
-                segments={[
-                  { label: 'Pending', value: pendingCount, tone: 'warning' },
-                  { label: 'Resubmission', value: resubmissionCount, tone: 'info' },
-                  { label: 'Approved', value: approvedCount, tone: 'success' },
-                  { label: 'Rejected', value: rejectedCount, tone: 'danger' },
-                ]}
-              />
+            <Panel title="Registrations by Month" className="lg:col-span-2">
+              <ColumnChart data={registrationsByMonth} series={REGISTRATION_SERIES} unit="registrations" />
             </Panel>
             <Panel title="Organizations by Category">
               <BarList items={byCategory} unit="organizations" />
+            </Panel>
+          </div>
+        </Reveal>
+
+        <Reveal delayMs={200}>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Organizations by Type">
+              <BarList items={byType} unit="organizations" emptyLabel="No organizations yet" />
             </Panel>
             <Panel title="Review Speed">
               <div className="grid grid-cols-2 gap-3">
@@ -94,48 +134,6 @@ export function SystemAdminDashboardPage() {
           </div>
         </Reveal>
 
-        <Reveal delayMs={200}>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-                Recently Registered
-              </p>
-              <Link
-                to={ROUTES.systemAdminAgencyStatus}
-                className="flex items-center gap-1 text-xs font-medium text-accent"
-              >
-                View all ({agencies.length})
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
-            {recentAgencies.map((agency) => (
-              <Card key={agency.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{agency.name}</p>
-                  <p className="text-xs text-foreground-muted">
-                    {agency.contactEmail} · Registered {formatDateTime(agency.registeredAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    tone={
-                      agency.registrationStatus === 'APPROVED'
-                        ? 'success'
-                        : agency.registrationStatus === 'REJECTED'
-                          ? 'danger'
-                          : 'warning'
-                    }
-                  >
-                    {agency.registrationStatus}
-                  </Badge>
-                  <Badge tone={agency.accountStatus === 'ACTIVE' ? 'success' : 'neutral'}>
-                    {agency.accountStatus}
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Reveal>
       </div>
     </>
   )

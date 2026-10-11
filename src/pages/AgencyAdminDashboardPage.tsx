@@ -1,14 +1,19 @@
-import { Link } from 'react-router-dom'
-import { Activity, ArrowRight, UserCheck, UserX, UsersRound } from 'lucide-react'
 import { PageHeader } from '../components/layout'
-import { Card, Badge, Panel } from '../components/ui'
-import { BarList, BreakdownBar, StatTile } from '../components/dashboard'
+import { Panel } from '../components/ui'
+import { BarList, ColumnChart, DonutBreakdown } from '../components/dashboard'
 import { Reveal } from '../components/landing/Reveal'
 import { useAuth } from '../features/auth'
 import { useAgencyAdminData } from '../features/agency-admin'
-import { formatDateTime } from '../lib/formatDateTime'
-import { USER_ROLE_LABEL } from '../lib/labels'
-import { ROUTES } from '../routes/paths'
+import { INCIDENT_PRIORITY_LABEL } from '../lib/labels'
+import { lastMonths } from '../lib/monthBuckets'
+import type { IncidentPriority } from '../types/incident'
+
+const PRIORITY_ORDER: IncidentPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
+
+const STAFF_SERIES = [
+  { label: 'Field Responders', color: 'var(--color-info)' },
+  { label: 'Command Staff', color: 'var(--color-neutral)' },
+]
 
 /**
  * The Agency Admin manages accounts and monitors response teams. Account
@@ -18,7 +23,7 @@ import { ROUTES } from '../routes/paths'
  */
 export function AgencyAdminDashboardPage() {
   const { session } = useAuth()
-  const { agencyUsers, responseTeams } = useAgencyAdminData()
+  const { agencyUsers, responseTeams, incidentHistory, incidentPriorityById } = useAgencyAdminData()
 
   if (!session) return null
 
@@ -27,13 +32,38 @@ export function AgencyAdminDashboardPage() {
   const commandStaffCount = agencyUsers.filter((u) => u.role === 'COMMAND_STAFF').length
   const responderCount = agencyUsers.filter((u) => u.role === 'FIELD_RESPONDER').length
 
+  const teamCount = (status: string) => responseTeams.filter((t) => t.status === status).length
   const activeTeams = responseTeams.filter((t) => t.status === 'ACTIVE')
   const deployedCount = activeTeams.reduce((sum, t) => sum + t.members.length, 0)
   const activeTeamSizes = activeTeams
     .map((t) => ({ label: `Incident ${t.incidentId}`, value: t.members.length }))
     .sort((a, b) => b.value - a.value)
 
-  const recentPersonnel = [...agencyUsers].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5)
+  // Hiring over the last year, split by role — shows whether the field team
+  // is growing alongside the people who command it.
+  const staffByMonth = lastMonths(12).map((month) => {
+    const added = agencyUsers.filter((u) => u.createdAt.slice(0, 7) === month.key)
+    return {
+      label: month.label,
+      values: [
+        added.filter((u) => u.role === 'FIELD_RESPONDER').length,
+        added.filter((u) => u.role === 'COMMAND_STAFF').length,
+      ],
+    }
+  })
+
+  // One response team per incident, so team priority is incident priority.
+  const teamsByPriority = PRIORITY_ORDER.map((priority) => ({
+    label: INCIDENT_PRIORITY_LABEL[priority],
+    values: [responseTeams.filter((t) => incidentPriorityById.get(t.incidentId) === priority).length],
+    color: `var(--color-priority-${priority.toLowerCase()})`,
+  }))
+
+  const missionOutcomes = [
+    { label: 'Completed', value: incidentHistory.filter((m) => m.status === 'COMPLETED').length },
+    { label: 'In progress', value: incidentHistory.filter((m) => m.status !== 'COMPLETED' && m.status !== 'DECLINED').length },
+    { label: 'Declined', value: incidentHistory.filter((m) => m.status === 'DECLINED').length },
+  ]
 
   return (
     <>
@@ -41,67 +71,75 @@ export function AgencyAdminDashboardPage() {
 
       <div className="flex flex-col gap-4 px-4 py-4">
         <Reveal>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatTile label="Active Accounts" value={activeCount} icon={UserCheck} tone="success" />
-              <StatTile label="Inactive Accounts" value={inactiveCount} icon={UserX} tone="neutral" />
-              <StatTile label="Active Response Teams" value={activeTeams.length} icon={UsersRound} tone="info" />
-              <StatTile label="Responders Deployed" value={deployedCount} icon={Activity} tone="warning" />
-            </div>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <Panel title="Staff by Role">
-                <BreakdownBar
-                  emptyLabel="No staff yet"
-                  segments={[
-                    { label: 'Field Responders', value: responderCount, tone: 'info' },
-                    { label: 'Command Staff', value: commandStaffCount, tone: 'neutral' },
-                  ]}
-                />
-              </Panel>
-              <Panel title="Active Teams by Size">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Panel title="Accounts by Status">
+              <DonutBreakdown
+                centerLabel="Accounts"
+                size={120}
+                segments={[
+                  { label: 'Active', value: activeCount, tone: 'success' },
+                  { label: 'Inactive', value: inactiveCount, tone: 'neutral' },
+                ]}
+              />
+            </Panel>
+            <Panel title="Staff by Role">
+              <DonutBreakdown
+                centerLabel="Staff"
+                size={120}
+                segments={[
+                  { label: 'Field Responders', value: responderCount, tone: 'info' },
+                  { label: 'Command Staff', value: commandStaffCount, tone: 'neutral' },
+                ]}
+              />
+            </Panel>
+            <Panel title="Response Teams">
+              <DonutBreakdown
+                centerLabel="Teams"
+                size={120}
+                segments={[
+                  { label: 'Active', value: teamCount('ACTIVE'), tone: 'info' },
+                  { label: 'Completed', value: teamCount('COMPLETED'), tone: 'success' },
+                  { label: 'Needs responders', value: teamCount('NEEDS_RESPONDERS'), tone: 'warning' },
+                ]}
+              />
+            </Panel>
+          </div>
+        </Reveal>
+
+        <Reveal delayMs={100}>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Panel title="Staff Added by Month" className="lg:col-span-2">
+              <ColumnChart data={staffByMonth} series={STAFF_SERIES} unit="added" />
+            </Panel>
+            <Panel title="Teams by Incident Priority">
+              {responseTeams.length === 0 ? (
+                <p className="text-sm text-foreground-muted">No response teams yet</p>
+              ) : (
+                <ColumnChart data={teamsByPriority} series={[{ label: 'Teams', color: 'var(--color-info)' }]} unit="teams" height={140} />
+              )}
+            </Panel>
+          </div>
+        </Reveal>
+
+        <Reveal delayMs={200}>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Active Teams by Size">
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-foreground-secondary">
+                  <span className="text-lg font-semibold text-foreground">{activeTeams.length}</span> active{' '}
+                  {activeTeams.length === 1 ? 'team' : 'teams'} ·{' '}
+                  <span className="text-lg font-semibold text-foreground">{deployedCount}</span> responders deployed
+                </p>
                 <BarList
                   items={activeTeamSizes}
                   unit="members"
                   emptyLabel="No active response teams — Command Staff form one when they alert responders."
                 />
-              </Panel>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal delayMs={100}>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
-                Recently Added Staff
-              </p>
-              <Link to={ROUTES.agencyAdminAccountStatus} className="flex items-center gap-1 text-xs font-medium text-accent">
-                Manage personnel
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
-            {recentPersonnel.length === 0 ? (
-              <Card className="px-4 py-6 text-center text-sm text-foreground-muted">
-                No staff added yet. Use Add Staff on the Manage Personnel page to create your first account.
-              </Card>
-            ) : (
-              recentPersonnel.map((user) => (
-                <Card key={user.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{user.name}</p>
-                    <p className="text-xs text-foreground-muted">
-                      {user.email} · Added {formatDateTime(user.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone="neutral">{USER_ROLE_LABEL[user.role]}</Badge>
-                    <Badge tone={user.accountStatus === 'ACTIVE' ? 'success' : 'neutral'}>
-                      {user.accountStatus === 'ACTIVE' ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </Card>
-              ))
-            )}
+              </div>
+            </Panel>
+            <Panel title="Responder Mission Outcomes">
+              <BarList items={incidentHistory.length ? missionOutcomes : []} unit="missions" emptyLabel="No missions yet" />
+            </Panel>
           </div>
         </Reveal>
       </div>
