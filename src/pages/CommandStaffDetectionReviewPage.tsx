@@ -98,13 +98,15 @@ export function CommandStaffDetectionReviewPage() {
   }, [selectedId])
 
   const team = linkedIncident ? responseTeamFor(missions, linkedIncident.id) : null
-  const nameOf = (userId: string) => mockUsers.find((u) => u.id === userId)?.name ?? 'Unknown'
+  // Database responders are not in mockUsers; the candidate list carries their names.
+  const nameOf = (userId: string) =>
+    mockUsers.find((u) => u.id === userId)?.name ?? responderCandidates.find((c) => c.id === userId)?.name ?? 'Unknown'
   const teamMemberNames = team ? team.members.map((m) => nameOf(m.responderUserId)) : []
 
   /** Alerts responders for an incident and describes what happened, for the toast. */
-  function alert(incidentId: string, responderIds: string[]): string | null {
+  function alert(incidentId: string, responderIds: string[], detectionId?: string): string | null {
     if (responderIds.length === 0) return null
-    const dispatched = dispatchResponders(incidentId, responderIds)
+    const dispatched = dispatchResponders(incidentId, responderIds, detectionId)
     if (dispatched.length === 0) return null
     const teamSize = (team?.members.length ?? 0) + dispatched.length
     return `Alerted ${dispatched.map((m) => nameOf(m.responderUserId)).join(', ')}. The response team now has ${teamSize} ${
@@ -112,12 +114,22 @@ export function CommandStaffDetectionReviewPage() {
     } — each mission starts as PENDING.`
   }
 
-  function handleVerifySubmit({ priority, notes, responderIds }: VerifyDispatchSubmit) {
+  async function handleVerifySubmit({ priority, notes, responderIds }: VerifyDispatchSubmit) {
     if (!selectedDetection) return
-    const incidentId = verifyDetection(selectedDetection.id, priority, notes)
+    const detectionId = selectedDetection.id
+    let incidentId: string | null
+    try {
+      incidentId = await verifyDetection(detectionId, priority, notes)
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'The incident could not be saved. The detection is still pending.',
+        'Verification failed',
+      )
+      return
+    }
     if (!incidentId) return
     toast.success(`Confirmed Incident ${incidentId} created.`, 'Detection verified')
-    const alerted = alert(incidentId, responderIds)
+    const alerted = alert(incidentId, responderIds, detectionId)
     if (alerted) toast.success(alerted, 'Responders alerted')
     else toast.info('No responders alerted yet — use Alert Responders when you are ready.')
     setDialog(null)

@@ -6,9 +6,10 @@ import { cn } from '../../lib/cn'
 
 interface MobileTopBarProps {
   notifications?: AppNotification[]
+  historyHref?: string
 }
 
-export function MobileTopBar({ notifications = [] }: MobileTopBarProps) {
+export function MobileTopBar({ notifications = [], historyHref }: MobileTopBarProps) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -28,7 +29,7 @@ export function MobileTopBar({ notifications = [] }: MobileTopBarProps) {
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <NotificationArea notifications={notifications} />
+        <NotificationArea notifications={notifications} historyHref={historyHref} />
       </div>
     </header>
   )

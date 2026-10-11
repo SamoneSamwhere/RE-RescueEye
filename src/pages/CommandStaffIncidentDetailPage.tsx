@@ -39,6 +39,22 @@ function sceneDamageText(detection: Detection): string {
 }
 import { RESPONSE_TEAM_STATUS_LABEL, responseTeamFor } from '../lib/responseTeams'
 import { ROUTES } from '../routes/paths'
+import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '../features/auth'
+import { useAlerts, ALERT_TYPE_LABEL, ALERT_STATUS_LABEL, ALERT_STATUS_TONE } from '../features/alerts'
+import type { AlertRecord, AlertType } from '../features/alerts'
+import { getAgencyResponders } from '../db/incidents'
+import { isDbId } from '../lib/incidentClassification'
+
+const CHANNEL_ORDER: AlertType[] = ['SMS', 'PUSH', 'DASHBOARD']
+
+/** Each channel's most recent alert to one responder - what Command Staff need to know: did it reach them? */
+function latestPerChannel(alerts: AlertRecord[], recipientId: string): AlertRecord[] {
+  return CHANNEL_ORDER.flatMap((channel) => {
+    const latest = alerts.find((a) => String(a.recipientId) === recipientId && a.alertType === channel)
+    return latest ? [latest] : []
+  })
+}
 
 export function CommandStaffIncidentDetailPage() {
   const { incidentId } = useParams<{ incidentId: string }>()
@@ -49,6 +65,24 @@ export function CommandStaffIncidentDetailPage() {
 
   const sourceLabel = detection ? sourceLabelFor(detection.mediaAssetId, mediaAssets, mockDrones) : ''
   const timelineEvents = useIncidentTimeline(incident, detection, missions, sourceLabel)
+
+  // Delivery status of every alert sent for this incident, kept live over the WebSocket.
+  const { session } = useAuth()
+  const { data: alerts = [] } = useAlerts(incident && isDbId(incident.id) ? { incidentId: Number(incident.id) } : null)
+  const { data: dbResponders = [] } = useQuery({
+    queryKey: ['agencyResponders', session?.agencyId],
+    queryFn: () => getAgencyResponders(Number(session?.agencyId)),
+    enabled: isDbId(session?.agencyId),
+    staleTime: 60_000,
+  })
+  const responderName = (userId: string) => {
+    const row = dbResponders.find((r) => String(r.id) === userId)
+    return (
+      mockUsers.find((u) => u.id === userId)?.name ??
+      (row ? [row.firstName, row.lastName].filter(Boolean).join(' ') || row.name : null) ??
+      'Unknown responder'
+    )
+  }
 
   if (!incident || !detection) {
     return (
@@ -162,12 +196,23 @@ export function CommandStaffIncidentDetailPage() {
                   {team.members.length > 0 ? (
                     <ul className="flex flex-col divide-y divide-border">
                       {team.members.map((member) => (
-                        <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                          <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                            <Users className="size-4 text-foreground-muted" />
-                            {mockUsers.find((u) => u.id === member.responderUserId)?.name ?? 'Unknown responder'}
-                          </p>
-                          <MissionStatusBadge status={member.status} />
+                        <li key={member.id} className="flex flex-col gap-1.5 py-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                              <Users className="size-4 text-foreground-muted" />
+                              {responderName(member.responderUserId)}
+                            </p>
+                            <MissionStatusBadge status={member.status} />
+                          </div>
+                          {latestPerChannel(alerts, member.responderUserId).length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-1.5 pl-5.5" aria-label="Alert delivery">
+                              {latestPerChannel(alerts, member.responderUserId).map((alert) => (
+                                <Badge key={alert.id} tone={ALERT_STATUS_TONE[alert.status]} className="text-[11px]">
+                                  {ALERT_TYPE_LABEL[alert.alertType]}: {ALERT_STATUS_LABEL[alert.status]}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : null}
                         </li>
                       ))}
                     </ul>
@@ -176,7 +221,7 @@ export function CommandStaffIncidentDetailPage() {
                     <p className="text-xs text-foreground-muted">
                       Declined:{' '}
                       {team.declined
-                        .map((m) => mockUsers.find((u) => u.id === m.responderUserId)?.name ?? 'Unknown responder')
+                        .map((m) => responderName(m.responderUserId))
                         .join(', ')}
                     </p>
                   ) : null}

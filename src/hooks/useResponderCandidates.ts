@@ -1,4 +1,7 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getAgencyResponders } from '../db/incidents'
+import { isDbId } from '../lib/incidentClassification'
 import { mockUsers } from '../data/mockUsers'
 import { ACTIVE_MISSION_STATUSES } from '../lib/missionStatus'
 import { distanceKm } from '../lib/geo'
@@ -12,6 +15,10 @@ import type { Mission } from '../types/mission'
  * Builds the nearest-first list of Field Responder dispatch candidates for
  * one detection's location, scoped to the given agency. A responder counts
  * as busy (unavailable) if they have any mission in an active status.
+ *
+ * A real agency's responders come from the database (only they can receive
+ * SMS/push alerts); demo agencies use the mock roster. Database responders
+ * have no stored position, so their distance comes from live device GPS only.
  */
 export function useResponderCandidates(
   detection: Detection | null,
@@ -20,11 +27,25 @@ export function useResponderCandidates(
   missions: Mission[],
 ): ResponderCandidate[] {
   const { positions } = useLiveUpdates()
+  const { data: dbResponders = [] } = useQuery({
+    queryKey: ['agencyResponders', agencyId],
+    queryFn: () => getAgencyResponders(Number(agencyId)),
+    enabled: isDbId(agencyId),
+    staleTime: 60_000,
+  })
 
   return useMemo(() => {
     if (!detection || !agencyId) return []
 
-    const agencyResponders = mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId)
+    const agencyResponders = [
+      ...mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId),
+      ...dbResponders.map((row) => ({
+        id: String(row.id),
+        name: [row.firstName, row.lastName].filter(Boolean).join(' ') || row.name || `Responder ${row.id}`,
+        accountStatus: row.active ? ('ACTIVE' as const) : ('INACTIVE' as const),
+        currentLocation: undefined,
+      })),
+    ]
 
     return agencyResponders
       .map((responder): ResponderCandidate => {
@@ -53,5 +74,5 @@ export function useResponderCandidates(
         if (b.distanceKm === null) return -1
         return a.distanceKm - b.distanceKm
       })
-  }, [detection, agencyId, incidents, missions, positions])
+  }, [detection, agencyId, incidents, missions, positions, dbResponders])
 }

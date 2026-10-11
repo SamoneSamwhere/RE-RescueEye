@@ -7,12 +7,14 @@ import { Panel, EmptyState, Button, LoadingState } from '../components/ui'
 import { LiveFeedPanel } from '../components/media'
 import { PossibleCasualtyCard } from '../components/detections'
 import { useCommandStaffData } from '../features/command-staff'
+import { useToast } from '../features/toast'
 import { useFeeds, useCloseFeed } from '../features/media/useFeeds'
 import { ROUTES } from '../routes/paths'
 
 export function CommandStaffLiveMonitoringPage() {
   const { detections, verifyDetection } = useCommandStaffData()
   const navigate = useNavigate()
+  const toast = useToast()
   const [detectEnabled, setDetectEnabled] = useState(true)
 
   const feedsQuery = useFeeds()
@@ -115,8 +117,13 @@ export function CommandStaffLiveMonitoringPage() {
           <Reveal delayMs={100}>
             <PossibleCasualtyCard
               detection={pendingCasualty}
-              onVerify={(id) => {
-                verifyDetection(id, 'MEDIUM', '')
+              onVerify={async (id) => {
+                try {
+                  await verifyDetection(id, 'MEDIUM', '')
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : 'The incident could not be saved.', 'Verification failed')
+                  return
+                }
                 // Verifying opens an incident; Detection Review is where its
                 // priority is set and the follow-up happens, so go there with
                 // the casualty already selected.

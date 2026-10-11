@@ -103,6 +103,32 @@ python -m venv .venv
   (Older checkouts with the stock weights loose in `api/` still work.)
 - Tests: `.venv\Scripts\python.exe -m pytest -q`
 
+#### Alerts (SMS, push, in-app)
+
+When Command Staff dispatch a verified incident, the API sends each responder an
+SMS, a push notification and an in-app alert, and records them in the `alert` and
+`audit_history` tables ([api/services/alert_service.py](api/services/alert_service.py)).
+Add these to `api/.env`:
+
+```env
+SUPABASE_URL=https://[YOUR-PROJECT].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=[service-role key — server only, never in the web app]
+SEMAPHORE_API_KEY=[Semaphore API key]
+# SEMAPHORE_SENDER_NAME=RescueEye   # a sender name registered with Semaphore
+# EXPO_ACCESS_TOKEN=                # only if push security is on in the Expo project
+```
+
+For testing without paid credits, SMS can go through **textbee** instead: an
+Android phone running the [textbee](https://textbee.dev) app sends each alert
+from its own SIM. Set `SMS_PROVIDER=textbee`, `TEXTBEE_API_KEY` and
+`TEXTBEE_DEVICE_ID` (both from the textbee dashboard). textbee alerts stay SENT —
+it reports when the phone has queued the text, not a carrier delivery receipt.
+
+Without credentials for the selected provider every SMS alert is recorded as FAILED; without a
+registered Expo push token on the responder's `user` row every PUSH alert is.
+The in-app alert is sent either way. Alerts go only to accounts in the database —
+the built-in demo logins have no `user` row.
+
 ### Database migrations
 
 Run each file in [supabase/migrations/](supabase/migrations/) **in order** in the

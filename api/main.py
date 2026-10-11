@@ -15,6 +15,7 @@ from routers import media as media_router
 from routers import responders as responders_router
 from routers import missions as missions_router
 from routers import live as live_router
+from routers import alerts as alerts_router
 from services import feed_registry
 from services import telemetry_sources
 from services.yolo_model import load_all, model_info, model_status
@@ -98,6 +99,7 @@ app.include_router(media_router.router,   prefix="/media",      tags=["media"])
 app.include_router(responders_router.router, prefix="/responders", tags=["responders"])
 app.include_router(missions_router.router,  prefix="/missions",   tags=["missions"])
 app.include_router(live_router.router,      prefix="/live",       tags=["live"])
+app.include_router(alerts_router.router,    prefix="/alerts",     tags=["alerts"])
 
 
 @app.get("/health", tags=["system"])

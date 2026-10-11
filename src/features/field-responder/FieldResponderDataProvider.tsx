@@ -12,6 +12,9 @@ import { checkArrival } from '../../lib/navigation'
 import type { ArrivalCheck } from '../../lib/navigation'
 import { useNotificationStore } from '../../state/NotificationStore'
 import { useLocationSharing } from './useLocationSharing'
+import { useDbIncidentHydration } from '../../hooks/useDbIncidentHydration'
+import { isDbId } from '../../lib/incidentClassification'
+import { acknowledgeAlerts } from '../alerts'
 import type { LocationSharingState } from './useLocationSharing'
 
 interface FieldResponderDataContextValue {
@@ -52,6 +55,16 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
     () => allMissions.filter((mission) => mission.responderUserId === session?.id),
     [allMissions, session?.id],
   )
+  useDbIncidentHydration(missions)
+
+  /** Accepting or declining acknowledges the mission's alerts (Alert_AcknowledgedAt). */
+  function acknowledge(missionId: string) {
+    const mission = allMissions.find((m) => m.id === missionId)
+    if (!mission || !session || !isDbId(mission.incidentId) || !isDbId(session.id)) return
+    acknowledgeAlerts(Number(mission.incidentId), Number(session.id)).catch((err: unknown) => {
+      console.warn('Could not record alert acknowledgement', err)
+    })
+  }
 
   function notifyDispatcher(missionId: string, type: NotificationType, message: string) {
     const mission = allMissions.find((m) => m.id === missionId)
@@ -78,12 +91,14 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
 
   function acceptMission(missionId: string) {
     if (!transition(missionId, 'PENDING', { status: 'ACCEPTED', acceptedAt: now().toISOString() })) return
+    acknowledge(missionId)
     notifyDispatcher(missionId, 'MISSION_STATUS_CHANGED', `${session?.name ?? 'Responder'} accepted the mission.`)
   }
 
   /** Declining leaves the mission DECLINED and the responder returns to waiting; the incident remains available for Command Staff to reassign. */
   function declineMission(missionId: string) {
     if (!transition(missionId, 'PENDING', { status: 'DECLINED', declinedAt: now().toISOString() })) return
+    acknowledge(missionId)
     notifyDispatcher(
       missionId,
       'MISSION_STATUS_CHANGED',

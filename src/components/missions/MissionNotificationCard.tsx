@@ -16,23 +16,29 @@ export function MissionNotificationCard({ mission, distance, onAccept, onDecline
   const detectionTypeLabel = mission.damageClassification
     ? `${DETECTION_CATEGORY_LABEL[mission.detectionCategory]} — ${DAMAGE_CLASSIFICATION_LABEL[mission.damageClassification]}`
     : DETECTION_CATEGORY_LABEL[mission.detectionCategory]
+  const priorityColor = `var(--color-priority-${mission.priority.toLowerCase()})`
 
   return (
     <Card className="overflow-hidden border-accent/40 shadow-modal">
-      {/* Priority-coloured header so urgency reads before any text does. */}
+      {/* A faint priority tint plus a coloured bell: urgency still reads first, without a full-bright banner. */}
       <div
-        className="flex items-center gap-3 px-4 py-3 text-foreground-inverse"
-        style={{ background: `var(--color-priority-${mission.priority.toLowerCase()})` }}
+        className="flex items-center gap-3 border-b border-border px-4 py-3"
+        style={{ background: `color-mix(in srgb, ${priorityColor} 12%, var(--color-surface))` }}
       >
         <span className="relative flex size-10 shrink-0 items-center justify-center">
-          <span className="absolute inset-0 rounded-full bg-white/30 motion-safe:animate-ping" />
-          <span className="relative flex size-10 items-center justify-center rounded-full bg-white/20">
+          <span className="absolute inset-0 rounded-full opacity-30 motion-safe:animate-ping" style={{ background: priorityColor }} />
+          <span
+            className="relative flex size-10 items-center justify-center rounded-full text-foreground-inverse"
+            style={{ background: priorityColor }}
+          >
             <BellRing className="size-5" />
           </span>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide opacity-90">New mission dispatch</p>
-          <p className="truncate text-lg font-semibold leading-tight">{detectionTypeLabel}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: priorityColor }}>
+            New mission dispatch
+          </p>
+          <p className="truncate text-lg font-semibold leading-tight text-foreground">{detectionTypeLabel}</p>
         </div>
       </div>
 

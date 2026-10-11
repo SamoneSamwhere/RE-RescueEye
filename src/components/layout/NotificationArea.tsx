@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import type { AppNotification } from '../../types/notification'
 import { NOTIFICATION_TYPE_ICON } from '../../lib/notificationIcons'
@@ -7,9 +8,11 @@ import { useTheme } from '../../features/theme'
 
 interface NotificationAreaProps {
   notifications?: AppNotification[]
+  /** Page listing the full history, linked at the bottom of the dropdown. */
+  historyHref?: string
 }
 
-export function NotificationArea({ notifications = [] }: NotificationAreaProps) {
+export function NotificationArea({ notifications = [], historyHref }: NotificationAreaProps) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const [open, setOpen] = useState(false)
@@ -93,6 +96,15 @@ export function NotificationArea({ notifications = [] }: NotificationAreaProps) 
               </ul>
             )}
           </div>
+          {historyHref ? (
+            <Link
+              to={historyHref}
+              onClick={() => setOpen(false)}
+              className="block border-t border-border px-3 py-2 text-center text-sm font-medium text-accent hover:bg-surface-secondary"
+            >
+              View all notifications
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -29,6 +29,7 @@ export const ROUTES = {
   fieldResponderMap: '/field-responder/map',
   fieldResponderProfile: '/field-responder/profile',
   fieldResponderSettings: '/field-responder/settings',
+  fieldResponderNotifications: '/field-responder/notifications',
   fieldResponderMissionDetail: '/field-responder/mission/:missionId',
   fieldResponderMissionNavigate: '/field-responder/mission/:missionId/navigate',
 } as const

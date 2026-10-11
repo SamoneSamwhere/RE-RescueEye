@@ -1,4 +1,9 @@
 import type { ReactNode } from 'react'
+import { useAuth } from '../../features/auth'
+import { useAlerts } from '../../features/alerts'
+import { isDbId } from '../../lib/incidentClassification'
+import { formatDateTime } from '../../lib/formatDateTime'
+import { ROUTES } from '../../routes/paths'
 import { MobileTopBar } from './MobileTopBar'
 import { MobileBottomNav } from './MobileBottomNav'
 import { DashboardBackdrop } from './DashboardBackdrop'
@@ -19,9 +24,23 @@ interface MobileShellProps {
  * two roles have different interaction models, not just different widths.
  */
 export function MobileShell({ navItems, notifications = [], children }: MobileShellProps) {
+  // The responder's in-app (DASHBOARD) alerts lead the bell; the full list is the history page.
+  const { session } = useAuth()
+  const { data: alerts = [] } = useAlerts(session && isDbId(session.id) ? { recipientId: Number(session.id) } : null)
+  const alertNotifications: AppNotification[] = alerts
+    .filter((alert) => alert.alertType === 'DASHBOARD')
+    .map((alert) => ({
+      id: `alert-${alert.id}`,
+      title: 'Mission alert',
+      description: alert.message,
+      timestamp: formatDateTime(alert.sentAt),
+      read: alert.status === 'READ',
+      type: 'MISSION_DISPATCH',
+    }))
+
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden border-x border-border bg-background">
-      <MobileTopBar notifications={notifications} />
+      <MobileTopBar notifications={[...alertNotifications, ...notifications]} historyHref={ROUTES.fieldResponderNotifications} />
       <main className="relative flex-1">
         <DashboardBackdrop />
         <div className="relative z-10 min-h-full">{children}</div>

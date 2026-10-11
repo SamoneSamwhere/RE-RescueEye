@@ -24,6 +24,11 @@ import { useDroneDatabase } from '../../db/useDroneDatabase'
 import { useLiveDetections } from '../media/useLiveDetections'
 import { useResponderPositions } from '../media/useResponderPositions'
 import type { DroneRecord } from '../../db/useDroneDatabase'
+import { insertIncident } from '../../db/incidents'
+import { alertLabelFor, incidentTypeFor, isDbId } from '../../lib/incidentClassification'
+import { dispatchAlerts } from '../alerts'
+import { useToast } from '../toast'
+import { useDbIncidentHydration } from '../../hooks/useDbIncidentHydration'
 
 /** Fallback operating area — only used the first time an agency captures media, before it has any detections of its own to center on. */
 const DEFAULT_AREA_CENTER: GeoPoint = { lat: 10.3155, lng: 123.895402 }
@@ -36,12 +41,16 @@ interface CommandStaffDataContextValue {
   notifications: Notification[]
   drones: Drone[]
   liveDroneIds: string[]
-  /** Returns the new Incident's id, or null if the detection could not be verified. */
-  verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => string | null
+  /**
+   * Returns the new Incident's id, or null if the detection could not be verified.
+   * Rejects if a real account's incident could not be saved to the database.
+   */
+  verifyDetection: (detectionId: string, priority: IncidentPriority, notes: string) => Promise<string | null>
   rejectDetection: (detectionId: string, notes: string) => void
   updateIncidentPriority: (incidentId: string, priority: IncidentPriority) => void
   /** Alerts the selected responders; together they form (or join) the incident's response team. */
-  dispatchResponders: (incidentId: string, responderUserIds: string[]) => Mission[]
+  /** `detectionId` names the incident's source detection when it was verified in this same action. */
+  dispatchResponders: (incidentId: string, responderUserIds: string[], detectionId?: string) => Mission[]
   closeIncident: (incidentId: string) => void
   captureMedia: (
     sourceType: MediaSourceType,
@@ -99,6 +108,10 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   const { notifications: allNotifications, addNotification } = useNotificationStore()
   const { liveDroneIds: allLiveDroneIds, startLiveFeed, stopLiveFeed } = useDroneStore()
   const { getDronesByAgency, createDrone, updateDrone: updateDbDrone } = useDroneDatabase()
+  const toast = useToast()
+  // Incidents saved to the database are only in memory where they were verified;
+  // after a reload, missions (from the API) still point at them.
+  useDbIncidentHydration(allMissions)
 
   const mediaAssets = useMemo(
     () => allMediaAssets.filter((m) => m.agencyId === agencyId),
@@ -254,10 +267,30 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
    * verified and that a new incident now exists. No-ops if the detection
    * has already been reviewed.
    */
-  function verifyDetection(detectionId: string, priority: IncidentPriority, notes: string): string | null {
+  async function verifyDetection(detectionId: string, priority: IncidentPriority, notes: string): Promise<string | null> {
     if (!session || !agencyId) return null
     const detection = detections.find((d) => d.id === detectionId)
     if (!detection || detection.validationStatus !== 'PENDING') return null
+
+    // A real account records the incident in the database first, and uses its
+    // row id as the incident id everywhere: alerts must reference an incident
+    // row, and a responder's own device loads the incident from it. Saving
+    // before marking the detection verified means a failed save leaves the
+    // detection pending rather than verified with no incident. Demo accounts
+    // (no database rows) keep an in-memory incident.
+    let newIncidentId = generateId('incident')
+    if (isDbId(session.id) && isDbId(agencyId)) {
+      const row = await insertIncident({
+        agencyId: Number(agencyId),
+        reportedBy: Number(session.id),
+        incidentType: incidentTypeFor(detection),
+        severity: priority,
+        lat: detection.location.lat,
+        lng: detection.location.lng,
+        description: notes.trim() || undefined,
+      })
+      newIncidentId = String(row.id)
+    }
     const nowIso = now().toISOString()
 
     updateDetection(detectionId, {
@@ -267,7 +300,6 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       reviewerNotes: notes.trim() || undefined,
     })
 
-    const newIncidentId = generateId('incident')
     const newIncident: Incident = {
       id: newIncidentId,
       detectionId,
@@ -323,17 +355,21 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
   }
 
   /**
-   * Confirmed Incident -> Command Staff selects responders -> mock SMS to each.
+   * Confirmed Incident -> Command Staff selects responders -> alert each one.
    * Creates one PENDING Mission and one MISSION_DISPATCH (or MISSION_REASSIGNED,
    * if someone on this incident already declined) Notification per responder,
-   * and escalates the incident from OPEN to DISPATCHED. No real SMS, no backend.
+   * and escalates the incident from OPEN to DISPATCHED.
+   *
+   * For a database incident and database responders the API sends the real
+   * alerts (SMS + PUSH + DASHBOARD, see api/services/alert_service.py), so the
+   * in-memory notification is skipped for them; demo accounts keep it.
    *
    * The responders dispatched to an incident are its response team (see
    * lib/responseTeams.ts): the first dispatch forms the team, and dispatching
    * more responders later adds them to it. Anyone already on an active mission
    * is skipped, so nobody is working two incidents at once.
    */
-  function dispatchResponders(incidentId: string, responderUserIds: string[]): Mission[] {
+  function dispatchResponders(incidentId: string, responderUserIds: string[], detectionId?: string): Mission[] {
     const busy = new Set(
       allMissions.filter((m) => ACTIVE_MISSION_STATUSES.has(m.status)).map((m) => m.responderUserId),
     )
@@ -344,6 +380,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
     const isReassignment = allMissions.some(
       (mission) => mission.incidentId === incidentId && mission.status === 'DECLINED',
     )
+    const realAlerts = isDbId(incidentId) && !!session && isDbId(session.id)
     const others = toDispatch.length - 1
     const teamNote = others > 0 ? ` You are part of a ${toDispatch.length}-person response team.` : ''
 
@@ -357,6 +394,7 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
         dispatchedAt: nowIso,
       }
       addMission(mission)
+      if (realAlerts && isDbId(responderUserId)) return mission
       addNotification({
         id: generateId('notif'),
         recipientUserId: responderUserId,
@@ -371,6 +409,20 @@ export function CommandStaffDataProvider({ children }: { children: ReactNode }) 
       })
       return mission
     })
+
+    const recipients = toDispatch.filter(isDbId)
+    if (realAlerts && session && recipients.length > 0) {
+      const sourceId = detectionId ?? allIncidents.find((i) => i.id === incidentId)?.detectionId
+      const sourceDetection = allDetections.find((d) => d.id === sourceId)
+      dispatchAlerts({
+        incidentId: Number(incidentId),
+        recipientIds: recipients.map(Number),
+        dispatchedBy: Number(session.id),
+        label: sourceDetection ? alertLabelFor(sourceDetection) : undefined,
+      }).catch((err: unknown) => {
+        toast.error(err instanceof Error ? err.message : 'The alert service did not respond.', 'Alerts not sent')
+      })
+    }
 
     // An incident verified in this same action is not in allIncidents yet — it is OPEN by definition.
     const incident = allIncidents.find((i) => i.id === incidentId)

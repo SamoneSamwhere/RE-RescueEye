@@ -2,7 +2,10 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { API_BASE_URL } from '../lib/apiClient'
 import { useAuth } from '../features/auth'
+import { useQueryClient } from '@tanstack/react-query'
 import { useMissionStore } from './MissionStore'
+import { upsertAlert } from '../features/alerts'
+import type { AlertRecord } from '../features/alerts'
 import type { Mission } from '../types/mission'
 
 /** A responder's latest GPS fix from their own device, as pushed by the API. */
@@ -19,6 +22,7 @@ type LiveMessage =
   | { type: 'snapshot'; responders: LiveResponderPosition[]; missions: Mission[] }
   | { type: 'responder_location'; responder: LiveResponderPosition }
   | { type: 'mission'; mission: Mission }
+  | { type: 'alert'; alert: AlertRecord }
 
 /** What the app sends up the socket: this responder's GPS fix. */
 export interface OutgoingLocationMessage {
@@ -44,7 +48,7 @@ const MAX_RETRY_DELAY_MS = 10_000
 
 /**
  * The one WebSocket to the API's /live/ws: responder GPS positions and every
- * mission change, pushed as they happen. Mission changes go straight into the
+ * mission change, plus alert delivery updates, pushed as they happen. Mission changes go straight into the
  * MissionStore, so every screen that already reads missions updates live;
  * positions are exposed here for the Damage Map and dispatch.
  *
@@ -54,6 +58,7 @@ const MAX_RETRY_DELAY_MS = 10_000
 export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
   const { applyRemoteMission } = useMissionStore()
+  const queryClient = useQueryClient()
   const [positions, setPositions] = useState<Record<string, LiveResponderPosition>>({})
   const [connected, setConnected] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
@@ -80,6 +85,9 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
         setPositions((prev) => ({ ...prev, [message.responder.id]: message.responder }))
       } else if (message.type === 'mission') {
         applyMission.current(message.mission)
+      } else if (message.type === 'alert') {
+        // Delivery status (SENT/DELIVERED/FAILED/READ) for Command Staff, and new alerts for the responder.
+        upsertAlert(queryClient, message.alert)
       }
     }
 
@@ -113,7 +121,7 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
       socketRef.current = null
       setConnected(false)
     }
-  }, [enabled])
+  }, [enabled, queryClient])
 
   function send(message: OutgoingLocationMessage): boolean {
     const socket = socketRef.current
