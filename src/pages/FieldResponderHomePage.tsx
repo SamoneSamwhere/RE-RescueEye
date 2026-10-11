@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Radar, MapPin, Navigation, ChevronRight } from 'lucide-react'
 import { MobileShell } from '../components/layout'
@@ -6,10 +5,9 @@ import { Card, StatusIndicator, PriorityBadge, MissionStatusBadge, EmptyState } 
 import { Reveal } from '../components/landing/Reveal'
 import { MissionNotificationCard } from '../components/missions'
 import { useAuth } from '../features/auth'
-import { FIELD_RESPONDER_NAV_ITEMS, useFieldResponderData } from '../features/field-responder'
+import { FIELD_RESPONDER_NAV_ITEMS, LOCATION_STATUS_DISPLAY, useFieldResponderData } from '../features/field-responder'
 import { mockUsers } from '../data/mockUsers'
 import { formatDateTime } from '../lib/formatDateTime'
-import { now } from '../lib/now'
 import { notificationsFor } from '../lib/notifications'
 import { useNotificationStore } from '../state/NotificationStore'
 import { useIncidentStore } from '../state/IncidentStore'
@@ -19,13 +17,15 @@ import { fieldResponderMissionDetailPath } from '../routes/paths'
 
 export function FieldResponderHomePage() {
   const { session } = useAuth()
-  const { missions, acceptMission, declineMission } = useFieldResponderData()
+  const { missions, acceptMission, declineMission, location } = useFieldResponderData()
   const { notifications: allNotifications } = useNotificationStore()
   const { incidents } = useIncidentStore()
   const { detections } = useDetectionStore()
-  const [locationSharedAt] = useState(() => now().toISOString())
 
   const currentUser = session ? mockUsers.find((u) => u.id === session.id) : undefined
+  // This device's live fix; the profile location only until the first fix arrives.
+  const myLocation = location.position ?? currentUser?.currentLocation
+  const locationStatus = LOCATION_STATUS_DISPLAY[location.status]
 
   const pendingMission = missions.find((m) => m.status === 'PENDING')
   const pendingIncident = pendingMission ? incidents.find((i) => i.id === pendingMission.incidentId) : undefined
@@ -82,15 +82,19 @@ export function FieldResponderHomePage() {
               <span className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">
                 Location Sharing
               </span>
-              <StatusIndicator tone="success" label="Sharing" />
+              <StatusIndicator tone={locationStatus.tone} label={locationStatus.label} />
             </div>
             <p className="flex items-center gap-1.5 text-sm text-foreground-secondary">
               <MapPin className="size-3.5 shrink-0" />
-              {currentUser?.currentLocation
-                ? `${currentUser.currentLocation.lat.toFixed(4)}, ${currentUser.currentLocation.lng.toFixed(4)}`
-                : 'Location unavailable'}
+              {myLocation ? `${myLocation.lat.toFixed(4)}, ${myLocation.lng.toFixed(4)}` : 'Location unavailable'}
             </p>
-            <p className="text-xs text-foreground-muted">Last updated {formatDateTime(locationSharedAt)}</p>
+            <p className="text-xs text-foreground-muted">
+              {location.updatedAt
+                ? `Last updated ${new Date(location.updatedAt).toLocaleTimeString()}`
+                : location.status === 'denied'
+                  ? 'Allow location access for this site in your browser so Command Staff can see where you are.'
+                  : 'Waiting for the first GPS fix…'}
+            </p>
           </Card>
         </Reveal>
 

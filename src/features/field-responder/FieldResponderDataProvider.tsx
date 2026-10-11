@@ -8,6 +8,8 @@ import { useAuth } from '../auth'
 import { useMissionStore } from '../../state/MissionStore'
 import { useIncidentStore } from '../../state/IncidentStore'
 import { useNotificationStore } from '../../state/NotificationStore'
+import { useLocationSharing } from './useLocationSharing'
+import type { LocationSharingState } from './useLocationSharing'
 
 interface FieldResponderDataContextValue {
   missions: Mission[]
@@ -16,6 +18,8 @@ interface FieldResponderDataContextValue {
   startNavigation: (missionId: string) => void
   arriveOnSite: (missionId: string) => void
   completeMission: (missionId: string) => void
+  /** This device's GPS sharing, started automatically once the responder is logged in. */
+  location: LocationSharingState
 }
 
 const FieldResponderDataContext = createContext<FieldResponderDataContextValue | undefined>(undefined)
@@ -33,6 +37,9 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
   const { missions: allMissions, updateMission } = useMissionStore()
   const { updateIncident } = useIncidentStore()
   const { addNotification } = useNotificationStore()
+  // This provider is mounted only for a logged-in Field Responder, so sharing
+  // starts at login and stops at logout without any extra wiring.
+  const location = useLocationSharing(session ? { id: session.id, name: session.name } : null)
 
   const missions = useMemo(
     () => allMissions.filter((mission) => mission.responderUserId === session?.id),
@@ -97,7 +104,7 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
     notifyDispatcher(missionId, 'RESPONDER_ON_SITE', `${session?.name ?? 'Responder'} has arrived on-site.`)
   }
 
-  /** ON_SITE -> COMPLETED, once the responder reports the rescue finished. */
+  /** ON_SITE -> COMPLETED, once the responder reports the rescue finished; the responder shows as Cleared. */
   function completeMission(missionId: string) {
     if (!transition(missionId, 'ON_SITE', { status: 'COMPLETED', completedAt: now().toISOString() })) return
     notifyDispatcher(missionId, 'MISSION_COMPLETED', `${session?.name ?? 'Responder'} completed the mission.`)
@@ -105,7 +112,7 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
 
   return (
     <FieldResponderDataContext.Provider
-      value={{ missions, acceptMission, declineMission, startNavigation, arriveOnSite, completeMission }}
+      value={{ missions, acceptMission, declineMission, startNavigation, arriveOnSite, completeMission, location }}
     >
       {children}
     </FieldResponderDataContext.Provider>
