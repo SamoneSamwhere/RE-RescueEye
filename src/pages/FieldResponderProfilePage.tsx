@@ -19,7 +19,7 @@ const memberSinceFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', 
 function InfoRow({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value: string }) {
   return (
     <li className="flex items-center gap-3 px-4 py-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-subtle text-accent">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-subtle text-accent [[data-theme=dark]_&]:text-white">
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">

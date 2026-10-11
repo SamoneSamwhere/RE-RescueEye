@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Radar, MapPin, ChevronRight, Route, CheckCircle2, ListChecks, XCircle, Satellite } from 'lucide-react'
 import { MobileShell } from '../components/layout'
-import { Card, PriorityBadge, MissionStatusBadge } from '../components/ui'
+import { Card, PriorityBadge } from '../components/ui'
 import { Reveal } from '../components/landing/Reveal'
 import { MissionNotificationCard, MissionProgress } from '../components/missions'
 import { useAuth } from '../features/auth'
@@ -22,18 +22,11 @@ import type { GeoPoint } from '../types/geo'
 import type { Detection } from '../types/detection'
 
 const TONE_TILE = {
-  success: 'bg-success-bg text-success-fg',
+  success: 'bg-accent-subtle text-accent',
   warning: 'bg-warning-bg text-warning-fg',
   danger: 'bg-danger-bg text-danger-fg',
 } as const
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-
-function greeting(hour: number): string {
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
-}
 
 function typeLabel(detection: Detection): string {
   return detection.damageClassification
@@ -65,6 +58,11 @@ export function FieldResponderHomePage() {
   const activeIncident = activeMission ? incidents.find((i) => i.id === activeMission.incidentId) : undefined
   const activeDetection = activeIncident ? detections.find((d) => d.id === activeIncident.detectionId) : undefined
 
+  // A mission whose incident is missing (e.g. stale data) cannot be drawn, so
+  // it must not hide the standby card either.
+  const showPending = !!(pendingMission && pendingIncident && pendingDetection)
+  const showActive = !!(activeMission && activeIncident)
+
   const completedCount = missions.filter((m) => m.status === 'COMPLETED').length
   const declinedCount = missions.filter((m) => m.status === 'DECLINED').length
 
@@ -72,34 +70,11 @@ export function FieldResponderHomePage() {
 
   if (!session) return null
 
-  const now = new Date()
-  const firstName = session.name.split(' ')[0]
-
   return (
     <MobileShell navItems={FIELD_RESPONDER_NAV_ITEMS} notifications={notifications}>
       <div className="flex flex-col gap-5 px-4 pb-6 pt-5">
-        <Reveal>
-          <header className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm text-foreground-secondary">{greeting(now.getHours())},</p>
-              <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">{firstName}</h1>
-              <p className="mt-0.5 text-xs text-foreground-muted">
-                {dateFormatter.format(now)}
-                {session.agencyName ? ` · ${session.agencyName}` : ''}
-              </p>
-            </div>
-            <span className="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-success-border bg-success-bg px-2.5 py-1 text-xs font-semibold text-success-fg">
-              <span className="relative flex size-2">
-                <span className="absolute inset-0 rounded-full bg-success motion-safe:animate-ping" />
-                <span className="relative size-2 rounded-full bg-success" />
-              </span>
-              On duty
-            </span>
-          </header>
-        </Reveal>
-
         <Reveal delayMs={80} className="flex flex-col gap-4">
-          {pendingMission && pendingIncident && pendingDetection ? (
+          {showPending ? (
             <MissionNotificationCard
               mission={{
                 missionId: pendingMission.id,
@@ -119,11 +94,10 @@ export function FieldResponderHomePage() {
             />
           ) : null}
 
-          {activeMission && activeIncident ? (
+          {showActive ? (
             <Card className="overflow-hidden">
-              <div className="flex items-center justify-between gap-2 border-b border-border bg-surface-secondary px-4 py-2">
+              <div className="border-b border-border bg-surface-secondary px-4 py-2">
                 <span className="text-xs font-semibold uppercase tracking-wide text-foreground-secondary">Current mission</span>
-                <MissionStatusBadge status={activeMission.status} />
               </div>
               <div className="flex flex-col gap-4 px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
@@ -159,7 +133,7 @@ export function FieldResponderHomePage() {
             </Card>
           ) : null}
 
-          {!pendingMission && !activeMission ? (
+          {!showPending && !showActive ? (
             <Card className="relative overflow-hidden border-transparent bg-surface-inverse px-6 py-8 text-center text-foreground-inverse">
               <div
                 className="pointer-events-none absolute inset-0 opacity-20"
@@ -191,12 +165,10 @@ export function FieldResponderHomePage() {
               <Satellite className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">Location sharing</p>
-                <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', TONE_TILE[locationStatus.tone])}>
-                  {locationStatus.label}
-                </span>
-              </div>
+              <p className="text-sm font-semibold text-foreground">
+                Location sharing
+                {location.status === 'sharing' ? null : <span className="font-normal text-foreground-secondary"> · {locationStatus.label}</span>}
+              </p>
               <p className="flex items-center gap-1 truncate text-xs tabular-nums text-foreground-secondary">
                 <MapPin className="size-3 shrink-0" />
                 {myLocation ? `${myLocation.lat.toFixed(4)}, ${myLocation.lng.toFixed(4)}` : 'Location unavailable'}
