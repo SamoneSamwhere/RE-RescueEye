@@ -7,6 +7,9 @@ import type { NotificationType } from '../../types/notification'
 import { useAuth } from '../auth'
 import { useMissionStore } from '../../state/MissionStore'
 import { useIncidentStore } from '../../state/IncidentStore'
+import { useDetectionStore } from '../../state/DetectionStore'
+import { checkArrival } from '../../lib/navigation'
+import type { ArrivalCheck } from '../../lib/navigation'
 import { useNotificationStore } from '../../state/NotificationStore'
 import { useLocationSharing } from './useLocationSharing'
 import type { LocationSharingState } from './useLocationSharing'
@@ -16,7 +19,10 @@ interface FieldResponderDataContextValue {
   acceptMission: (missionId: string) => void
   declineMission: (missionId: string) => void
   startNavigation: (missionId: string) => void
-  arriveOnSite: (missionId: string) => void
+  /** Returns false (and changes nothing) unless the responder is within ARRIVE_RADIUS_M of the incident. */
+  arriveOnSite: (missionId: string) => boolean
+  /** Whether this responder is currently close enough to the mission's incident to arrive. */
+  arrivalCheck: (missionId: string) => ArrivalCheck
   completeMission: (missionId: string) => void
   /** This device's GPS sharing, started automatically once the responder is logged in. */
   location: LocationSharingState
@@ -35,7 +41,8 @@ const FieldResponderDataContext = createContext<FieldResponderDataContextValue |
 export function FieldResponderDataProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
   const { missions: allMissions, updateMission } = useMissionStore()
-  const { updateIncident } = useIncidentStore()
+  const { incidents, updateIncident } = useIncidentStore()
+  const { detections } = useDetectionStore()
   const { addNotification } = useNotificationStore()
   // This provider is mounted only for a logged-in Field Responder, so sharing
   // starts at login and stops at logout without any extra wiring.
@@ -90,18 +97,28 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
     notifyDispatcher(missionId, 'MISSION_STATUS_CHANGED', `${session?.name ?? 'Responder'} is en route to the incident.`)
   }
 
+  function arrivalCheck(missionId: string): ArrivalCheck {
+    const mission = allMissions.find((m) => m.id === missionId)
+    const incident = mission ? incidents.find((i) => i.id === mission.incidentId) : undefined
+    const detection = incident ? detections.find((d) => d.id === incident.detectionId) : undefined
+    return checkArrival(location.position, detection?.location)
+  }
+
   /**
    * EN_ROUTE -> ON_SITE, once the responder arrives at the incident location.
-   * Also moves the incident to IN_PROGRESS — this is the "monitor responder
-   * status" signal Command Staff sees on the incident/dashboard/map.
+   * Still a manual tap, but only allowed within ARRIVE_RADIUS_M of the incident
+   * by the responder's own GPS. Also moves the incident to IN_PROGRESS — this
+   * is the "monitor responder status" signal Command Staff sees.
    */
-  function arriveOnSite(missionId: string) {
+  function arriveOnSite(missionId: string): boolean {
     const mission = allMissions.find((m) => m.id === missionId)
-    if (!transition(missionId, 'EN_ROUTE', { status: 'ON_SITE', onSiteAt: now().toISOString() })) return
+    if (!arrivalCheck(missionId).canArrive) return false
+    if (!transition(missionId, 'EN_ROUTE', { status: 'ON_SITE', onSiteAt: now().toISOString() })) return false
     if (mission) {
       updateIncident(mission.incidentId, { status: 'IN_PROGRESS' })
     }
     notifyDispatcher(missionId, 'RESPONDER_ON_SITE', `${session?.name ?? 'Responder'} has arrived on-site.`)
+    return true
   }
 
   /** ON_SITE -> COMPLETED, once the responder reports the rescue finished; the responder shows as Cleared. */
@@ -112,7 +129,16 @@ export function FieldResponderDataProvider({ children }: { children: ReactNode }
 
   return (
     <FieldResponderDataContext.Provider
-      value={{ missions, acceptMission, declineMission, startNavigation, arriveOnSite, completeMission, location }}
+      value={{
+        missions,
+        acceptMission,
+        declineMission,
+        startNavigation,
+        arriveOnSite,
+        arrivalCheck,
+        completeMission,
+        location,
+      }}
     >
       {children}
     </FieldResponderDataContext.Provider>

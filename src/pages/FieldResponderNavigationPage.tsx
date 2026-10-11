@@ -26,6 +26,7 @@ import { useFieldResponderData } from '../features/field-responder'
 import { useIncidentStore } from '../state/IncidentStore'
 import { useDetectionStore } from '../state/DetectionStore'
 import { fieldResponderMissionDetailPath, ROUTES } from '../routes/paths'
+import { ARRIVE_RADIUS_M } from '../lib/navigation'
 import {
   bearingDegrees,
   fetchRoute,
@@ -98,7 +99,7 @@ export function FieldResponderNavigationPage() {
   const { missionId } = useParams<{ missionId: string }>()
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { missions, arriveOnSite, location } = useFieldResponderData()
+  const { missions, arriveOnSite, arrivalCheck, location } = useFieldResponderData()
   const { incidents } = useIncidentStore()
   const { detections } = useDetectionStore()
 
@@ -193,12 +194,12 @@ export function FieldResponderNavigationPage() {
   if (mission.status !== 'EN_ROUTE') return <Navigate to={fieldResponderMissionDetailPath(mission.id)} replace />
 
   const StepIcon = nextStep ? MANEUVER_ICON[nextStep.icon] : Navigation
+  const arrival = arrivalCheck(mission.id)
   const center = position ?? destination
 
   function handleArrive() {
     if (!mission) return
-    arriveOnSite(mission.id)
-    navigate(fieldResponderMissionDetailPath(mission.id))
+    if (arriveOnSite(mission.id)) navigate(fieldResponderMissionDetailPath(mission.id))
   }
 
   return (
@@ -297,10 +298,17 @@ export function FieldResponderNavigationPage() {
             </p>
           </div>
         </div>
-        <Button size="lg" className="w-full" onClick={handleArrive}>
+        <Button size="lg" className="w-full" disabled={!arrival.canArrive} onClick={handleArrive}>
           <Flag className="size-4" />
           Arrive On-Site
         </Button>
+        {!arrival.canArrive ? (
+          <p className="-mt-1 text-center text-xs text-foreground-muted">
+            {arrival.distanceM === null
+              ? 'Waiting for your GPS position to unlock Arrive On-Site.'
+              : `Unlocks within ${ARRIVE_RADIUS_M} m of the incident — you are ${formatDistance(arrival.distanceM)} away.`}
+          </p>
+        ) : null}
         <p className="text-center text-[10px] text-foreground-muted">
           ©{' '}
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">

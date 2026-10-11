@@ -7,7 +7,8 @@ import { useAuth } from '../features/auth'
 import { FIELD_RESPONDER_NAV_ITEMS, LOCATION_STATUS_DISPLAY, useFieldResponderData } from '../features/field-responder'
 import { mockUsers } from '../data/mockUsers'
 import { formatDateTime } from '../lib/formatDateTime'
-import { googleMapsDirectionsUrl } from '../lib/navigation'
+import { ARRIVE_RADIUS_M, googleMapsDirectionsUrl } from '../lib/navigation'
+import { formatDistance } from '../lib/routing'
 import { notificationsFor } from '../lib/notifications'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../lib/labels'
 import { useNotificationStore } from '../state/NotificationStore'
@@ -21,7 +22,7 @@ export function FieldResponderMissionDetailPage() {
   const { missionId } = useParams<{ missionId: string }>()
   const navigate = useNavigate()
   const { session } = useAuth()
-  const { missions, acceptMission, declineMission, startNavigation, arriveOnSite, completeMission, location } =
+  const { missions, acceptMission, declineMission, startNavigation, arriveOnSite, arrivalCheck, completeMission, location } =
     useFieldResponderData()
   const { notifications: allNotifications } = useNotificationStore()
   const { incidents } = useIncidentStore()
@@ -75,6 +76,7 @@ export function FieldResponderMissionDetailPage() {
   // This device's live fix; the profile location only until the first fix arrives.
   const myLocation = location.position ?? currentUser?.currentLocation
   const locationStatus = LOCATION_STATUS_DISPLAY[location.status]
+  const arrival = arrivalCheck(mission.id)
 
   function handleStartNavigation() {
     if (!mission) return
@@ -132,10 +134,23 @@ export function FieldResponderMissionDetailPage() {
               <Navigation className="size-4" />
               Open Navigation
             </Button>
-            <Button variant="outline" size="lg" className="w-full" onClick={() => arriveOnSite(mission.id)}>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={!arrival.canArrive}
+              onClick={() => arriveOnSite(mission.id)}
+            >
               <Flag className="size-4" />
               Arrive On-Site
             </Button>
+            {!arrival.canArrive ? (
+              <p className="-mt-2 text-center text-xs text-foreground-muted">
+                {arrival.distanceM === null
+                  ? 'Waiting for your GPS position to unlock Arrive On-Site.'
+                  : `Unlocks within ${ARRIVE_RADIUS_M} m of the incident — you are ${formatDistance(arrival.distanceM)} away.`}
+              </p>
+            ) : null}
           </>
         ) : null}
 
