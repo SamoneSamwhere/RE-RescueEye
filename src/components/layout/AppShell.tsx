@@ -24,14 +24,13 @@ export function AppShell({ navItems = [], user, notifications = [], onLogout, ch
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar navItems={navItems} open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <Sidebar navItems={navItems} open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} onLogout={onLogout} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar
           user={user}
           notifications={notifications}
           onMenuClick={() => setMobileNavOpen(true)}
-          onLogout={onLogout}
         />
         {/* h-screen + min-h-0 above keeps the whole shell pinned to the viewport, so this
             is the only element that ever scrolls — no more nested body+main scrollbars, and

@@ -1,3 +1,5 @@
+import type { UserRole } from '../types/user'
+
 export const ROUTES = {
   login: '/login',
   signup: '/signup',
@@ -45,4 +47,20 @@ export function fieldResponderMissionDetailPath(missionId: string): string {
 
 export function fieldResponderMissionNavigatePath(missionId: string): string {
   return `/field-responder/mission/${missionId}/navigate`
+}
+
+/** The settings page for a role, used by both the sidebar and the profile menu. */
+export function settingsRouteFor(role: UserRole | undefined): string | null {
+  switch (role) {
+    case 'SYSTEM_ADMIN':
+      return ROUTES.systemAdminSettings
+    case 'AGENCY_ADMIN':
+      return ROUTES.agencyAdminSettings
+    case 'COMMAND_STAFF':
+      return ROUTES.commandStaffSettings
+    case 'FIELD_RESPONDER':
+      return ROUTES.fieldResponderSettings
+    default:
+      return null
+  }
 }

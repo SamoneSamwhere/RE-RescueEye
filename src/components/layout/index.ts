@@ -1,7 +1,7 @@
 export { AppShell } from './AppShell'
 export { Sidebar } from './Sidebar'
 export { Topbar } from './Topbar'
-export { UserMenu } from './UserMenu'
+export { UserBadge } from './UserBadge'
 export { NotificationArea } from './NotificationArea'
 export { PageHeader } from './PageHeader'
 export { MobileShell } from './MobileShell'
