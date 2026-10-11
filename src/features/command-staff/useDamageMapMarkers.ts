@@ -1,5 +1,8 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import type { MapMarker, IncidentMapMarker } from '../../components/map'
+import { getAgencyResponders } from '../../db/incidents'
+import { isDbId } from '../../lib/incidentClassification'
 import { useAuth } from '../auth'
 import { mockUsers } from '../../data/mockUsers'
 import { MAP_VISIBLE_MISSION_STATUSES } from '../../lib/missionStatus'
@@ -19,6 +22,13 @@ export function useDamageMapMarkers(): MapMarker[] {
   const { detections, incidents, missions } = useCommandStaffData()
   const { positions } = useLiveUpdates()
   const agencyId = session?.agencyId
+  // Same query (and cache entry) as the dispatch list in useResponderCandidates.
+  const { data: dbResponders = [] } = useQuery({
+    queryKey: ['agencyResponders', agencyId],
+    queryFn: () => getAgencyResponders(Number(agencyId)),
+    enabled: isDbId(agencyId),
+    staleTime: 60_000,
+  })
 
   return useMemo(() => {
     const incidentMarkers: MapMarker[] = incidents
@@ -70,8 +80,23 @@ export function useDamageMapMarkers(): MapMarker[] {
 
     // A responder's live GPS (pushed over WebSocket from their device) wins over
     // the location on their profile, which is only a fallback until they report.
-    const responderMarkers: MapMarker[] = mockUsers
-      .filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId && (positions[u.id] || u.currentLocation))
+    //
+    // The roster is the demo responders plus this agency's real database
+    // responders. Building it from mockUsers alone meant a real responder's
+    // live position arrived over the socket and was never drawn. Database
+    // responders have no stored location, so they appear once their device
+    // reports.
+    const roster = [
+      ...mockUsers.filter((u) => u.role === 'FIELD_RESPONDER' && u.agencyId === agencyId),
+      ...dbResponders.map((row) => ({
+        id: String(row.id),
+        name: [row.firstName, row.lastName].filter(Boolean).join(' ') || row.name || `Responder ${row.id}`,
+        accountStatus: row.active ? ('ACTIVE' as const) : ('INACTIVE' as const),
+        currentLocation: undefined as { lat: number; lng: number } | undefined,
+      })),
+    ]
+    const responderMarkers: MapMarker[] = roster
+      .filter((u) => positions[u.id] || u.currentLocation)
       .map((responder) => {
         const live = positions[responder.id]
         const latestMission = missions
@@ -97,5 +122,5 @@ export function useDamageMapMarkers(): MapMarker[] {
       })
 
     return [...incidentMarkers, ...detectionMarkers, ...responderMarkers]
-  }, [detections, incidents, missions, agencyId, positions])
+  }, [detections, incidents, missions, agencyId, positions, dbResponders])
 }

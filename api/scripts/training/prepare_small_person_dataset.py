@@ -45,7 +45,6 @@ DATA = Path(os.getenv("DATA_ROOT", str(API / "data")))
 VISDRONE = DATA / "raw/downloads/visdrone/detection"
 SDS = DATA / "raw/downloads/seadronessee/data"
 HERIDAL_ZIP = DATA / "raw/downloads/heridal.zip"
-HERIDAL_MAX_VAL_FRACTION = 0.1
 OUT = DATA / "small_person"
 YAML = DATA / "small_person.yaml"
 
@@ -190,18 +189,21 @@ def prepare_heridal() -> None:
         return
     z = zipfile.ZipFile(HERIDAL_ZIP)
     names = z.namelist()
-    images = {Path(n).stem: n for n in names if n.lower().endswith((".jpg", ".jpeg", ".png"))}
-    xmls = [n for n in names if n.lower().endswith(".xml")]
+    # The zip was made on a Mac: __MACOSX/ holds "._" resource-fork twins of
+    # every file, which are not images or XML at all.
+    real = [n for n in names if not n.startswith("__MACOSX/") and not Path(n).name.startswith("._")]
+    images = {Path(n).stem: n for n in real if n.lower().endswith((".jpg", ".jpeg", ".png"))}
+    xmls = [n for n in real if n.lower().endswith(".xml")]
     log(f"  heridal: {len(images)} images, {len(xmls)} annotation files")
-    rng.shuffle(xmls)
-    n_val = int(len(xmls) * HERIDAL_MAX_VAL_FRACTION)
+    # HERIDAL ships its own split as a filename prefix (train_*/test_*); keep
+    # it, so its test photos never share a scene with training tiles.
     totals = {"train": [0, 0], "val": [0, 0]}
     budget = {"train": [10**9], "val": [10**9]}
     for i, x in enumerate(xmls):
-        split = "val" if i < n_val else "train"
+        split = "val" if Path(x).name.startswith("test_") else "train"
         root = ET.fromstring(z.read(x))
-        stem = Path(root.findtext("filename") or x).stem
-        img_name = images.get(stem) or images.get(Path(x).stem)
+        stem = Path(x).stem
+        img_name = images.get(stem) or images.get(Path(root.findtext("filename") or "").stem)
         if not img_name:
             continue
         people = []
@@ -219,14 +221,26 @@ def prepare_heridal() -> None:
 
 
 def main() -> None:
-    if OUT.exists():
+    import argparse
+    ap = argparse.ArgumentParser(description="Build data/small_person (single class 'person')")
+    ap.add_argument("--sources", default="visdrone,seadronessee,heridal",
+                    help="comma list of sources to process")
+    ap.add_argument("--append", action="store_true",
+                    help="add to an existing build instead of starting fresh — e.g. HERIDAL after the others")
+    args = ap.parse_args()
+    sources = {x.strip() for x in args.sources.split(",") if x.strip()}
+
+    if OUT.exists() and not args.append:
         shutil.rmtree(OUT)
-    log("VisDrone (pedestrian + people)…")
-    prepare_visdrone()
-    log("SeaDronesSee (swimmers, tiled)…")
-    prepare_seadronessee()
-    log("HERIDAL (wilderness SAR, tiled)…")
-    prepare_heridal()
+    if "visdrone" in sources:
+        log("VisDrone (pedestrian + people)…")
+        prepare_visdrone()
+    if "seadronessee" in sources:
+        log("SeaDronesSee (swimmers, tiled)…")
+        prepare_seadronessee()
+    if "heridal" in sources:
+        log("HERIDAL (wilderness SAR, tiled)…")
+        prepare_heridal()
     with open(YAML, "w") as f:
         yaml.dump({"path": str(OUT.resolve()), "train": "images/train", "val": "images/val",
                    "nc": 1, "names": {0: "person"}}, f, sort_keys=False)

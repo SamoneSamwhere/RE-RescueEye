@@ -166,4 +166,21 @@ export const mockDetections: Detection[] = [
     reviewerNotes:
       'Major structural damage: the front wall and part of the roof of a two-storey commercial building have collapsed onto the sidewalk. Occupants may be trapped on the ground floor.',
   },
+  // Demo pending casualty for organization #13 (e.g. Command Staff
+  // shin@agency.org), in Barangay Casili, Mandaue City — close to where that
+  // organization's responders report from, so the dispatch list has someone
+  // nearby to alert. Verifying it creates a real incident and real alerts.
+  {
+    id: 'det-demo-casili',
+    mediaAssetId: 'media-demo-casili',
+    category: 'CASUALTY',
+    confidence: 0.91,
+    boundingBox: { x: 46, y: 41, width: 14, height: 9 },
+    location: { lat: 10.37965, lng: 123.93388 },
+    detectedAt: '2026-10-11T08:24:00Z',
+    validationStatus: 'PENDING',
+    casualtyScore: 0.88,
+    casualtyReasons: ['posture_from_pose_nadir', 'stillness_measured'],
+    sceneDamage: { label: 'flood_damage', confidence: 0.84, severity: 'MODERATE' },
+  },
 ]

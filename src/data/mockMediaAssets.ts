@@ -75,4 +75,13 @@ export const mockMediaAssets: MediaAsset[] = [
     capturedAt: '2026-08-20T08:00:00Z',
     uploadedByUserId: 'usr-command-staff-2',
   },
+  // Demo footage for the real organization #13 (database agency id "13"), so
+  // its Command Staff have a pending casualty to review. See det-demo-casili.
+  {
+    id: 'media-demo-casili',
+    agencyId: '13',
+    sourceType: 'UPLOADED_VIDEO',
+    url: 'mock://uploads/casili-mandaue-flyover.mp4',
+    capturedAt: '2026-10-11T08:20:00Z',
+  },
 ]

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Route, Users, MapPinned, X } from 'lucide-react'
 import { MobileShell } from '../components/layout'
@@ -13,6 +14,8 @@ import { useNotificationStore } from '../state/NotificationStore'
 import { useMissionStore } from '../state/MissionStore'
 import { useLiveUpdates } from '../state/LiveUpdatesStore'
 import { mockUsers } from '../data/mockUsers'
+import { getAgencyResponders } from '../db/incidents'
+import { isDbId } from '../lib/incidentClassification'
 import { distanceKm } from '../lib/geo'
 import { formatDistance } from '../lib/routing'
 import { DETECTION_CATEGORY_LABEL, DAMAGE_CLASSIFICATION_LABEL } from '../lib/labels'
@@ -37,6 +40,13 @@ export function FieldResponderMapPage() {
   const { detections } = useDetectionStore()
   const { notifications: allNotifications } = useNotificationStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // Real teammates are database rows, not demo users; same cache entry as Command Staff's roster.
+  const { data: dbResponders = [] } = useQuery({
+    queryKey: ['agencyResponders', session?.agencyId],
+    queryFn: () => getAgencyResponders(Number(session?.agencyId)),
+    enabled: isDbId(session?.agencyId),
+    staleTime: 60_000,
+  })
 
   const notifications = session ? notificationsFor(allNotifications, session.id) : []
 
@@ -75,19 +85,30 @@ export function FieldResponderMapPage() {
     ]
 
     const responderMarkers: MapMarker[] = people.flatMap(({ responderId, mission }) => {
-      const responder = mockUsers.find((u) => u.id === responderId)
-      if (!responder) return []
-      const live = positions[responder.id]
-      const location = live ? { lat: live.lat, lng: live.lng } : responder.currentLocation
-      if (!location) return []
+      // Demo users carry a profile location; real (database) responders only
+      // appear once a position is known. For yourself that is this device's own
+      // GPS fix, which is there before the socket echoes it back - looking only
+      // in mockUsers meant a real responder never saw their own pin.
+      const demo = mockUsers.find((u) => u.id === responderId)
+      const row = dbResponders.find((r) => String(r.id) === responderId)
+      const isSelf = responderId === session.id
+      if (!demo && !row && !isSelf) return []
+      const live = positions[responderId]
+      const ownFix = isSelf ? location.position : undefined
+      const markerLocation = ownFix ?? (live ? { lat: live.lat, lng: live.lng } : demo?.currentLocation)
+      if (!markerLocation) return []
+      const name =
+        demo?.name ??
+        (row ? [row.firstName, row.lastName].filter(Boolean).join(' ') || row.name : null) ??
+        (isSelf ? session.name : `Responder ${responderId}`)
       return [
         {
           kind: 'RESPONDER' as const,
-          id: `responder-marker-${responder.id}`,
-          location,
-          responderId: responder.id,
-          name: responder.name,
-          accountStatus: responder.accountStatus,
+          id: `responder-marker-${responderId}`,
+          location: markerLocation,
+          responderId,
+          name,
+          accountStatus: demo?.accountStatus ?? (row && !row.active ? ('INACTIVE' as const) : ('ACTIVE' as const)),
           missionId: mission?.id,
           missionStatus: mission?.status,
           missionIncidentPriority: mission ? incident?.priority : undefined,
@@ -96,7 +117,7 @@ export function FieldResponderMapPage() {
     })
 
     return [...incidentMarker, ...responderMarkers]
-  }, [session, myMission, incidents, detections, allMissions, positions])
+  }, [session, myMission, incidents, detections, allMissions, positions, dbResponders, location.position])
 
   const selectedMarker = markers.find((m) => m.id === selectedId) ?? null
 
