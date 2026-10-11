@@ -20,10 +20,21 @@ type LiveMessage =
   | { type: 'responder_location'; responder: LiveResponderPosition }
   | { type: 'mission'; mission: Mission }
 
+/** What the app sends up the socket: this responder's GPS fix. */
+export interface OutgoingLocationMessage {
+  type: 'location'
+  responderId: string
+  name: string
+  lat: number
+  lng: number
+}
+
 interface LiveUpdatesContextValue {
   /** Keyed by responder user id. Only responders whose device has reported. */
   positions: Record<string, LiveResponderPosition>
   connected: boolean
+  /** Sends a message if the socket is open; returns false (and sends nothing) otherwise. */
+  send: (message: OutgoingLocationMessage) => boolean
 }
 
 const LiveUpdatesContext = createContext<LiveUpdatesContextValue | undefined>(undefined)
@@ -45,6 +56,7 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
   const { applyRemoteMission } = useMissionStore()
   const [positions, setPositions] = useState<Record<string, LiveResponderPosition>>({})
   const [connected, setConnected] = useState(false)
+  const socketRef = useRef<WebSocket | null>(null)
 
   const applyMission = useRef(applyRemoteMission)
   useEffect(() => {
@@ -73,6 +85,7 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
 
     function open() {
       socket = new WebSocket(LIVE_URL)
+      socketRef.current = socket
       socket.onopen = () => {
         attempt = 0
         setConnected(true)
@@ -97,11 +110,19 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
       stopped = true
       clearTimeout(retryTimer)
       socket?.close()
+      socketRef.current = null
       setConnected(false)
     }
   }, [enabled])
 
-  return <LiveUpdatesContext.Provider value={{ positions, connected }}>{children}</LiveUpdatesContext.Provider>
+  function send(message: OutgoingLocationMessage): boolean {
+    const socket = socketRef.current
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false
+    socket.send(JSON.stringify(message))
+    return true
+  }
+
+  return <LiveUpdatesContext.Provider value={{ positions, connected, send }}>{children}</LiveUpdatesContext.Provider>
 }
 
 export function useLiveUpdates() {

@@ -68,19 +68,23 @@ async def report_positions(payload: dict = Body(...)) -> dict:
     return {"accepted": accepted, "active": len(responder_registry.active())}
 
 
-@router.post("/{responder_id}/location")
-async def report_device_location(responder_id: str, payload: dict = Body(...)) -> dict:
+async def record_device_fix(responder_id: str, payload: dict) -> dict:
     """
-    Records a responder's GPS fix from their own device and pushes it live.
+    Stores one device GPS fix and pushes it to every live client.
 
-    Body: {"lat": 10.3, "lng": 123.9, "name": "..."}
+    Shared by the REST endpoint below and the WebSocket (routers/live.py), which
+    is how the Field Responder app sends fixes while connected. Raises
+    ValueError with a readable message on a bad fix.
     """
+    responder_id = str(responder_id or "").strip()
+    if not responder_id:
+        raise ValueError("responder id is required")
     try:
         lat, lng = float(payload["lat"]), float(payload["lng"])
     except (KeyError, TypeError, ValueError):
-        raise HTTPException(422, "'lat' and 'lng' must be numbers")
+        raise ValueError("'lat' and 'lng' must be numbers")
     if not (-90 <= lat <= 90 and -180 <= lng <= 180):
-        raise HTTPException(422, "'lat'/'lng' out of range")
+        raise ValueError("'lat'/'lng' out of range")
 
     position = responder_registry.report(
         responder_id, lat, lng, str(payload.get("name") or ""), source="device",
@@ -88,6 +92,20 @@ async def report_device_location(responder_id: str, payload: dict = Body(...)) -
     body = position_payload(position)
     await live_hub.broadcast({"type": "responder_location", "responder": body})
     return body
+
+
+@router.post("/{responder_id}/location")
+async def report_device_location(responder_id: str, payload: dict = Body(...)) -> dict:
+    """
+    Records a responder's GPS fix from their own device and pushes it live.
+    Fallback for when the app's WebSocket is not connected.
+
+    Body: {"lat": 10.3, "lng": 123.9, "name": "..."}
+    """
+    try:
+        return await record_device_fix(responder_id, payload)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.get("")

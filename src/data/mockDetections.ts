@@ -150,4 +150,20 @@ export const mockDetections: Detection[] = [
     reviewedAt: '2026-08-20T08:10:00Z',
     reviewerNotes: 'Pre-existing damage, not related to the current event.',
   },
+  // Demo incident for the navigation walkthrough (see incident-demo, mission-demo).
+  {
+    id: 'det-demo',
+    mediaAssetId: 'media-3',
+    category: 'DAMAGE',
+    damageClassification: 'STRUCTURAL',
+    confidence: 0.92,
+    boundingBox: { x: 30, y: 25, width: 34, height: 40 },
+    location: { lat: 10.2935, lng: 123.9015 },
+    detectedAt: '2026-10-11T07:52:00Z',
+    validationStatus: 'VERIFIED',
+    reviewedByUserId: 'usr-command-staff-1',
+    reviewedAt: '2026-10-11T07:55:00Z',
+    reviewerNotes:
+      'Major structural damage: the front wall and part of the roof of a two-storey commercial building have collapsed onto the sidewalk. Occupants may be trapped on the ground floor.',
+  },
 ]

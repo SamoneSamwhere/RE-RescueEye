@@ -183,4 +183,21 @@ export const mockUsers: MockUser[] = [
     lastLoginAt: '2026-08-20T14:15:00Z',
     currentLocation: { lat: 10.3278, lng: 123.8815 },
   },
+  // Demo Field Responder for the navigation walkthrough: has exactly one
+  // mission (mission-demo, dispatched and awaiting Accept) and nothing else, so
+  // the demo flow is never confused by other active missions.
+  {
+    id: 'usr-demo-responder',
+    name: 'Demo Responder',
+    email: 'demo.responder@rescueeye.io',
+    password: 'password123',
+    role: 'FIELD_RESPONDER',
+    phone: '+63-917-000-0000',
+    agencyId: 'agency-1',
+    accountStatus: 'ACTIVE',
+    createdAt: '2026-10-01T09:00:00Z',
+    createdByUserId: 'usr-agency-admin-1',
+    lastLoginAt: '2026-10-11T08:00:00Z',
+    currentLocation: { lat: 10.3157, lng: 123.8854 },
+  },
 ]

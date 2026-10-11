@@ -57,4 +57,14 @@ export const mockIncidents: Incident[] = [
     closedByUserId: 'usr-command-staff-1',
     closedAt: '2026-08-19T18:10:00Z',
   },
+  // Demo incident for the navigation walkthrough — Major Structural Damage.
+  {
+    id: 'incident-demo',
+    detectionId: 'det-demo',
+    agencyId: 'agency-1',
+    priority: 'HIGH',
+    status: 'DISPATCHED',
+    verifiedByUserId: 'usr-command-staff-1',
+    verifiedAt: '2026-10-11T07:55:00Z',
+  },
 ]

@@ -15,7 +15,7 @@ import { useIncidentStore } from '../state/IncidentStore'
 import { useDetectionStore } from '../state/DetectionStore'
 import { useMissionStore } from '../state/MissionStore'
 import { responseTeamFor } from '../lib/responseTeams'
-import { ROUTES } from '../routes/paths'
+import { fieldResponderMissionNavigatePath, ROUTES } from '../routes/paths'
 
 export function FieldResponderMissionDetailPage() {
   const { missionId } = useParams<{ missionId: string }>()
@@ -79,13 +79,91 @@ export function FieldResponderMissionDetailPage() {
   function handleStartNavigation() {
     if (!mission) return
     startNavigation(mission.id)
-    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
+    navigate(fieldResponderMissionNavigatePath(mission.id))
   }
 
   return (
     <MobileShell navItems={FIELD_RESPONDER_NAV_ITEMS} notifications={notifications}>
       <div className="flex flex-col gap-4 px-4 py-4">
         {backLink}
+
+        <MissionRouteMap
+          origin={myLocation}
+          destination={detection.location}
+          isEnRoute={mission.status === 'EN_ROUTE' || mission.status === 'ON_SITE'}
+        />
+
+        {mission.status === 'PENDING' ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="primary" size="lg" className="w-full" onClick={() => acceptMission(mission.id)}>
+              <CheckCircle2 className="size-4" />
+              Accept
+            </Button>
+            <Button
+              variant="danger"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                declineMission(mission.id)
+                navigate(ROUTES.fieldResponder)
+              }}
+            >
+              <XCircle className="size-4" />
+              Decline
+            </Button>
+          </div>
+        ) : null}
+
+        {mission.status === 'ACCEPTED' ? (
+          <Button variant="primary" size="lg" className="w-full" onClick={handleStartNavigation}>
+            <Navigation className="size-4" />
+            Start Navigation
+          </Button>
+        ) : null}
+
+        {mission.status === 'EN_ROUTE' ? (
+          <>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate(fieldResponderMissionNavigatePath(mission.id))}
+            >
+              <Navigation className="size-4" />
+              Open Navigation
+            </Button>
+            <Button variant="outline" size="lg" className="w-full" onClick={() => arriveOnSite(mission.id)}>
+              <Flag className="size-4" />
+              Arrive On-Site
+            </Button>
+          </>
+        ) : null}
+
+        {mission.status === 'ON_SITE' ? (
+          <>
+            <Card className="flex items-center gap-2 border-success-border bg-success-bg px-4 py-3">
+              <LifeBuoy className="size-5 shrink-0 text-success" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rescue In Progress</p>
+                <p className="text-xs text-foreground-muted">
+                  Arrived {mission.onSiteAt ? formatDateTime(mission.onSiteAt) : ''} — report complete when the rescue is finished.
+                </p>
+              </div>
+            </Card>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                completeMission(mission.id)
+                navigate(ROUTES.fieldResponder)
+              }}
+            >
+              <CheckCircle2 className="size-4" />
+              Report Rescue Complete
+            </Button>
+          </>
+        ) : null}
 
         <Card className="flex flex-col gap-3 px-4 py-4">
           <div className="flex items-center justify-between">
@@ -169,72 +247,6 @@ export function FieldResponderMissionDetailPage() {
           ) : null}
         </Card>
 
-        <MissionRouteMap
-          origin={myLocation}
-          destination={detection.location}
-          isEnRoute={mission.status === 'EN_ROUTE' || mission.status === 'ON_SITE'}
-        />
-
-        {mission.status === 'PENDING' ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="primary" size="lg" className="w-full" onClick={() => acceptMission(mission.id)}>
-              <CheckCircle2 className="size-4" />
-              Accept
-            </Button>
-            <Button
-              variant="danger"
-              size="lg"
-              className="w-full"
-              onClick={() => {
-                declineMission(mission.id)
-                navigate(ROUTES.fieldResponder)
-              }}
-            >
-              <XCircle className="size-4" />
-              Decline
-            </Button>
-          </div>
-        ) : null}
-
-        {mission.status === 'ACCEPTED' ? (
-          <Button variant="primary" size="lg" className="w-full" onClick={handleStartNavigation}>
-            <Navigation className="size-4" />
-            Start Navigation
-          </Button>
-        ) : null}
-
-        {mission.status === 'EN_ROUTE' ? (
-          <Button variant="primary" size="lg" className="w-full" onClick={() => arriveOnSite(mission.id)}>
-            <Flag className="size-4" />
-            Arrive On-Site
-          </Button>
-        ) : null}
-
-        {mission.status === 'ON_SITE' ? (
-          <>
-            <Card className="flex items-center gap-2 border-success-border bg-success-bg px-4 py-3">
-              <LifeBuoy className="size-5 shrink-0 text-success" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Rescue In Progress</p>
-                <p className="text-xs text-foreground-muted">
-                  Arrived {mission.onSiteAt ? formatDateTime(mission.onSiteAt) : ''} — report complete when the rescue is finished.
-                </p>
-              </div>
-            </Card>
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={() => {
-                completeMission(mission.id)
-                navigate(ROUTES.fieldResponder)
-              }}
-            >
-              <CheckCircle2 className="size-4" />
-              Report Rescue Complete
-            </Button>
-          </>
-        ) : null}
       </div>
     </MobileShell>
   )

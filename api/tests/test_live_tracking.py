@@ -114,3 +114,25 @@ class TestWebSocket:
             client.put("/missions/mission-1", json={**MISSION, "status": "ON_SITE"})
             mission = ws.receive_json()
             assert mission == {"type": "mission", "mission": {**MISSION, "status": "ON_SITE"}}
+
+
+class TestLocationOverWebSocket:
+    def test_fix_sent_up_the_socket_is_stored_and_pushed(self, client):
+        with client.websocket_connect("/live/ws") as watcher, client.websocket_connect("/live/ws") as phone:
+            watcher.receive_json()
+            phone.receive_json()
+            phone.send_json({"type": "location", "responderId": "usr-1", "name": "Lena", "lat": 10.31, "lng": 123.89})
+            pushed = watcher.receive_json()
+        assert pushed["type"] == "responder_location"
+        assert (pushed["responder"]["id"], pushed["responder"]["source"]) == ("usr-1", "device")
+        (pos,) = responder_registry.active()
+        assert (pos.lat, pos.lng) == (10.31, 123.89)
+
+    def test_bad_messages_do_not_close_the_socket(self, client):
+        with client.websocket_connect("/live/ws") as ws:
+            ws.receive_json()
+            ws.send_text("not json")
+            ws.send_json({"type": "location", "responderId": "usr-1", "lat": "x", "lng": 1})
+            ws.send_json({"type": "something-else"})
+            ws.send_json({"type": "location", "responderId": "usr-1", "lat": 10.31, "lng": 123.89})
+            assert ws.receive_json()["type"] == "responder_location"
