@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "android:sync": "tsc -b && vite build --mode mobile && cap sync android",
-    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+    "android:apk": "npm run android:sync && node scripts/build-apk.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.2",
@@ -28,6 +28,7 @@
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.3",
