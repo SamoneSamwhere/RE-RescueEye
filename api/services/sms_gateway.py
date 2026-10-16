@@ -16,7 +16,14 @@ textbee (https://textbee.dev, open source): an Android phone running the
 textbee app sends the SMS from its own SIM - a low-cost option for testing and
 demos. Configured with TEXTBEE_API_KEY and TEXTBEE_DEVICE_ID.
 
-SMS_PROVIDER selects one: semaphore (default) or textbee.
+UniSMS (https://unismsapi.com, Philippine SMS gateway):
+  POST /api/sms                    send; returns the message and its reference_id
+  GET  /api/sms/{reference_id}     current status: pending, retrying, sent, failed
+Configured with UNISMS_API_KEY (the dashboard's API secret key, sent as the
+Basic-auth username) and UNISMS_SENDER_ID (required by UniSMS; new accounts
+get a random test sender ID on the dashboard).
+
+SMS_PROVIDER selects one: semaphore (default), unisms or textbee.
 """
 from __future__ import annotations
 
@@ -97,6 +104,45 @@ class SemaphoreGateway:
         return "SENT"
 
 
+class UniSmsGateway:
+    BASE_URL = "https://unismsapi.com/api"
+
+    def __init__(self, api_key: str, sender_id: str) -> None:
+        self._auth = httpx.BasicAuth(api_key, "")
+        self._sender_id = sender_id
+
+    async def send(self, number: str, message: str) -> SendResult:
+        payload = {"recipient": number, "content": message, "sender_id": self._sender_id}
+        try:
+            async with httpx.AsyncClient(timeout=15.0, auth=self._auth) as client:
+                response = await client.post(f"{self.BASE_URL}/sms", json=payload)
+        except httpx.HTTPError as exc:
+            return SendResult(ok=False, error=f"UniSMS unreachable: {exc}")
+        if response.status_code >= 400:
+            return SendResult(ok=False, error=f"UniSMS rejected the message ({response.status_code}): {response.text[:200]}")
+        try:
+            msg = response.json().get("message") or {}
+        except ValueError:
+            msg = {}
+        reference_id = msg.get("reference_id")
+        if not reference_id:
+            return SendResult(ok=False, error=f"Unexpected UniSMS response: {response.text[:200]}")
+        if str(msg.get("status", "")).lower() == "failed":
+            return SendResult(ok=False, provider_id=str(reference_id), error=f"UniSMS marked the message failed: {msg.get('fail_reason')}")
+        return SendResult(ok=True, provider_id=str(reference_id))
+
+    async def delivery_state(self, provider_id: str) -> DeliveryState:
+        async with httpx.AsyncClient(timeout=10.0, auth=self._auth) as client:
+            response = await client.get(f"{self.BASE_URL}/sms/{provider_id}")
+        response.raise_for_status()
+        status = str((response.json().get("message") or {}).get("status", "")).lower()
+        if status == "sent":
+            return "DELIVERED"
+        if status == "failed":
+            return "FAILED"
+        return "SENT"
+
+
 def to_e164_ph(number: str) -> str:
     """09XXXXXXXXX -> +639XXXXXXXXX."""
     return "+63" + number[1:]
@@ -160,6 +206,12 @@ def get_sms_gateway() -> SmsGateway:
             base_url = os.getenv("TEXTBEE_BASE_URL", "").strip() or "https://api.textbee.dev/api/v1"
             return TextbeeGateway(api_key, device_id, base_url)
         return UnconfiguredGateway("TEXTBEE_API_KEY and TEXTBEE_DEVICE_ID")
+    if provider == "unisms":
+        api_key = os.getenv("UNISMS_API_KEY", "").strip()
+        sender_id = os.getenv("UNISMS_SENDER_ID", "").strip()
+        if api_key and sender_id:
+            return UniSmsGateway(api_key, sender_id)
+        return UnconfiguredGateway("UNISMS_API_KEY and UNISMS_SENDER_ID")
     api_key = os.getenv("SEMAPHORE_API_KEY", "").strip()
     if api_key:
         return SemaphoreGateway(api_key, os.getenv("SEMAPHORE_SENDER_NAME", "").strip() or None)
