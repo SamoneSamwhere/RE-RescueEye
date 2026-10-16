@@ -136,6 +136,23 @@ Supabase SQL editor. They are plain SQL — there is no migration tool. The live
 schema is whatever Supabase has; [docs/data-dictionary.md](docs/data-dictionary.md)
 describes it.
 
+## Android app (Field Responders)
+
+The Field Responder side also ships as an installable Android app (Capacitor),
+so responders don't need Expo Go or a browser. It contains only sign-in and
+the Field Responder screens; other roles are signed out and sent to the website.
+
+```bash
+npm run android:apk   # builds dist/ with .env.mobile, syncs, runs Gradle
+# -> android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+- Needs Android Studio's bundled JDK 17: `JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"`,
+  plus `android/local.properties` with `sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk`.
+- `.env.mobile` sets the API address the phone uses. `127.0.0.1` means the phone
+  itself, so use the laptop's Wi-Fi IP (or a hosted/tunnelled URL) and rebuild when it changes.
+- Run the API with `--host 0.0.0.0` so the phone can reach it, on the same Wi-Fi.
+
 ## AI models
 
 | Model | File | Trained on | Used for |

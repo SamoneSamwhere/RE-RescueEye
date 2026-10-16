@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "tsc -b && vite build --mode mobile && cap sync android",
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
     "@supabase/supabase-js": "^2.112.4",
     "@tanstack/react-query": "^5.101.4",
     "@types/leaflet": "^1.9.22",
@@ -24,6 +28,7 @@
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",

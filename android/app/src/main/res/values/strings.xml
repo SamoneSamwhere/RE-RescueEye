@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RescueEye</string>
+    <string name="title_activity_main">RescueEye</string>
+    <string name="package_name">com.rescueeye.app</string>
+    <string name="custom_url_scheme">com.rescueeye.app</string>
+</resources>

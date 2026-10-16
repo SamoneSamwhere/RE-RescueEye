@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { Building2, CheckCircle2, LogIn } from 'lucide-react'
 import { useAuth, ROLE_HOME_ROUTE } from '../features/auth'
+import { IS_RESPONDER_APP } from '../lib/appTarget'
 import { Field, Input, Button } from '../components/ui'
 import { AuthPageShell, Reveal } from '../components/landing'
 import { AuthCardDecor } from '../components/landing/AuthCardDecor'
@@ -145,7 +146,7 @@ const SIGN_IN_INPUT_CLASS =
   'h-11 border-foreground-muted/70 bg-foreground/[0.06] px-3 text-base placeholder:text-foreground-secondary/60 hover:border-foreground-muted focus-visible:border-accent'
 
 export function AuthPage() {
-  const { login, session } = useAuth()
+  const { login, logout, session } = useAuth()
   const { addAgency } = useAgencyStore()
   const { createAgency: createAgencyInDb, isLoading: isCreatingAgency } = useAgencyDatabase()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -205,7 +206,16 @@ export function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
-  if (session) {
+  // The Android app is the Field Responder app only; anyone else is signed
+  // straight back out and pointed at the website.
+  const wrongAppRole = IS_RESPONDER_APP && !!session && session.role !== 'FIELD_RESPONDER'
+  useEffect(() => {
+    if (!wrongAppRole) return
+    logout()
+    setLoginError('This app is for Field Responders. Command Staff and administrators sign in on the RescueEye website.')
+  }, [wrongAppRole, logout])
+
+  if (session && !wrongAppRole) {
     return <Navigate to={ROLE_HOME_ROUTE[session.role]} replace />
   }
 

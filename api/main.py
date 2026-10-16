@@ -74,6 +74,9 @@ _DEV_ORIGINS = [
     f"http://{host}:{port}"
     for host in ("localhost", "127.0.0.1")
     for port in range(5173, 5181)
+] + [
+    # The Android app (Capacitor) serves its bundled pages from this origin.
+    "https://localhost",
 ]
 
 _configured = os.getenv("ALLOWED_ORIGINS", "").strip()
